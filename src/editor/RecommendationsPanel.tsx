@@ -302,7 +302,7 @@ function ModeCard({
   onClick,
 }: {
   active: boolean;
-  icon: React.ReactNode;
+  icon?: React.ReactNode;
   title: string;
   subtitle: string;
   onClick: () => void;
