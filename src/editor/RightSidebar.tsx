@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { useEmailStore } from "../store/emailStore";
 import { resolveToken } from "../core/theme";
 import { getAssetProvider } from "../core/plugins";
+import { RecommendationsPanel } from "./RecommendationsPanel";
+import { isProductAware } from "../recommendations/logic";
 import type {
   EmailElement,
   EmailModule,
@@ -377,6 +379,7 @@ function ModulePanel({ mod }: { mod: EmailModule }) {
         hideOn={rawStyle.hideOn as "mobile" | "desktop" | undefined}
         onChange={(v) => updateModule(mod.id, { style: { ...rawStyle, hideOn: v } })}
       />
+      {isProductAware(mod) && <RecommendationsPanel mod={mod} />}
     </>
   );
 }

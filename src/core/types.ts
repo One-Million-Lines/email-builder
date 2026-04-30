@@ -119,6 +119,8 @@ export interface EmailModule {
   name: string;
   style?: BaseStyle;
   children: EmailElement[];
+  /** Free-form per-module data used by plugins (e.g. `recommendations` logic). */
+  data?: Record<string, unknown>;
 }
 
 export interface ThemeTokens {

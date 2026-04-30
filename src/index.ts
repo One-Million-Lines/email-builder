@@ -80,3 +80,20 @@ export { imageUploaderPlugin } from "./plugins/imageUploader";
 export type { ImageUploaderOptions } from "./plugins/imageUploader";
 export { templateRegistry, TEMPLATE_CATEGORY_LABELS } from "./templates";
 export type { TemplateDefinition, TemplateCategory } from "./templates";
+export {
+  ALGORITHMS,
+  ALGORITHM_BY_ID,
+  FALLBACK_OPTIONS,
+  defaultLogic as defaultRecommendationsLogic,
+  readLogic as readRecommendationsLogic,
+  toLegacyShape as recommendationsToLegacyShape,
+} from "./recommendations/logic";
+export type {
+  RecommendationsLogic,
+  RecommendationFilters,
+  StackEntry,
+  AlgorithmDefinition,
+  AlgorithmParamSpec,
+  FallbackId,
+  RecommendationMode,
+} from "./recommendations/logic";

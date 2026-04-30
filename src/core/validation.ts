@@ -67,6 +67,7 @@ export const moduleSchema = z.object({
   name: z.string(),
   style: styleSchema,
   children: z.array(elementSchema),
+  data: z.record(z.any()).optional(),
 });
 
 export const themeSchema = z.object({
