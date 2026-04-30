@@ -29,6 +29,8 @@ backend/**/__pycache__/
 *.sln
 *.sw?
 
+tsconfig.tsbuildinfo
+
 .env
 .env.*
 
