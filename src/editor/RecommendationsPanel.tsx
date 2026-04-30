@@ -45,14 +45,14 @@ export function RecommendationsPanel({ mod }: Props) {
         <div className="grid grid-cols-2 gap-2">
           <ModeCard
             active={logic.mode === "manual"}
-            // icon={<Hand size={16} />}
+            
             title="Select Items"
             subtitle="Hand-pick from a feed"
             onClick={() => update({ mode: "manual" })}
           />
           <ModeCard
             active={logic.mode === "recommender"}
-            // icon={<Sparkles size={16} />}
+            
             title="Recommender"
             subtitle="Algorithms + filters"
             onClick={() => update({ mode: "recommender" })}
