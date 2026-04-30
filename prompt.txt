@@ -1,0 +1,15 @@
+here we build an email builder
+Simple, with components
+
+
+https://www.reddit.com/r/coolgithubprojects/comments/1r6f3ub/building_an_opensource_alternative_to_designmodo/
+https://chatgpt.com/c/69d769c9-b764-8396-88ac-f72b85da36d1
+
+
+migmaAI
+genius design
+
+
+https://usewaypoint.github.io/email-builder-js/#sample/welcome
+
+emailbuilder.js
