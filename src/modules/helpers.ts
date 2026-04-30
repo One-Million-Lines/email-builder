@@ -160,13 +160,19 @@ export const mod = (
 // Heading shortcut for newsletter article titles.
 export const heading = (
   content: string,
-  opts: { level?: 1 | 2 | 3; align?: "left" | "center" | "right"; paddingTop?: number; paddingBottom?: number } = {}
+  opts: {
+    level?: 1 | 2 | 3;
+    align?: "left" | "center" | "right";
+    paddingTop?: number;
+    paddingBottom?: number;
+    fontSize?: number;
+  } = {}
 ) => {
   const sizes = { 1: 32, 2: 24, 3: 18 } as const;
   return text(content, {
     role: "headline",
     fontFamily: "{fonts.heading}",
-    fontSize: sizes[opts.level ?? 2],
+    fontSize: opts.fontSize ?? sizes[opts.level ?? 2],
     fontWeight: "bold",
     align: opts.align,
     paddingTop: opts.paddingTop ?? 16,
@@ -197,6 +203,8 @@ export const muted = (
     paddingTop?: number;
     paddingBottom?: number;
     lineHeight?: number;
+    link?: string;
+    letterSpacing?: number;
   } = {}
 ) =>
   text(content, {
@@ -206,6 +214,8 @@ export const muted = (
     paddingTop: opts.paddingTop,
     paddingBottom: opts.paddingBottom,
     lineHeight: opts.lineHeight,
+    link: opts.link,
+    letterSpacing: opts.letterSpacing,
   });
 
 export const PLACEHOLDER = (w: number, h: number, label = "Image") =>

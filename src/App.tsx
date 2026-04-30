@@ -6,6 +6,8 @@ import { RightSidebar } from "./editor/RightSidebar";
 import { registerDefaultModules } from "./modules/defaultModules";
 import { moduleRegistry } from "./modules/registry";
 import { useEmailStore } from "./store/emailStore";
+// Register all built-in templates (each module self-registers on import).
+import "./templates";
 
 // Register default modules once at module load.
 registerDefaultModules();

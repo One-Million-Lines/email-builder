@@ -10,6 +10,7 @@ import { uid } from "../core/utils";
 import { documentSchema } from "../core/validation";
 import { renderEmailHtml } from "../core/renderer";
 import { defaultThemes } from "../themes/defaultThemes";
+import type { TemplateDefinition } from "../templates/registry";
 
 const HISTORY_LIMIT = 50;
 
@@ -42,10 +43,16 @@ interface State {
     patch: Partial<EmailElement>
   ) => void;
   deleteElement: (moduleId: string, elementId: string) => void;
+  reorderElement: (moduleId: string, fromIndex: number, toIndex: number) => void;
+  moveElement: (moduleId: string, elementId: string, dir: -1 | 1) => void;
 
   applyTheme: (theme: Theme) => void;
   updateMeta: (patch: Partial<EmailDocument["meta"]>) => void;
   updateSettings: (patch: Partial<EmailDocument["settings"]>) => void;
+
+  // Templates
+  loadTemplate: (def: TemplateDefinition) => void;
+  resetDocument: () => void;
 
   // I/O
   exportJson: () => string;
@@ -187,6 +194,30 @@ export const useEmailStore = create<State>((set, get) => ({
     set({ selection: { kind: "module", moduleId } });
   },
 
+  reorderElement: (moduleId, fromIndex, toIndex) => {
+    const { doc, applyDoc } = get();
+    const modules = doc.modules.map((m) => {
+      if (m.id !== moduleId) return m;
+      if (fromIndex < 0 || fromIndex >= m.children.length) return m;
+      if (toIndex < 0 || toIndex >= m.children.length) return m;
+      if (fromIndex === toIndex) return m;
+      const children = [...m.children];
+      const [moved] = children.splice(fromIndex, 1);
+      children.splice(toIndex, 0, moved);
+      return { ...m, children };
+    });
+    applyDoc({ ...doc, modules });
+  },
+
+  moveElement: (moduleId, elementId, dir) => {
+    const { doc, reorderElement } = get();
+    const m = doc.modules.find((x) => x.id === moduleId);
+    if (!m) return;
+    const idx = m.children.findIndex((c) => c.id === elementId);
+    if (idx === -1) return;
+    reorderElement(moduleId, idx, idx + dir);
+  },
+
   applyTheme: (theme) => {
     const { doc, applyDoc } = get();
     applyDoc({ ...doc, theme });
@@ -200,6 +231,18 @@ export const useEmailStore = create<State>((set, get) => ({
   updateSettings: (patch) => {
     const { doc, applyDoc } = get();
     applyDoc({ ...doc, settings: { ...doc.settings, ...patch } });
+  },
+
+  loadTemplate: (def) => {
+    const next = def.build();
+    get().applyDoc(next);
+    set({ selection: { kind: "email" }, past: [], future: [] });
+  },
+
+  resetDocument: () => {
+    const { doc, applyDoc } = get();
+    applyDoc(emptyDoc(doc.theme));
+    set({ selection: { kind: "email" }, past: [], future: [] });
   },
 
   exportJson: () => JSON.stringify(get().doc, null, 2),

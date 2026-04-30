@@ -11,7 +11,7 @@ import type {
   Theme,
 } from "../core/types";
 import { resolveStyle, resolveToken } from "../core/theme";
-import { Copy, Trash2, GripVertical } from "lucide-react";
+import { Copy, Trash2, GripVertical, ArrowUp, ArrowDown, MousePointer2 } from "lucide-react";
 import {
   DndContext,
   closestCenter,
@@ -29,7 +29,7 @@ import {
   arrayMove,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 const MOBILE_WIDTH = 375;
 
@@ -51,6 +51,8 @@ export function Canvas() {
     reorderModules,
     deleteModule,
     duplicateModule,
+    deleteElement,
+    moveElement,
     viewMode,
   } = useEmailStore();
 
@@ -68,19 +70,20 @@ export function Canvas() {
     reorderModules(from, to);
   };
 
-  // Keyboard delete
+  // Keyboard delete (modules and elements)
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if ((e.key === "Delete" || e.key === "Backspace") && selection?.kind === "module") {
-        const target = e.target as HTMLElement;
-        if (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable)
-          return;
-        deleteModule(selection.moduleId);
-      }
+      if (e.key !== "Delete" && e.key !== "Backspace") return;
+      const target = e.target as HTMLElement;
+      if (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable)
+        return;
+      if (selection?.kind === "module") deleteModule(selection.moduleId);
+      else if (selection?.kind === "element")
+        deleteElement(selection.moduleId, selection.elementId);
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [selection, deleteModule]);
+  }, [selection, deleteModule, deleteElement]);
 
   const bg = resolveToken(doc.settings.backgroundColor, doc.theme) as string;
   const cbg = resolveToken(doc.settings.contentBackgroundColor, doc.theme) as string;
@@ -213,6 +216,7 @@ function ModuleView({
   if (hideOn === viewMode) return null;
   const merged = mergeMobile(rawStyle, viewMode);
   const s = resolveStyle(merged, theme);
+  const [hovered, setHovered] = useState(false);
   const moduleStyle: React.CSSProperties = {
     backgroundColor: s.backgroundColor as string,
     paddingTop: (s.paddingTop as number) ?? 0,
@@ -221,7 +225,11 @@ function ModuleView({
     paddingRight: (s.paddingRight as number) ?? 0,
     borderRadius: s.borderRadius as number,
     position: "relative",
-    outline: selected ? "2px solid #2563eb" : "1px dashed transparent",
+    outline: selected
+      ? "2px solid #2563eb"
+      : hovered
+      ? "1px dashed #93c5fd"
+      : "1px dashed transparent",
     outlineOffset: -2,
     cursor: "pointer",
   };
@@ -233,13 +241,15 @@ function ModuleView({
         e.stopPropagation();
         onSelectModule();
       }}
-      onMouseEnter={(e) => {
-        if (!selected) e.currentTarget.style.outline = "1px dashed #93c5fd";
-      }}
-      onMouseLeave={(e) => {
-        if (!selected) e.currentTarget.style.outline = "1px dashed transparent";
-      }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
     >
+      {/* Hover label (when not selected) makes it obvious what block you're targeting */}
+      {!selected && hovered && (
+        <div className="absolute top-0 right-0 z-10 bg-blue-600 text-white text-[10px] px-1.5 py-0.5 rounded-bl pointer-events-none">
+          Click to select: {mod.name}
+        </div>
+      )}
       {selected && (
         <div className="absolute -top-3 left-2 z-10 flex gap-1">
           {dragHandle}
@@ -268,15 +278,19 @@ function ModuleView({
           </span>
         </div>
       )}
-      {mod.children.map((c) => (
+      {mod.children.map((c, i) => (
         <ElementView
           key={c.id}
           el={c}
+          index={i}
+          totalElements={mod.children.length}
           viewMode={viewMode}
           theme={theme}
           moduleId={mod.id}
+          moduleSelected={selected}
           selected={selectionEl === c.id}
           onSelect={() => onSelectElement(c.id)}
+          onSelectModule={onSelectModule}
         />
       ))}
     </div>
@@ -285,19 +299,29 @@ function ModuleView({
 
 function ElementView({
   el,
+  index,
+  totalElements,
   viewMode,
   theme,
   moduleId,
+  moduleSelected,
   selected,
   onSelect,
+  onSelectModule,
 }: {
   el: EmailElement;
+  index: number;
+  totalElements: number;
   viewMode: "desktop" | "mobile";
   theme: Theme;
   moduleId: string;
+  moduleSelected: boolean;
   selected: boolean;
   onSelect: () => void;
+  onSelectModule: () => void;
 }) {
+  const moveElement = useEmailStore((s) => s.moveElement);
+  const deleteElement = useEmailStore((s) => s.deleteElement);
   const elStyle = (el as { style?: Record<string, unknown> }).style;
   const hideOn = elStyle?.hideOn as "mobile" | "desktop" | undefined;
   if (hideOn === viewMode) return null;
@@ -306,48 +330,79 @@ function ElementView({
     outlineOffset: -2,
     position: "relative",
   };
+  // Two-click drilldown: clicking an element when its module is not selected
+  // selects the MODULE first; a second click then drills into the element.
+  // This makes module selection intuitive (you don't keep landing on a child).
   const handle = (e: React.MouseEvent) => {
     e.stopPropagation();
+    if (!moduleSelected && !selected) {
+      onSelectModule();
+      return;
+    }
     onSelect();
   };
 
+  const toolbar = selected && (
+    <div
+      className="absolute -top-3 right-2 z-20 flex gap-1"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <button
+        onClick={() => onSelectModule()}
+        className="bg-blue-600 text-white p-1 rounded"
+        title="Select parent block"
+      >
+        <MousePointer2 size={12} />
+      </button>
+      <button
+        disabled={index === 0}
+        onClick={() => moveElement(moduleId, el.id, -1)}
+        className="bg-amber-500 text-white p-1 rounded disabled:opacity-40"
+        title="Move up"
+      >
+        <ArrowUp size={12} />
+      </button>
+      <button
+        disabled={index === totalElements - 1}
+        onClick={() => moveElement(moduleId, el.id, 1)}
+        className="bg-amber-500 text-white p-1 rounded disabled:opacity-40"
+        title="Move down"
+      >
+        <ArrowDown size={12} />
+      </button>
+      <button
+        onClick={() => deleteElement(moduleId, el.id)}
+        className="bg-red-600 text-white p-1 rounded"
+        title="Delete element"
+      >
+        <Trash2 size={12} />
+      </button>
+      <span className="bg-amber-500 text-white text-[10px] px-1.5 py-0.5 rounded">
+        {el.type}
+      </span>
+    </div>
+  );
+
+  const wrapWith = (inner: React.ReactNode) => (
+    <div style={wrapStyle} onClick={handle}>
+      {toolbar}
+      {inner}
+    </div>
+  );
+
   switch (el.type) {
     case "text":
-      return (
-        <div style={wrapStyle} onClick={handle}>
-          <TextRender el={el} viewMode={viewMode} theme={theme} moduleId={moduleId} />
-        </div>
-      );
+      return wrapWith(<TextRender el={el} viewMode={viewMode} theme={theme} moduleId={moduleId} />);
     case "image":
-      return (
-        <div style={wrapStyle} onClick={handle}>
-          <ImageRender el={el} viewMode={viewMode} theme={theme} />
-        </div>
-      );
+      return wrapWith(<ImageRender el={el} viewMode={viewMode} theme={theme} />);
     case "button":
-      return (
-        <div style={wrapStyle} onClick={handle}>
-          <ButtonRender el={el} viewMode={viewMode} theme={theme} />
-        </div>
-      );
+      return wrapWith(<ButtonRender el={el} viewMode={viewMode} theme={theme} />);
     case "spacer":
-      return (
-        <div style={wrapStyle} onClick={handle}>
-          <SpacerRender el={el} />
-        </div>
-      );
+      return wrapWith(<SpacerRender el={el} />);
     case "divider":
-      return (
-        <div style={wrapStyle} onClick={handle}>
-          <DividerRender el={el} viewMode={viewMode} theme={theme} />
-        </div>
-      );
+      return wrapWith(<DividerRender el={el} viewMode={viewMode} theme={theme} />);
     case "productGrid":
-      return (
-        <div style={wrapStyle} onClick={handle}>
-          <ProductGridRender el={el} viewMode={viewMode} theme={theme} />
-        </div>
-      );
+      return wrapWith(<ProductGridRender el={el} viewMode={viewMode} theme={theme} />);
   }
 }
 

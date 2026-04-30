@@ -1,12 +1,21 @@
 import { useEmailStore } from "../store/emailStore";
-import { Undo2, Redo2, Save, Download, Upload, Eye, FileCode, Monitor, Smartphone } from "lucide-react";
+import { Undo2, Redo2, Save, Download, Upload, Eye, FileCode, Monitor, Smartphone, LayoutTemplate, RotateCcw } from "lucide-react";
 import { useRef, useState } from "react";
+import { TemplatesModal } from "./TemplatesModal";
 
 export function TopBar() {
-  const { doc, updateMeta, undo, redo, past, future, exportJson, importJson, exportHtml, saveToLocalStorage, viewMode, setViewMode } =
+  const { doc, updateMeta, undo, redo, past, future, exportJson, importJson, exportHtml, saveToLocalStorage, viewMode, setViewMode, resetDocument } =
     useEmailStore();
   const fileRef = useRef<HTMLInputElement>(null);
   const [previewing, setPreviewing] = useState(false);
+  const [templatesOpen, setTemplatesOpen] = useState(false);
+
+  const handleReset = () => {
+    if (doc.modules.length === 0) return;
+    if (window.confirm("Reset the editor? Your current email will be cleared.")) {
+      resetDocument();
+    }
+  };
 
   const downloadFile = (filename: string, content: string, type: string) => {
     const blob = new Blob([content], { type });
@@ -76,6 +85,13 @@ export function TopBar() {
             <Smartphone size={14} /> Mobile
           </button>
         </div>
+        <ToolButton title="Browse templates" onClick={() => setTemplatesOpen(true)}>
+          <LayoutTemplate size={16} /> Templates
+        </ToolButton>
+        <ToolButton title="Reset editor" onClick={handleReset} disabled={doc.modules.length === 0}>
+          <RotateCcw size={16} /> Reset
+        </ToolButton>
+        <Divider />
         <ToolButton title="Undo" onClick={undo} disabled={past.length === 0}>
           <Undo2 size={16} />
         </ToolButton>
@@ -101,6 +117,7 @@ export function TopBar() {
           <FileCode size={16} /> Export HTML
         </ToolButton>
       </div>
+      <TemplatesModal open={templatesOpen} onClose={() => setTemplatesOpen(false)} />
     </div>
   );
 }

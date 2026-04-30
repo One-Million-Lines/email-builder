@@ -78,3 +78,5 @@ export type { Plugin, ModuleDefinition, AIProvider, EmailDocument, Theme };
 export { registerPlugin, renderEmailHtml, documentSchema };
 export { imageUploaderPlugin } from "./plugins/imageUploader";
 export type { ImageUploaderOptions } from "./plugins/imageUploader";
+export { templateRegistry, TEMPLATE_CATEGORY_LABELS } from "./templates";
+export type { TemplateDefinition, TemplateCategory } from "./templates";
