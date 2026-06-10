@@ -39,3 +39,4 @@ __pycache__/
 *.pyc
 
 backend/media/
+prompt.txt
