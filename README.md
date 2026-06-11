@@ -1,31 +1,79 @@
 # OpenPostcards AI Builder
 
-Open-source AI-ready email builder. Drag-and-drop modules, JSON-first document model, table-based HTML export, embeddable in React/Vue/vanilla JS.
+OpenPostcards AI Builder is a visual email builder for composing modular marketing emails from a JSON document model and exporting table-based HTML. It can run as a standalone app or be embedded into other products through a React component or a vanilla JavaScript wrapper.
 
-## Run
+## What it does
+
+It gives users a drag-and-drop editor with reusable modules, themes, HTML export, and plugin hooks for extending the builder.
+
+## Why it exists
+
+Marketing teams often need a reusable editor that produces email-safe HTML without tying the editor to a specific CMS or backend. This project separates the editing experience, the JSON document model, and the final HTML renderer so it can be embedded elsewhere.
+
+## Features
+
+- Visual editor with top bar, left sidebar, canvas, and right sidebar
+- JSON-first email document model
+- Built-in modules, templates, and themes
+- Table-based HTML rendering for email output
+- Local autosave via Zustand store
+- React component API and vanilla JS factory
+- Plugin registration for modules and integrations
+- AI action pipeline that validates structured output with Zod before applying changes
+
+## How it works
+
+1. The app registers default modules and starter templates at load time.
+2. The email document lives in a Zustand store with import, export, and autosave support.
+3. The canvas and sidebars edit that shared document model.
+4. `renderEmailHtml()` converts the JSON document into table-based email HTML.
+5. Embedders can mount the editor with `EmailBuilder` or `createEmailBuilder()` and subscribe to document or HTML changes.
+
+## Tech stack
+
+- React
+- TypeScript
+- Vite
+- Zustand
+- Zod
+- dnd-kit
+
+## Project structure
+
+```text
+src/
+  core/             document types, renderer, validation, AI actions, plugins
+  editor/           top bar, sidebars, canvas
+  modules/          module registry and built-in modules
+  recommendations/  recommendation and fallback logic
+  store/            editor state and persistence
+  templates/        built-in email templates
+  themes/           theme definitions
+  plugins/          extension points, including image uploader helpers
+  index.ts          public API for embedding
+```
+
+## Getting started
 
 ```bash
+git clone <repo-url>
+cd email-builder
 npm install
-npm run dev      # http://localhost:5316
-npm run build
+npm run dev
 ```
 
-## Architecture
+Open `http://localhost:5315`.
 
-```
-src/
-  core/         # types, theme, renderer, validation, AI actions, plugins
-  modules/      # module registry + default module pack
-  themes/       # default theme pack
-  store/        # zustand store with undo/redo, import/export
-  editor/       # TopBar, LeftSidebar, Canvas, RightSidebar
-  App.tsx       # composes the editor
-  index.ts      # public API: <EmailBuilder/> + createEmailBuilder()
-```
+## Configuration
 
-## Embedding
+This project does not require environment variables for local development.
 
-### React
+The production build uses `/demo/email-builder/` as the Vite base path.
+
+## Usage
+
+React:
+
 ```tsx
 import { EmailBuilder } from "openpostcards-builder";
 
@@ -33,72 +81,52 @@ import { EmailBuilder } from "openpostcards-builder";
   initialDocument={emailJson}
   onChange={(doc) => console.log(doc)}
   onExportHtml={(html) => console.log(html)}
-/>
+/>;
 ```
 
-### Vanilla JS
-```js
+Vanilla JS:
+
+```ts
 import { createEmailBuilder } from "openpostcards-builder";
 
 createEmailBuilder({
-  container: document.getElementById("builder"),
+  container: document.getElementById("builder")!,
   initialDocument,
-  onChange(doc) {}
-});
-```
-
-## AI
-
-The AI never edits HTML. It returns either a full validated `EmailDocument` or an array of typed actions (`update_meta`, `apply_theme`, `insert_module`, `update_element`, ...). All AI output is validated via Zod before being applied.
-
-```ts
-import { documentSchema, applyAIActions, mockAIProvider } from "openpostcards-builder";
-```
-
-## Plugins
-
-```ts
-registerPlugin({
-  name: "ecommerce-modules",
-  type: "modules",
-  setup(builder) {
-    builder.registerModule(productGridModule);
+  onChange(doc) {
+    console.log(doc);
   },
 });
 ```
 
+## Development
 
+```bash
+npm run dev
+npm run build
+npm run lint
+npm run preview
+```
 
-Suggested next plugins
-Quick wins (asset / API style — same shape as this one):
+There is currently no automated test suite in the repository.
 
-S3 / R2 / GCS direct-upload — pre-signed URL flow (browser → cloud, server only signs); cheaper at scale and removes file proxying.
-Unsplash / Pexels picker — searchable stock-photo modal that returns a URL + alt + attribution string.
-Image library / DAM browser — list previously uploaded assets so users don't re-upload.
-Image transformer — auto-resize/optimize on upload (max width 1200, convert HEIC→JPG, strip EXIF).
-Content / AI:
+## Roadmap
 
-AI copywriter (ai-provider) — wraps OpenAI / Anthropic / local LLM for "Rewrite", "Shorter", "More casual" actions on text blocks.
-AI image generator — DALL·E / SDXL endpoint that fills an image field from a prompt.
-Translation plugin — bulk-translate the document to N languages, producing one variant per locale.
-Brand voice / linter — flags off-brand words, banned phrases, reading-level warnings in the right sidebar.
-Data & personalization:
+- Add persistence adapters beyond local storage
+- Add more production-ready media upload integrations
+- Add automated tests for document validation and HTML export
+- Add richer framework wrappers and packaging docs
 
-Merge tag plugin — {{first_name}} etc. with autocomplete from a configured schema, plus a preview-with-sample-data toggle.
-Product feed plugin — fetches Shopify / WooCommerce / CSV feed and lets the user drop products into a productGrid from a picker.
-Countdown timer module — image generated from a timer-image service URL (?ends=...) for flash sales.
-Delivery / workflow:
+## Contributing
 
-ESP send/test plugin — "Send test to me" button that pushes the rendered HTML to Mailgun / SES / Postmark / Resend.
-Inbox preview plugin — Litmus / Email on Acid screenshot integration.
-Spam-score linter — runs the HTML through SpamAssassin / Mail-Tester and reports.
-Git / version-control plugin — commit document JSON to a repo on save; PR review for marketing changes.
-Multi-version A/B plugin — duplicate the doc into A/B variants with a single subject-line diff editor.
-Theme / styling:
+This project is public and open for collaboration. If you’re interested in contributing, improving the project, or discussing ideas, feel free to reach out.
 
-Brand kit importer — reads a brand.json (or fetches from your design-system endpoint) and registers it as a Theme.
-Dark-mode preview plugin — toggle in the canvas that simulates iOS Mail dark inversion to catch logo issues.
-Persistence:
+LinkedIn: https://linkedin.com/in/alexrada
 
-Document storage plugin — replace localStorage with a REST/Supabase backend; auto-save with conflict detection.
-Webhook on save / send — fire a configurable webhook with the document JSON or rendered HTML for downstream automation (Zapier, n8n, internal CRMs).
+1. Fork the repository
+2. Create a new branch
+3. Make your changes
+4. Open a pull request
+
+## License
+
+This project is licensed under the MIT License. See [LICENSE](./LICENSE).
