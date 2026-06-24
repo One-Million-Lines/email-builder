@@ -1,21 +1,74 @@
 {
   "name": "openpostcards-builder",
-  "private": true,
   "version": "0.1.0",
+  "description": "Embeddable visual email builder (React + vanilla JS) that composes modular marketing emails from a JSON model and exports table-based HTML.",
   "type": "module",
+  "license": "MIT",
+  "author": "Alex Rada (https://linkedin.com/in/alexrada)",
+  "homepage": "https://github.com/one-million-lines/email-builder#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/one-million-lines/email-builder.git"
+  },
+  "bugs": {
+    "url": "https://github.com/one-million-lines/email-builder/issues"
+  },
+  "keywords": [
+    "email-builder",
+    "email-editor",
+    "email-template",
+    "drag-and-drop",
+    "react",
+    "html-email",
+    "newsletter",
+    "marketing",
+    "no-code",
+    "visual-editor"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "sideEffects": [
+    "**/*.css",
+    "**/templates/**"
+  ],
+  "main": "./dist/email-builder.cjs",
+  "module": "./dist/email-builder.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/email-builder.js",
+      "require": "./dist/email-builder.cjs"
+    },
+    "./styles.css": "./dist/styles.css",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "vite build --config vite.lib.config.ts",
+    "build:demo": "tsc -b && vite build",
     "preview": "vite preview",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "test": "node --test test/*.test.mjs",
+    "prepublishOnly": "npm run build",
+    "validate:pack": "npm run build && npm pack --dry-run"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0 || ^19.0.0",
+    "react-dom": "^18.0.0 || ^19.0.0"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.1.0",
     "@dnd-kit/sortable": "^8.0.0",
     "@dnd-kit/utilities": "^3.2.2",
     "lucide-react": "^0.460.0",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
     "zod": "^3.23.8",
     "zustand": "^5.0.2"
   },
@@ -24,8 +77,12 @@
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "@vitejs/plugin-react-swc": "^3.5.0",
+    "jsdom": "^25.0.1",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
     "tailwindcss": "^4.1.0",
     "typescript": "^5.5.3",
-    "vite": "^5.4.10"
+    "vite": "^5.4.10",
+    "vite-plugin-dts": "^4.0.0"
   }
 }

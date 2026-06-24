@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Email Builder — plain JavaScript</title>
+    <!-- With a bundler: import "openpostcards-builder/styles.css"; -->
+    <link
+      rel="stylesheet"
+      href="../../node_modules/openpostcards-builder/dist/styles.css"
+    />
+    <style>
+      html, body { margin: 0; height: 100%; }
+      #builder { height: 100vh; }
+    </style>
+  </head>
+  <body>
+    <div id="builder"></div>
+
+    <!--
+      The package lists react and react-dom as PEER dependencies. In a no-build
+      setup, provide them via an import map (or use a bundler in real projects).
+    -->
+    <script type="importmap">
+      {
+        "imports": {
+          "react": "https://esm.sh/react@19",
+          "react-dom": "https://esm.sh/react-dom@19",
+          "react-dom/client": "https://esm.sh/react-dom@19/client",
+          "react/jsx-runtime": "https://esm.sh/react@19/jsx-runtime"
+        }
+      }
+    </script>
+
+    <script type="module">
+      // With a bundler:
+      //   import { createEmailBuilder } from "openpostcards-builder";
+      import { createEmailBuilder } from "../../dist/email-builder.js";
+
+      const instance = createEmailBuilder({
+        container: document.getElementById("builder"),
+        onChange(doc) {
+          console.log("changed", doc);
+        },
+      });
+
+      // instance.exportHtml(); instance.getDocument(); instance.destroy();
+      window.__emailBuilder = instance;
+    </script>
+  </body>
+</html>

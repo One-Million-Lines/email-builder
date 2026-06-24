@@ -2,6 +2,7 @@
 // Note: Vue wrapper is left as a stub (drop-in via createEmailBuilder + a Vue component).
 import { createRoot, type Root } from "react-dom/client";
 import { createElement, useEffect } from "react";
+import "./lib.css";
 import type { EmailDocument, Theme } from "./core/types";
 import { documentSchema } from "./core/validation";
 import { renderEmailHtml } from "./core/renderer";

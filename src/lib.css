@@ -1,0 +1,17 @@
+/* Library stylesheet for embedding the email builder in other apps.
+ *
+ * Unlike the standalone app stylesheet (src/index.css), this intentionally
+ * omits app-only globals such as `html, body, #root { height: 100% }` so the
+ * package does not hijack the host page layout.
+ *
+ * NOTE: `@import "tailwindcss"` includes Tailwind Preflight, which applies a
+ * global CSS reset. See README "Styling & isolation" for the trade-offs and
+ * recommended scoping when embedding into an existing design system.
+ */
+@import "tailwindcss";
+
+[contenteditable="true"]:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+  border-radius: 2px;
+}

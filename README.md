@@ -53,6 +53,19 @@ src/
   index.ts          public API for embedding
 ```
 
+## Install
+
+```bash
+npm install openpostcards-builder react react-dom
+```
+
+`react` and `react-dom` (v18 or v19) are **peer dependencies** — install them in
+your app; they are never bundled into the package.
+
+> **MANUAL ACTION REQUIRED:** `openpostcards-builder` is a placeholder package
+> name. Check availability and choose/reserve your own npm name before publishing,
+> then update `package.json` `name`, `repository`, `homepage`, and `bugs`.
+
 ## Getting started
 
 ```bash
@@ -76,6 +89,7 @@ React:
 
 ```tsx
 import { EmailBuilder } from "openpostcards-builder";
+import "openpostcards-builder/styles.css";
 
 <EmailBuilder
   initialDocument={emailJson}
@@ -88,26 +102,91 @@ Vanilla JS:
 
 ```ts
 import { createEmailBuilder } from "openpostcards-builder";
+import "openpostcards-builder/styles.css";
 
-createEmailBuilder({
+const instance = createEmailBuilder({
   container: document.getElementById("builder")!,
   initialDocument,
   onChange(doc) {
     console.log(doc);
   },
 });
+
+// instance.getDocument(); instance.exportHtml(); instance.exportJson(); instance.destroy();
+```
+
+Always import the stylesheet once per app: `import "openpostcards-builder/styles.css";`
+
+### Framework integration
+
+Thin wrappers for each framework live in [`examples/`](./examples):
+
+- **React** — `examples/react/App.jsx`
+- **Vue 3** — `examples/vue/EmailBuilder.vue`
+- **Angular** — `examples/angular/email-builder.component.ts`
+- **Plain JS** — `examples/plain/index.html`
+
+Vue and Angular mount the React-based editor through the framework-neutral
+`createEmailBuilder()` factory (`getDocument` / `exportHtml` / `exportJson` /
+`destroy`). React and ReactDOM remain peer dependencies in all cases.
+
+### Styling & isolation
+
+The stylesheet at `openpostcards-builder/styles.css` includes Tailwind
+**Preflight**, a global CSS reset that normalizes `margin`, `box-sizing`,
+headings, lists, etc. When embedding into an existing design system this can
+affect host styles. Mitigations:
+
+- Load the editor in a dedicated route/page where the reset is acceptable, or
+- Scope/encapsulate it (e.g., render inside an iframe or a Shadow DOM host), or
+- Build your own Tailwind stylesheet without Preflight if your app already
+  provides resets.
+
+The editor root uses `h-screen w-screen`; place it in a full-size container.
+
+### Server-side rendering
+
+The package does not access `window`/`document` at import time, so it is safe to
+import in SSR frameworks. The editor itself is client-only — render it in an
+effect, or dynamically import it with SSR disabled in Next.js:
+
+```tsx
+import dynamic from "next/dynamic";
+
+const EmailBuilder = dynamic(
+  () => import("openpostcards-builder").then((m) => m.EmailBuilder),
+  { ssr: false }
+);
 ```
 
 ## Development
 
 ```bash
-npm run dev
-npm run build
-npm run lint
-npm run preview
+npm run dev           # standalone app
+npm run build         # build the library into dist/ (ESM + CJS + CSS + d.ts)
+npm test              # package-consumption tests (jsdom + React)
+npm run lint          # eslint
+npm run validate:pack # build + npm pack --dry-run
+npm run build:demo    # build the standalone demo app
 ```
 
-There is currently no automated test suite in the repository.
+## Building & publishing
+
+```bash
+npm run build              # produces dist/
+npm pack --dry-run         # inspect the tarball contents
+npm pack                   # create the .tgz to test in a consumer app
+```
+
+To publish (run manually):
+
+```bash
+# MANUAL ACTION REQUIRED — choose a real package name first, then:
+npm login
+npm publish --access public
+```
+
+`prepublishOnly` rebuilds the library automatically before publish.
 
 ## Roadmap
 
