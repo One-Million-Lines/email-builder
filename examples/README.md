@@ -8,11 +8,11 @@ These examples consume the **built, published** package — the realistic npm pa
 # In the email-builder repo
 npm install
 npm run build
-npm pack            # -> openpostcards-builder-0.1.0.tgz
+npm pack            # -> @one-million-lines/email-builder-0.1.0.tgz
 
 # In your example/consumer app
 npm install react react-dom
-npm install /absolute/path/to/openpostcards-builder-0.1.0.tgz
+npm install /absolute/path/to/@one-million-lines/email-builder-0.1.0.tgz
 ```
 
 > `react` and `react-dom` are **peer dependencies** — install them in the
@@ -32,7 +32,7 @@ npm install /absolute/path/to/openpostcards-builder-0.1.0.tgz
 Load the stylesheet once per app:
 
 ```js
-import "openpostcards-builder/styles.css";
+import "@one-million-lines/email-builder/styles.css";
 ```
 
 See the main README "Styling & isolation" for notes on Tailwind Preflight when
@@ -46,7 +46,7 @@ The editor is client-only. Import it dynamically with SSR disabled:
 import dynamic from "next/dynamic";
 
 const EmailBuilder = dynamic(
-  () => import("openpostcards-builder").then((m) => m.EmailBuilder),
+  () => import("@one-million-lines/email-builder").then((m) => m.EmailBuilder),
   { ssr: false }
 );
 ```

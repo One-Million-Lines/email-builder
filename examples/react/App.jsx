@@ -1,8 +1,8 @@
-// React usage of openpostcards-builder.
+// React usage of @one-million-lines/email-builder.
 // React/ReactDOM are PEER dependencies — provided by your app.
 import { useState } from "react";
-import { EmailBuilder } from "openpostcards-builder";
-import "openpostcards-builder/styles.css";
+import { EmailBuilder } from "@one-million-lines/email-builder";
+import "@one-million-lines/email-builder/styles.css";
 
 export default function App() {
   const [doc, setDoc] = useState(null);

@@ -56,15 +56,16 @@ src/
 ## Install
 
 ```bash
-npm install openpostcards-builder react react-dom
+npm install @one-million-lines/email-builder react react-dom
 ```
 
 `react` and `react-dom` (v18 or v19) are **peer dependencies** — install them in
 your app; they are never bundled into the package.
 
-> **MANUAL ACTION REQUIRED:** `openpostcards-builder` is a placeholder package
-> name. Check availability and choose/reserve your own npm name before publishing,
-> then update `package.json` `name`, `repository`, `homepage`, and `bugs`.
+> **MANUAL ACTION REQUIRED:** This package is configured to publish under the
+> `@one-million-lines` npm scope. Before publishing, confirm you own/have publish
+> access to that npm organization and that `@one-million-lines/email-builder` is
+> available (or already yours). `publishConfig.access` is set to `public`.
 
 ## Getting started
 
@@ -88,8 +89,8 @@ The production build uses `/demo/email-builder/` as the Vite base path.
 React:
 
 ```tsx
-import { EmailBuilder } from "openpostcards-builder";
-import "openpostcards-builder/styles.css";
+import { EmailBuilder } from "@one-million-lines/email-builder";
+import "@one-million-lines/email-builder/styles.css";
 
 <EmailBuilder
   initialDocument={emailJson}
@@ -101,8 +102,8 @@ import "openpostcards-builder/styles.css";
 Vanilla JS:
 
 ```ts
-import { createEmailBuilder } from "openpostcards-builder";
-import "openpostcards-builder/styles.css";
+import { createEmailBuilder } from "@one-million-lines/email-builder";
+import "@one-million-lines/email-builder/styles.css";
 
 const instance = createEmailBuilder({
   container: document.getElementById("builder")!,
@@ -115,7 +116,7 @@ const instance = createEmailBuilder({
 // instance.getDocument(); instance.exportHtml(); instance.exportJson(); instance.destroy();
 ```
 
-Always import the stylesheet once per app: `import "openpostcards-builder/styles.css";`
+Always import the stylesheet once per app: `import "@one-million-lines/email-builder/styles.css";`
 
 ### Framework integration
 
@@ -132,7 +133,7 @@ Vue and Angular mount the React-based editor through the framework-neutral
 
 ### Styling & isolation
 
-The stylesheet at `openpostcards-builder/styles.css` includes Tailwind
+The stylesheet at `@one-million-lines/email-builder/styles.css` includes Tailwind
 **Preflight**, a global CSS reset that normalizes `margin`, `box-sizing`,
 headings, lists, etc. When embedding into an existing design system this can
 affect host styles. Mitigations:
@@ -154,7 +155,7 @@ effect, or dynamically import it with SSR disabled in Next.js:
 import dynamic from "next/dynamic";
 
 const EmailBuilder = dynamic(
-  () => import("openpostcards-builder").then((m) => m.EmailBuilder),
+  () => import("@one-million-lines/email-builder").then((m) => m.EmailBuilder),
   { ssr: false }
 );
 ```
@@ -181,7 +182,7 @@ npm pack                   # create the .tgz to test in a consumer app
 To publish (run manually):
 
 ```bash
-# MANUAL ACTION REQUIRED — choose a real package name first, then:
+# MANUAL ACTION REQUIRED — log in to an account with publish access to the @one-million-lines scope, then:
 npm login
 npm publish --access public
 ```

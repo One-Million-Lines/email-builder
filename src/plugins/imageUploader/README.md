@@ -11,7 +11,7 @@ This document also serves as the canonical guide for **building plugins** for th
 The builder exposes one entry point:
 
 ```ts
-import { registerPlugin, type Plugin } from "openpostcards-builder";
+import { registerPlugin, type Plugin } from "@one-million-lines/email-builder";
 ```
 
 A plugin is a plain object:
@@ -42,8 +42,8 @@ Plugins are pure: call `setup()` once, register what you need, and return. They 
 ## 2. Image Uploader — usage
 
 ```ts
-import { registerPlugin } from "openpostcards-builder";
-import { imageUploaderPlugin } from "openpostcards-builder/plugins/imageUploader";
+import { registerPlugin } from "@one-million-lines/email-builder";
+import { imageUploaderPlugin } from "@one-million-lines/email-builder";
 
 registerPlugin(
   imageUploaderPlugin({

@@ -1,5 +1,5 @@
 <!--
-  Vue 3 wrapper for openpostcards-builder.
+  Vue 3 wrapper for @one-million-lines/email-builder.
   The editor is React-based; we mount it through the framework-neutral
   createEmailBuilder() factory inside a Vue component.
 -->
@@ -9,8 +9,8 @@
 
 <script setup>
 import { onMounted, onBeforeUnmount, ref } from "vue";
-import { createEmailBuilder } from "openpostcards-builder";
-import "openpostcards-builder/styles.css";
+import { createEmailBuilder } from "@one-million-lines/email-builder";
+import "@one-million-lines/email-builder/styles.css";
 
 const props = defineProps({
   initialDocument: { type: Object, default: undefined },
@@ -40,5 +40,5 @@ defineExpose({
 
 <!--
   NOTE: react and react-dom are peer dependencies. In a Vue app you must still
-  install them:  npm install react react-dom openpostcards-builder
+  install them:  npm install react react-dom @one-million-lines/email-builder
 -->

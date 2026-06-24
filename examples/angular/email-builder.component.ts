@@ -1,11 +1,11 @@
-// Angular wrapper for openpostcards-builder.
+// Angular wrapper for @one-million-lines/email-builder.
 // The editor is React-based; we mount it via the framework-neutral factory.
 //
 // Add the stylesheet to angular.json "styles":
-//   "node_modules/openpostcards-builder/dist/styles.css"
+//   "node_modules/@one-million-lines/email-builder/dist/styles.css"
 //
 // react and react-dom are peer dependencies — install them in your Angular app:
-//   npm install react react-dom openpostcards-builder
+//   npm install react react-dom @one-million-lines/email-builder
 import {
   Component,
   ElementRef,
@@ -16,7 +16,7 @@ import {
   Output,
   ViewChild,
 } from "@angular/core";
-import { createEmailBuilder } from "openpostcards-builder";
+import { createEmailBuilder } from "@one-million-lines/email-builder";
 
 @Component({
   selector: "email-builder",

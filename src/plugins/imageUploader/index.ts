@@ -103,8 +103,8 @@ export function createImageUploaderProvider(opts: ImageUploaderOptions): AssetPr
  * Plugin factory. Pass to `registerPlugin()` exported by the builder.
  *
  * @example
- *   import { registerPlugin } from "openpostcards-builder";
- *   import { imageUploaderPlugin } from "openpostcards-builder/plugins/imageUploader";
+ *   import { registerPlugin } from "@one-million-lines/email-builder";
+ *   import { imageUploaderPlugin } from "@one-million-lines/email-builder";
  *   registerPlugin(imageUploaderPlugin({ endpoint: "/api/upload" }));
  */
 export function imageUploaderPlugin(opts: ImageUploaderOptions): Plugin {

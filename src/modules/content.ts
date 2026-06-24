@@ -396,7 +396,7 @@ export const contentModules: ModuleDefinition[] = [
         "content.code_block",
         "Code",
         [
-          text("npm install openpostcards-builder", {
+          text("npm install @one-million-lines/email-builder", {
             fontFamily: "Menlo, Consolas, monospace",
             fontSize: 13,
             color: "{colors.text}",

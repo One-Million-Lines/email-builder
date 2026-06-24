@@ -9,7 +9,7 @@ This project adheres to [Semantic Versioning](https://semver.org/) and the
 ### Added
 - npm library build (`dist/email-builder.js` ESM, `dist/email-builder.cjs` CommonJS).
 - Generated TypeScript declarations (`dist/index.d.ts` + per-module `.d.ts`).
-- Compiled stylesheet at `dist/styles.css`, imported via `openpostcards-builder/styles.css`.
+- Compiled stylesheet at `dist/styles.css`, imported via `@one-million-lines/email-builder/styles.css`.
 - `exports` map, `files` allowlist, and publishing metadata in `package.json`.
 - Library-only stylesheet (`src/lib.css`) that omits app `html/body/#root` globals.
 
