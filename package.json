@@ -1,6 +1,6 @@
 {
-  "name": "openpostcards-builder",
-  "version": "0.1.0",
+  "name": "@one-million-lines/email-builder",
+  "version": "0.1.1",
   "description": "Embeddable visual email builder (React + vanilla JS) that composes modular marketing emails from a JSON model and exports table-based HTML.",
   "type": "module",
   "license": "MIT",
@@ -12,6 +12,9 @@
   },
   "bugs": {
     "url": "https://github.com/one-million-lines/email-builder/issues"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "keywords": [
     "email-builder",
