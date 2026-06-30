@@ -1,0 +1,208 @@
+<!doctype html>
+<!--
+  CSS Isolation Demo — @one-million-lines/email-builder
+  =====================================================
+  This page simulates a host application with intentionally conflicting styles.
+  The email builder should render correctly and not affect host styles outside
+  its container.
+-->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CSS Isolation Demo — Email Builder</title>
+
+    <!-- ── HOST APP STYLES (conflicting) ────────────────────────────────── -->
+    <style>
+      /* Intentionally aggressive host reset */
+      *, *::before, *::after { box-sizing: content-box; }
+      html, body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: 16px;
+        color: #1a0030;
+        background: #f0e8ff;
+      }
+
+      /* Host custom properties that must NOT bleed into the builder */
+      :root {
+        --color-blue-600: limegreen;   /* intentional override to detect leaks */
+        --primary: purple;
+        --radius: 0px;
+        --bg: #f0e8ff;
+        --text: #1a0030;
+      }
+
+      /* Host utility classes matching common Tailwind names */
+      .flex     { display: inline !important; }
+      .hidden   { visibility: visible !important; }
+      .rounded  { border-radius: 0 !important; }
+      .shadow   { box-shadow: none !important; }
+      .border   { border: 3px solid purple !important; }
+      .p-4      { padding: 0 !important; }
+      .text-sm  { font-size: 20px !important; }
+      .bg-white { background: #f0e8ff !important; }
+      .bg-gray-100 { background: lavender !important; }
+      .overflow-hidden { overflow: visible !important; }
+
+      /* Host heading / form styles */
+      h1, h2, h3, h4 { font-family: "Comic Sans MS", cursive; color: purple; }
+      button {
+        font-family: "Comic Sans MS", cursive;
+        background: purple;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        cursor: pointer;
+        border-radius: 0;
+      }
+      input, select, textarea {
+        font-family: Georgia, serif;
+        border: 3px solid purple;
+        border-radius: 0;
+        background: #e8d8ff;
+      }
+      a { color: purple; text-decoration: underline wavy; }
+      img, video { display: inline !important; }
+
+      /* ── HOST LAYOUT ─────────────────────────────────────────────────── */
+      .host-app {
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        overflow: hidden;
+      }
+      .host-header {
+        background: #2d0060;
+        color: white;
+        padding: 10px 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-shrink: 0;
+      }
+      .host-header h1 {
+        font-family: sans-serif;
+        font-size: 13px;
+        font-weight: 600;
+        color: white;
+        margin: 0;
+      }
+      .host-badge {
+        font-family: monospace;
+        font-size: 11px;
+        background: #9333ea;
+        color: white;
+        padding: 2px 8px;
+        border-radius: 10px;
+      }
+      .host-body {
+        display: grid;
+        grid-template-columns: 220px 1fr;
+        flex: 1;
+        overflow: hidden;
+      }
+      .host-sidebar {
+        background: #ede9fe;
+        border-right: 3px solid purple;
+        padding: 14px;
+        overflow-y: auto;
+      }
+      .host-sidebar h2 { font-size: 12px; margin: 0 0 10px; }
+      .host-sidebar p  { font-size: 11px; color: #4c1d95; line-height: 1.4; margin-bottom: 8px; }
+      .host-main {
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+      .host-main-header {
+        background: white;
+        border-bottom: 3px solid purple;
+        padding: 6px 14px;
+        font-size: 11px;
+        color: #4c1d95;
+        flex-shrink: 0;
+      }
+      /* Email builder container */
+      #email-builder {
+        flex: 1;
+        overflow: hidden;
+        /* isolation: isolate; — uncomment if host z-index conflicts arise */
+      }
+    </style>
+
+    <!-- ── EMAIL BUILDER STYLESHEET ─────────────────────────────────────── -->
+    <!--
+      In a real bundled app: import "@one-million-lines/email-builder/styles.css";
+      For the plain JS demo without a bundler, load the compiled dist:
+    -->
+    <link rel="stylesheet" href="../../dist/styles.css" />
+  </head>
+  <body>
+    <div class="host-app">
+      <header class="host-header">
+        <h1>🏠 Fake Host App <span class="host-badge">shadcn/ui + Custom CSS + Tailwind overrides</span></h1>
+        <span style="font-family:monospace;font-size:11px;color:#c4b5fd;">
+          --color-blue-600 overridden to limegreen — builder buttons must still be blue
+        </span>
+      </header>
+
+      <div class="host-body">
+        <aside class="host-sidebar">
+          <h2>Host Sidebar</h2>
+          <p>This sidebar uses <strong>"Comic Sans"</strong> fonts, purple borders, and overrides common Tailwind class names like <code>.flex</code>, <code>.rounded</code>, <code>.bg-white</code>.</p>
+          <p>The email builder must be unaffected by all of these.</p>
+          <hr style="border-color:purple;margin:10px 0;" />
+          <p><strong>Verify:</strong></p>
+          <ul style="font-size:10px;color:#4c1d95;padding-left:14px;">
+            <li>Builder uses sans-serif, not Comic Sans</li>
+            <li>Builder's blue buttons must be blue, not green (even though <code>--color-blue-600</code> is overridden to limegreen on host <code>:root</code>)</li>
+            <li>Builder layout is not broken by <code>.flex { display: inline !important }</code></li>
+            <li>Builder inputs are styled normally</li>
+            <li>Templates modal is visible and unaffected</li>
+          </ul>
+          <hr style="border-color:purple;margin:10px 0;" />
+          <h2>Host form</h2>
+          <input type="text" placeholder="Host input (purple)" style="width:100%;margin-bottom:6px;" />
+          <select style="width:100%;margin-bottom:6px;"><option>Host select</option></select>
+          <button style="width:100%;text-align:center;">Host button (purple)</button>
+        </aside>
+
+        <div class="host-main">
+          <div class="host-main-header">
+            ⬇ Email Builder embedded below — styles must be isolated to <code>.oml-email-builder</code>
+          </div>
+
+          <!-- THE EMBEDDED BUILDER -->
+          <div id="email-builder"></div>
+        </div>
+      </div>
+    </div>
+
+    <script type="importmap">
+      {
+        "imports": {
+          "react": "https://esm.sh/react@19",
+          "react-dom": "https://esm.sh/react-dom@19",
+          "react-dom/client": "https://esm.sh/react-dom@19/client",
+          "react/jsx-runtime": "https://esm.sh/react@19/jsx-runtime"
+        }
+      }
+    </script>
+
+    <script type="module">
+      import { createEmailBuilder } from "../../dist/email-builder.js";
+
+      const instance = createEmailBuilder({
+        container: document.getElementById("email-builder"),
+        onChange(doc) {
+          console.log("email doc changed", doc.modules.length, "modules");
+        },
+      });
+
+      window.__emailBuilder = instance;
+    </script>
+  </body>
+</html>

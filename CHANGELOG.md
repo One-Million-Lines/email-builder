@@ -6,12 +6,30 @@ This project adheres to [Semantic Versioning](https://semver.org/) and the
 
 ## [Unreleased]
 
+## [0.1.2] — 2026-06-30
+
 ### Added
 - npm library build (`dist/email-builder.js` ESM, `dist/email-builder.cjs` CommonJS).
 - Generated TypeScript declarations (`dist/index.d.ts` + per-module `.d.ts`).
 - Compiled stylesheet at `dist/styles.css`, imported via `@one-million-lines/email-builder/styles.css`.
 - `exports` map, `files` allowlist, and publishing metadata in `package.json`.
 - Library-only stylesheet (`src/lib.css`) that omits app `html/body/#root` globals.
+
+### Fixed
+- **CSS isolation** — `src/lib.css` no longer imports Tailwind Preflight
+  (`@import "tailwindcss"` → `@import "tailwindcss/theme"` + `@import
+  "tailwindcss/utilities"`). The global CSS reset no longer leaks into the host
+  application.
+- Added `.oml-email-builder` as the root class on the `<App>` element. All
+  builder styles are now nested under this class in the DOM.
+- Scoped minimal reset (`box-sizing`, `button`, `input`, `img` defaults) applied
+  only inside `.oml-email-builder` via `@layer base`, replacing the Preflight
+  rules that were previously global.
+- `[contenteditable="true"]:focus` selector is now scoped to
+  `.oml-email-builder` and no longer affects host page content.
+- Replaced `h-screen w-screen` on the builder root with `h-full w-full` so the
+  builder fills its container rather than always taking up the full viewport. The
+  host is responsible for sizing the container (e.g., `height: 100vh`).
 
 ### Changed
 - `react` and `react-dom` are now **peer dependencies** (no longer bundled).

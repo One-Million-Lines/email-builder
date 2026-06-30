@@ -1,17 +1,73 @@
-/* Library stylesheet for embedding the email builder in other apps.
+/* Library stylesheet — loaded by consumers via:
+ *   import "@one-million-lines/email-builder/styles.css";
  *
- * Unlike the standalone app stylesheet (src/index.css), this intentionally
- * omits app-only globals such as `html, body, #root { height: 100% }` so the
- * package does not hijack the host page layout.
+ * We import Tailwind theme variables and utilities but intentionally OMIT
+ * Preflight so this package does NOT apply a global CSS reset to the host
+ * application. A minimal scoped reset is applied only inside
+ * .oml-email-builder (the root element added by App.tsx).
  *
- * NOTE: `@import "tailwindcss"` includes Tailwind Preflight, which applies a
- * global CSS reset. See README "Styling & isolation" for the trade-offs and
- * recommended scoping when embedding into an existing design system.
+ * Unlike the standalone app stylesheet (src/index.css), this also omits the
+ * app-only globals `html, body, #root { height: 100% }`.
  */
-@import "tailwindcss";
+@import "tailwindcss/theme";
+@import "tailwindcss/utilities";
 
-[contenteditable="true"]:focus {
-  outline: 2px solid #3b82f6;
-  outline-offset: 2px;
-  border-radius: 2px;
+/* ── Scoped reset ─────────────────────────────────────────────────────────── */
+/* Replaces the Tailwind Preflight rules, applied only inside the builder.     */
+@layer base {
+  .oml-email-builder *,
+  .oml-email-builder ::before,
+  .oml-email-builder ::after {
+    box-sizing: border-box;
+    border-width: 0;
+    border-style: solid;
+    border-color: currentColor;
+  }
+
+  .oml-email-builder button,
+  .oml-email-builder input,
+  .oml-email-builder select,
+  .oml-email-builder textarea {
+    font-family: inherit;
+    font-feature-settings: inherit;
+    font-variation-settings: inherit;
+    font-size: 100%;
+    font-weight: inherit;
+    line-height: inherit;
+    letter-spacing: inherit;
+    color: inherit;
+    margin: 0;
+    padding: 0;
+  }
+
+  .oml-email-builder button,
+  .oml-email-builder [role="button"] {
+    cursor: pointer;
+    background-color: transparent;
+    background-image: none;
+  }
+
+  .oml-email-builder button:disabled {
+    cursor: default;
+  }
+
+  .oml-email-builder img,
+  .oml-email-builder svg,
+  .oml-email-builder video {
+    display: block;
+    vertical-align: middle;
+  }
+
+  .oml-email-builder img,
+  .oml-email-builder video {
+    max-width: 100%;
+    height: auto;
+  }
+
+  /* Contenteditable focus — scoped so it never bleeds into the host page */
+  .oml-email-builder [contenteditable="true"]:focus {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
 }
