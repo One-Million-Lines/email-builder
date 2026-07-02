@@ -6,6 +6,28 @@ This project adheres to [Semantic Versioning](https://semver.org/) and the
 
 ## [Unreleased]
 
+## [0.1.4] — 2026-07-02
+
+### Changed
+- **Dependencies upgraded to latest releases** (no public API changes):
+  - `@dnd-kit/core` `^6.1.0` → `^6.3.1`
+  - `@dnd-kit/sortable` `^8.0.0` → `^10.0.0`
+  - `lucide-react` `^0.460.0` → `^1.23.0`
+  - `zod` `^3.23.8` → `^4.4.3` (v4 is API-compatible for the schemas used here)
+  - `zustand` `^5.0.2` → `^5.0.14`
+- **Dev dependencies upgraded to latest releases**:
+  - `react` / `react-dom` (dev) `^19.0.0` → `^19.2.7`
+  - `@types/react` `^19.0.0` → `^19.2.17`
+  - `@types/react-dom` `^19.0.0` → `^19.2.3`
+  - `@tailwindcss/vite` `^4.1.0` → `^4.3.2`
+  - `tailwindcss` `^4.1.0` → `^4.3.2`
+  - `@vitejs/plugin-react-swc` `^3.5.0` → `^4.3.1`
+  - `typescript` `^5.5.3` → `^6.0.3`
+  - `vite-plugin-dts` `^4.0.0` → `^5.0.3`
+  - `jsdom` `^25.0.1` → `^29.1.1`
+  - `eslint` `^9.x` → `^10.6.0`
+- `engines.node` bumped to `>=22` in line with supported LTS range.
+
 ## [0.1.2] — 2026-06-30
 
 ### Added

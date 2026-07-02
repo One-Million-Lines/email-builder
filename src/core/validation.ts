@@ -1,7 +1,7 @@
 import { z } from "zod";
 
-const styleValue = z.union([z.string(), z.number(), z.boolean(), z.record(z.any())]);
-const styleSchema = z.record(styleValue).optional();
+const styleValue = z.union([z.string(), z.number(), z.boolean(), z.record(z.string(), z.any())]);
+const styleSchema = z.record(z.string(), styleValue).optional();
 
 const elementSchema = z.discriminatedUnion("type", [
   z.object({
@@ -67,17 +67,17 @@ export const moduleSchema = z.object({
   name: z.string(),
   style: styleSchema,
   children: z.array(elementSchema),
-  data: z.record(z.any()).optional(),
+  data: z.record(z.string(), z.any()).optional(),
 });
 
 export const themeSchema = z.object({
   id: z.string(),
   name: z.string(),
   tokens: z.object({
-    colors: z.record(z.string()),
-    fonts: z.record(z.string()),
-    spacing: z.record(z.number()),
-    radius: z.record(z.number()),
+    colors: z.record(z.string(), z.string()),
+    fonts: z.record(z.string(), z.string()),
+    spacing: z.record(z.string(), z.number()),
+    radius: z.record(z.string(), z.number()),
   }),
 });
 

@@ -1,6 +1,6 @@
 {
   "name": "@one-million-lines/email-builder",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Embeddable visual email builder (React + vanilla JS) that composes modular marketing emails from a JSON model and exports table-based HTML.",
   "type": "module",
   "license": "MIT",
@@ -29,7 +29,7 @@
     "visual-editor"
   ],
   "engines": {
-    "node": ">=18"
+    "node": ">=22"
   },
   "sideEffects": [
     "**/*.css",
@@ -68,25 +68,25 @@
     "react-dom": "^18.0.0 || ^19.0.0"
   },
   "dependencies": {
-    "@dnd-kit/core": "^6.1.0",
-    "@dnd-kit/sortable": "^8.0.0",
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
-    "lucide-react": "^0.460.0",
-    "zod": "^3.23.8",
-    "zustand": "^5.0.2"
+    "lucide-react": "^1.23.0",
+    "zod": "^4.4.3",
+    "zustand": "^5.0.14"
   },
   "devDependencies": {
-    "@tailwindcss/vite": "^4.1.0",
-    "@types/react": "^19.0.0",
-    "@types/react-dom": "^19.0.0",
-    "@vitejs/plugin-react-swc": "^3.5.0",
-    "jsdom": "^25.0.1",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "tailwindcss": "^4.1.0",
-    "typescript": "^5.5.3",
-    "vite": "^5.4.10",
-    "vite-plugin-dts": "^4.0.0",
-    "eslint": "^9.0.0"
+    "@tailwindcss/vite": "^4.3.2",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react-swc": "^4.3.1",
+    "eslint": "^10.6.0",
+    "jsdom": "^29.1.1",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "tailwindcss": "^4.3.2",
+    "typescript": "^6.0.3",
+    "vite": "^8.1.2",
+    "vite-plugin-dts": "^5.0.3"
   }
 }
