@@ -2,15 +2,10 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "./index.css";
 import { App } from "./App";
-import { galleryRegistry } from "./gallery/registry";
-import { sampleGallery } from "./gallery/sampleGallery";
 import { builder } from "./core/plugins";
 import { createHttpAIProvider } from "./ai/provider";
 
 // --- Standalone demo wiring (not part of the embeddable library) ---
-
-// Showcase the gallery module in the standalone app.
-galleryRegistry.registerGallery(sampleGallery);
 
 // Optionally enable the AI assistant when a backend endpoint is configured.
 // Set VITE_AI_ENDPOINT in a .env file to point at the Python service in backend/.

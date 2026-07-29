@@ -42,8 +42,6 @@ Plugins are pure: call `setup()` once, register what you need, and return. They 
 The package ships several ready-made plugins that follow this model:
 
 - `imageUploaderPlugin({ endpoint })` — file upload asset provider (this doc).
-- `galleryPlugin(...galleries)` — register packs of extra blocks. See
-  [`../../gallery/README.md`](../../gallery/README.md).
 - `aiAssistantPlugin({ endpoint })` — wire the AI chat panel to a backend. See
   [`../../ai/README.md`](../../ai/README.md).
 

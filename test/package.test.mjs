@@ -55,9 +55,6 @@ test("ESM build exposes the public API", async () => {
     "templateRegistry",
     "registerPlugin",
     "imageUploaderPlugin",
-    "galleryPlugin",
-    "galleryRegistry",
-    "sampleGallery",
     "aiAssistantPlugin",
     "buildCatalog",
     "applyAIResponse",
@@ -142,17 +139,15 @@ test("shipped stylesheet is non-empty and includes utilities", () => {
   assert.match(css, /\.flex|\.grid|contenteditable/);
 });
 
-test("gallery items surface in the catalog on top", async () => {
-  const { galleryRegistry, buildCatalog, sampleGallery } = await import(distEsm);
-  galleryRegistry.registerGallery(sampleGallery);
+test("buildCatalog includes all registered modules with renderable samples", async () => {
+  const { buildCatalog } = await import(distEsm);
   const catalog = buildCatalog();
-  const gallery = catalog.filter((e) => e.source === "gallery");
-  assert.ok(gallery.length > 0, "gallery entries present in catalog");
-  // Gallery entries are listed first so the AI prefers fresh styles.
-  assert.equal(catalog[0].source, "gallery");
+  assert.ok(catalog.length > 0, "catalog has entries");
   // Every entry ships a concrete, renderable sample.
   for (const e of catalog) assert.ok(Array.isArray(e.sample.children), "sample has children");
-  galleryRegistry.removeGallery(sampleGallery.id);
+  // Feature modules should be present.
+  const feature = catalog.filter((e) => e.category === "feature");
+  assert.ok(feature.length > 0, "feature modules present in catalog");
 });
 
 test("applyAIResponse validates, regenerates ids, and applies actions", async () => {

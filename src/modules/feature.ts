@@ -1,5 +1,5 @@
 import type { ModuleDefinition } from "./registry";
-import { text, image, mod, heading, muted, eyebrow, spacer, PLACEHOLDER } from "./helpers";
+import { text, image, button, mod, divider, heading, muted, eyebrow, spacer, product, productGrid, PLACEHOLDER } from "./helpers";
 
 export const featureModules: ModuleDefinition[] = [
   {
@@ -74,7 +74,7 @@ export const featureModules: ModuleDefinition[] = [
     tags: ["testimonial", "review", "social-proof", "customer"],
     create: () =>
       mod("feature.testimonial", "Testimonial", [
-        text("“This cut our email production from a week to an afternoon.”", {
+        text("\u201cThis cut our email production from a week to an afternoon.\u201d", {
           fontFamily: "{fonts.heading}",
           fontSize: 22,
           align: "center",
@@ -102,6 +102,108 @@ export const featureModules: ModuleDefinition[] = [
       mod("feature.logo_strip", "Logo Strip", [
         muted("TRUSTED BY", { align: "center", fontSize: 11 }),
         image(PLACEHOLDER(520, 60, "LOGOS"), "Customer logos", { width: 520, paddingTop: 8, paddingBottom: 16 }),
+      ]),
+  },
+  // ---------- Additional feature blocks ----------
+  {
+    type: "feature.gradient_hero",
+    category: "feature",
+    name: "Gradient Hero CTA",
+    description: "Bold centered hero with an eyebrow, oversized headline and a primary CTA button. Great for launch announcements and campaign openers.",
+    tags: ["hero", "launch", "cta", "bold", "announcement"],
+    create: () =>
+      mod(
+        "feature.gradient_hero",
+        "Gradient Hero CTA",
+        [
+          eyebrow("Introducing", { align: "center" }),
+          heading("Something new is here", {
+            level: 1,
+            align: "center",
+            paddingTop: 4,
+            paddingBottom: 8,
+          }),
+          text("A fresh way to reach your audience — crafted for the inbox.", {
+            align: "center",
+            color: "{colors.muted}",
+            fontSize: 16,
+            paddingBottom: 20,
+          }),
+          button("Explore now", "#", { align: "center" }),
+        ],
+        { backgroundColor: "{colors.surface}", paddingTop: 40, paddingBottom: 40 }
+      ),
+  },
+  {
+    type: "feature.pull_quote",
+    category: "feature",
+    name: "Pull Quote",
+    description: "Large centered quotation with an attribution line. Use to highlight a testimonial or a memorable line.",
+    tags: ["quote", "testimonial", "highlight", "pull-quote"],
+    create: () =>
+      mod("feature.pull_quote", "Pull Quote", [
+        text("\u201cThis is the fastest we\u2019ve ever shipped a campaign.\u201d", {
+          fontFamily: "{fonts.heading}",
+          fontSize: 24,
+          align: "center",
+          lineHeight: 1.4,
+          paddingTop: 28,
+          paddingBottom: 8,
+        }),
+        muted("— A very happy customer", { align: "center", paddingBottom: 28 }),
+      ]),
+  },
+  {
+    type: "feature.stat_row",
+    category: "feature",
+    name: "Stat Row",
+    description: "Three short number + label pairs in a row. Use to show traction, metrics or highlights.",
+    tags: ["stats", "metrics", "numbers", "row", "kpi"],
+    create: () =>
+      mod("feature.stat_row", "Stat Row", [
+        heading("By the numbers", { align: "center", paddingTop: 24 }),
+        text(
+          "<b>10k+</b> subscribers &nbsp;\u00b7&nbsp; <b>98%</b> delivery &nbsp;\u00b7&nbsp; <b>4.9\u2605</b> rating",
+          { align: "center", color: "{colors.muted}", paddingBottom: 24 }
+        ),
+      ]),
+  },
+  {
+    type: "feature.single_product_spotlight",
+    category: "feature",
+    name: "Single Product Spotlight",
+    description: "One product with image, name, price and buy button. Use to feature a hero product in a feature-focused email.",
+    tags: ["product", "spotlight", "single", "buy", "shop", "ecommerce"],
+    create: () =>
+      mod("feature.single_product_spotlight", "Product Spotlight", [
+        productGrid(
+          [
+            product({
+              name: "The Signature Bag",
+              finalPrice: "$129",
+              oldPrice: "$159",
+              description: "Handmade, built to last.",
+              image: PLACEHOLDER(520, 520, "Product"),
+            }),
+          ],
+          { columns: 1, showDescription: true, buttonLabel: "Buy now" }
+        ),
+      ]),
+  },
+  {
+    type: "feature.pill_nav",
+    category: "feature",
+    name: "Pill Navigation",
+    description: "Centered row of navigation links with a divider below. Compact feature nav block for use inside email content sections.",
+    tags: ["menu", "nav", "links", "pill"],
+    create: () =>
+      mod("feature.pill_nav", "Pill Navigation", [
+        image(PLACEHOLDER(120, 32, "LOGO"), "Logo", { width: 120, paddingBottom: 8 }),
+        text(
+          '<a href="#">Shop</a> &nbsp; <a href="#">New</a> &nbsp; <a href="#">Sale</a> &nbsp; <a href="#">About</a>',
+          { align: "center", color: "{colors.primary}", paddingBottom: 8 }
+        ),
+        divider({ paddingTop: 4, paddingBottom: 0 }),
       ]),
   },
 ];

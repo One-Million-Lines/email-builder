@@ -15,8 +15,6 @@ Marketing teams often need a reusable editor that produces email-safe HTML witho
 - Visual editor with top bar, left sidebar, canvas, and right sidebar
 - JSON-first email document model
 - Built-in modules, templates, and themes
-- **Gallery module** — pluggable packs of extra blocks that appear on top of each
-  category and can be loaded at runtime
 - **AI assistant module** — optional chat-driven editing backed by a simple
   Python service
 - Table-based HTML rendering for email output
@@ -49,7 +47,6 @@ src/
   core/             document types, renderer, validation, AI actions, plugins
   editor/           top bar, sidebars, canvas
   modules/          module registry and built-in modules
-  gallery/          gallery registry + packs of extra blocks (see gallery/README.md)
   ai/               AI assistant module: provider, catalog, chat panel (see ai/README.md)
   recommendations/  recommendation and fallback logic
   store/            editor state and persistence
@@ -137,26 +134,6 @@ Thin wrappers for each framework live in [`examples/`](./examples):
 Vue and Angular mount the React-based editor through the framework-neutral
 `createEmailBuilder()` factory (`getDocument` / `exportHtml` / `exportJson` /
 `destroy`). React and ReactDOM remain peer dependencies in all cases.
-
-### Gallery module
-
-Galleries are pluggable packs of extra, ready-to-drop blocks. Their items appear
-**on top of** each category in the left sidebar (badged "New") and can be loaded
-at runtime.
-
-```tsx
-import { EmailBuilder, sampleGallery } from "@one-million-lines/email-builder";
-
-<EmailBuilder galleries={[sampleGallery]} />
-```
-
-```ts
-import { galleryRegistry } from "@one-million-lines/email-builder";
-// Load dynamically — the sidebar updates live.
-galleryRegistry.registerGallery(await fetch("/api/galleries").then((r) => r.json()));
-```
-
-See [`src/gallery/README.md`](./src/gallery/README.md) for authoring galleries.
 
 ### AI assistant module
 
