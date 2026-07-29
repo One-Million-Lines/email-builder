@@ -6,6 +6,27 @@ This project adheres to [Semantic Versioning](https://semver.org/) and the
 
 ## [Unreleased]
 
+### Added
+- **Gallery module** (`src/gallery/`) — pluggable packs of extra, ready-to-drop
+  blocks that render on top of each category in the left sidebar (badged "New")
+  and can be registered/removed at runtime with live UI updates. New exports:
+  `galleryRegistry`, `galleryPlugin`, `sampleGallery`, types `GalleryDefinition`
+  and `GalleryItem`. New `galleries` prop on `<EmailBuilder>` and a dedicated
+  **Gallery** sidebar tab. See `src/gallery/README.md`.
+- **AI assistant module** (`src/ai/`) — optional chat-driven editing. When an AI
+  provider is configured an **AI** tab appears in the left sidebar. The client
+  sends a catalog of real modules (built-ins + gallery items) so the assistant
+  only ever assembles valid, renderable emails; every response is validated with
+  `documentSchema` and gets fresh ids before being applied. New exports:
+  `aiAssistantPlugin`, `createHttpAIProvider`, `buildCatalog`, `applyAIResponse`,
+  `mockAIProvider`, `applyAIActions`, `validateAIDocument`, and the related
+  types. New `aiEndpoint` prop on `<EmailBuilder>`. See `src/ai/README.md`.
+- **Python AI backend** (`backend/`) — a small Flask service (`app.py`,
+  `ai_service.py`) exposing `GET /health` and `POST /ai/generate`. Works with any
+  OpenAI-compatible endpoint and falls back to a deterministic offline planner
+  when no API key is set. See `backend/README.md`.
+
+
 ## [0.1.4] — 2026-07-02
 
 ### Changed

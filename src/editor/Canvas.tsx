@@ -33,6 +33,27 @@ import { useEffect, useState } from "react";
 
 const MOBILE_WIDTH = 375;
 
+/**
+ * Returns true when `color` is white or very light (luminance > 0.82).
+ * Used by TextRender to add a canvas-only text-shadow so white text remains
+ * readable while editing, without affecting the exported HTML.
+ */
+function isColorLight(color: string): boolean {
+  const hex = color.replace("#", "");
+  if (hex.length !== 3 && hex.length !== 6) {
+    // Named colours: handle the most common ones.
+    if (color === "white" || color === "#fff" || color === "#ffffff") return true;
+    return false;
+  }
+  const full = hex.length === 3 ? hex.split("").map((c) => c + c).join("") : hex;
+  const r = parseInt(full.slice(0, 2), 16) / 255;
+  const g = parseInt(full.slice(2, 4), 16) / 255;
+  const b = parseInt(full.slice(4, 6), 16) / 255;
+  // sRGB relative luminance (approximate)
+  const lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  return lum > 0.82;
+}
+
 function mergeMobile(
   style: Record<string, unknown> | undefined,
   viewMode: "desktop" | "mobile"
@@ -159,6 +180,9 @@ function SortableModule(props: {
     transition,
     opacity: isDragging ? 0.5 : 1,
     position: "relative",
+    // Lift the selected module above its siblings so the selection toolbar
+    // (which overflows outside the block bounds) is never obscured.
+    zIndex: props.selected ? 10 : "auto",
   };
   return (
     <div ref={setNodeRef} style={style}>
@@ -251,14 +275,19 @@ function ModuleView({
         </div>
       )}
       {selected && (
-        <div className="absolute -top-3 left-2 z-10 flex gap-1">
+        // Toolbar sits INSIDE the block at the top-left so it is never clipped
+        // by the scroll container or hidden above the first block in the canvas.
+        <div
+          className="absolute top-0 left-0 z-20 flex items-center gap-1 p-1 rounded-br bg-blue-600 shadow-md"
+          onClick={(e) => e.stopPropagation()}
+        >
           {dragHandle}
           <button
             onClick={(e) => {
               e.stopPropagation();
               onDuplicate();
             }}
-            className="bg-blue-600 text-white p-1 rounded"
+            className="text-white p-1 rounded hover:bg-blue-700"
             title="Duplicate"
           >
             <Copy size={14} />
@@ -268,12 +297,12 @@ function ModuleView({
               e.stopPropagation();
               onDelete();
             }}
-            className="bg-red-600 text-white p-1 rounded"
+            className="text-white p-1 rounded hover:bg-red-600"
             title="Delete"
           >
             <Trash2 size={14} />
           </button>
-          <span className="bg-blue-600 text-white text-[10px] px-1.5 py-0.5 rounded">
+          <span className="text-white text-[10px] font-medium px-1.5 py-0.5">
             {mod.name}
           </span>
         </div>
@@ -326,8 +355,10 @@ function ElementView({
   const hideOn = elStyle?.hideOn as "mobile" | "desktop" | undefined;
   if (hideOn === viewMode) return null;
   const wrapStyle: React.CSSProperties = {
-    outline: selected ? "2px solid #f59e0b" : "1px dashed transparent",
-    outlineOffset: -2,
+    // Amber outline when selected; a faint border otherwise so element
+    // boundaries stay visible even when text colour is white or near-white.
+    outline: selected ? "2px solid #f59e0b" : "1px dashed rgba(0,0,0,0.08)",
+    outlineOffset: -1,
     position: "relative",
   };
   // Two-click drilldown: clicking an element when its module is not selected
@@ -344,12 +375,12 @@ function ElementView({
 
   const toolbar = selected && (
     <div
-      className="absolute -top-3 right-2 z-20 flex gap-1"
+      className="absolute top-0 right-0 z-20 flex items-center gap-1 p-1 rounded-bl bg-amber-500 shadow-md"
       onClick={(e) => e.stopPropagation()}
     >
       <button
         onClick={() => onSelectModule()}
-        className="bg-blue-600 text-white p-1 rounded"
+        className="text-white p-1 rounded hover:bg-amber-600"
         title="Select parent block"
       >
         <MousePointer2 size={12} />
@@ -357,7 +388,7 @@ function ElementView({
       <button
         disabled={index === 0}
         onClick={() => moveElement(moduleId, el.id, -1)}
-        className="bg-amber-500 text-white p-1 rounded disabled:opacity-40"
+        className="text-white p-1 rounded disabled:opacity-40 hover:bg-amber-600"
         title="Move up"
       >
         <ArrowUp size={12} />
@@ -365,19 +396,19 @@ function ElementView({
       <button
         disabled={index === totalElements - 1}
         onClick={() => moveElement(moduleId, el.id, 1)}
-        className="bg-amber-500 text-white p-1 rounded disabled:opacity-40"
+        className="text-white p-1 rounded disabled:opacity-40 hover:bg-amber-600"
         title="Move down"
       >
         <ArrowDown size={12} />
       </button>
       <button
         onClick={() => deleteElement(moduleId, el.id)}
-        className="bg-red-600 text-white p-1 rounded"
+        className="text-white p-1 rounded hover:bg-red-600"
         title="Delete element"
       >
         <Trash2 size={12} />
       </button>
-      <span className="bg-amber-500 text-white text-[10px] px-1.5 py-0.5 rounded">
+      <span className="text-white text-[10px] font-medium px-1 py-0.5">
         {el.type}
       </span>
     </div>
@@ -420,13 +451,20 @@ function TextRender({
   const updateElement = useEmailStore((s) => s.updateElement);
   const merged = mergeMobile(el.style as Record<string, unknown>, viewMode);
   const s = resolveStyle(merged, theme);
+  const color = (s.color as string) ?? "#000000";
+
+  // Canvas-only: add a subtle text-shadow when the text colour is very light
+  // (white or near-white) so content is readable against any module background
+  // while editing. This shadow is NOT present in the exported HTML.
+  const isLightColor = isColorLight(color);
+
   const style: React.CSSProperties = {
     fontFamily: s.fontFamily as string,
     fontSize: s.fontSize as number,
     lineHeight: s.lineHeight as number,
     letterSpacing: s.letterSpacing as number,
     fontWeight: s.fontWeight as React.CSSProperties["fontWeight"],
-    color: s.color as string,
+    color,
     textAlign: s.align as React.CSSProperties["textAlign"],
     paddingTop: (s.paddingTop as number) ?? 8,
     paddingBottom: (s.paddingBottom as number) ?? 8,
@@ -434,6 +472,9 @@ function TextRender({
     paddingRight: (s.paddingRight as number) ?? 16,
     margin: 0,
     minHeight: "1.5em",
+    ...(isLightColor
+      ? { textShadow: "0 0 8px rgba(0,0,0,0.55), 0 1px 2px rgba(0,0,0,0.45)" }
+      : undefined),
   };
   return (
     <div

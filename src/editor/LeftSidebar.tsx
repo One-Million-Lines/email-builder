@@ -1,6 +1,9 @@
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { useEmailStore } from "../store/emailStore";
 import { moduleRegistry, CATEGORY_LABELS, type ModuleCategory } from "../modules/registry";
+import { galleryRegistry, type GalleryItem } from "../gallery/registry";
+import type { EmailModule } from "../core/types";
+import { AIChatPanel, useAIAvailable } from "../ai/AIChatPanel";
 import {
   Square,
   Menu,
@@ -14,6 +17,8 @@ import {
   AlignVerticalJustifyEnd,
   Palette,
   Layers,
+  Images,
+  Sparkles,
   ArrowUp,
   ArrowDown,
   Trash2,
@@ -34,52 +39,73 @@ const CATEGORIES: { id: ModuleCategory; icon: React.ComponentType<{ size?: numbe
 ];
 
 export function LeftSidebar() {
-  const [active, setActive] = useState<ModuleCategory | "themes" | "layers">("layers");
+  const [active, setActive] = useState<
+    ModuleCategory | "themes" | "layers" | "gallery" | "ai"
+  >("layers");
   const { addModule, themes, applyTheme, doc } = useEmailStore();
+  const aiAvailable = useAIAvailable();
+
+  // Re-render when galleries are (un)registered at runtime.
+  useSyncExternalStore(
+    galleryRegistry.subscribe,
+    galleryRegistry.getSnapshot,
+    galleryRegistry.getSnapshot
+  );
+
+  const hasGallery = galleryRegistry.list().length > 0;
 
   return (
     <div className="flex h-full bg-white border-r border-gray-200 shrink-0">
       {/* Category rail */}
-      <div className="w-16 border-r border-gray-200 flex flex-col items-center py-2 gap-1">
-        <button
+      <div className="w-16 border-r border-gray-200 flex flex-col items-center py-2 gap-1 overflow-y-auto">
+        {aiAvailable && (
+          <>
+            <RailButton
+              id="ai"
+              label="AI"
+              icon={Sparkles}
+              active={active === "ai"}
+              onClick={() => setActive("ai")}
+              accent
+            />
+            <div className="h-px w-10 bg-gray-200 my-1" />
+          </>
+        )}
+        <RailButton
+          id="layers"
+          label="Layers"
+          icon={Layers}
+          active={active === "layers"}
           onClick={() => setActive("layers")}
-          title="Layout overview"
-          className={`flex flex-col items-center gap-0.5 w-14 py-2 rounded text-[10px] transition-colors ${
-            active === "layers" ? "bg-blue-50 text-blue-700" : "text-gray-600 hover:bg-gray-50"
-          }`}
-        >
-          <Layers size={20} />
-          <span>Layers</span>
-        </button>
+        />
+        {hasGallery && (
+          <RailButton
+            id="gallery"
+            label="Gallery"
+            icon={Images}
+            active={active === "gallery"}
+            onClick={() => setActive("gallery")}
+          />
+        )}
         <div className="h-px w-10 bg-gray-200 my-1" />
-        {CATEGORIES.map((c) => {
-          const Icon = c.icon;
-          const isActive = active === c.id;
-          return (
-            <button
-              key={c.id}
-              onClick={() => setActive(c.id)}
-              title={CATEGORY_LABELS[c.id]}
-              className={`flex flex-col items-center gap-0.5 w-14 py-2 rounded text-[10px] transition-colors ${
-                isActive ? "bg-blue-50 text-blue-700" : "text-gray-600 hover:bg-gray-50"
-              }`}
-            >
-              <Icon size={20} />
-              <span className="leading-tight text-center">{CATEGORY_LABELS[c.id]}</span>
-            </button>
-          );
-        })}
+        {CATEGORIES.map((c) => (
+          <RailButton
+            key={c.id}
+            id={c.id}
+            label={CATEGORY_LABELS[c.id]}
+            icon={c.icon}
+            active={active === c.id}
+            onClick={() => setActive(c.id)}
+          />
+        ))}
         <div className="mt-auto">
-          <button
+          <RailButton
+            id="themes"
+            label="Themes"
+            icon={Palette}
+            active={active === "themes"}
             onClick={() => setActive("themes")}
-            title="Themes"
-            className={`flex flex-col items-center gap-0.5 w-14 py-2 rounded text-[10px] transition-colors ${
-              active === "themes" ? "bg-blue-50 text-blue-700" : "text-gray-600 hover:bg-gray-50"
-            }`}
-          >
-            <Palette size={20} />
-            <span>Themes</span>
-          </button>
+          />
         </div>
       </div>
 
@@ -87,6 +113,10 @@ export function LeftSidebar() {
       <div className="w-64 overflow-y-auto p-3">
         {active === "layers" ? (
           <LayersPanel />
+        ) : active === "ai" ? (
+          <AIChatPanel />
+        ) : active === "gallery" ? (
+          <GalleryPanel onAdd={(item) => addModule(item.create())} />
         ) : active === "themes" ? (
           <>
             <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-3">
@@ -126,33 +156,167 @@ export function LeftSidebar() {
             </div>
           </>
         ) : (
-          <>
-            <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-3">
-              {CATEGORY_LABELS[active]}
-            </h3>
-            <div className="grid grid-cols-1 gap-2">
-              {moduleRegistry.byCategory(active).map((def) => (
-                <button
-                  key={def.type}
-                  onClick={() => addModule(def.create())}
-                  className="text-left p-3 rounded border border-gray-200 bg-white hover:border-blue-400 hover:shadow-sm transition-all"
-                >
-                  <div className="h-12 bg-gray-50 rounded mb-2 flex items-center justify-center text-xs text-gray-400">
-                    {def.name}
-                  </div>
-                  <div className="text-xs font-medium text-gray-700">{def.name}</div>
-                </button>
-              ))}
-              {moduleRegistry.byCategory(active).length === 0 && (
-                <div className="text-xs text-gray-400 italic py-4 text-center">
-                  No modules in this category yet.
-                </div>
-              )}
-            </div>
-          </>
+          <CategoryPanel category={active} onAdd={(create) => addModule(create())} />
         )}
       </div>
     </div>
+  );
+}
+
+// ---------- Category rail button ----------
+
+function RailButton({
+  label,
+  icon: Icon,
+  active,
+  onClick,
+  accent,
+}: {
+  id: string;
+  label: string;
+  icon: React.ComponentType<{ size?: number }>;
+  active: boolean;
+  onClick: () => void;
+  accent?: boolean;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      title={label}
+      className={`flex flex-col items-center gap-0.5 w-14 py-2 rounded text-[10px] transition-colors ${
+        active
+          ? "bg-blue-50 text-blue-700"
+          : accent
+          ? "text-blue-600 hover:bg-blue-50"
+          : "text-gray-600 hover:bg-gray-50"
+      }`}
+    >
+      <Icon size={20} />
+      <span className="leading-tight text-center">{label}</span>
+    </button>
+  );
+}
+
+// ---------- Category panel (gallery items on top, then built-ins) ----------
+
+function CategoryPanel({
+  category,
+  onAdd,
+}: {
+  category: ModuleCategory;
+  onAdd: (create: () => EmailModule) => void;
+}) {
+  const galleryItems = galleryRegistry.byCategory(category);
+  const modules = moduleRegistry.byCategory(category);
+
+  return (
+    <>
+      <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-3">
+        {CATEGORY_LABELS[category]}
+      </h3>
+      <div className="grid grid-cols-1 gap-2">
+        {galleryItems.map((item) => (
+          <ModuleCard
+            key={item.type}
+            name={item.name}
+            badge={item.badge ?? "New"}
+            onClick={() => onAdd(item.create)}
+          />
+        ))}
+        {modules.map((def) => (
+          <ModuleCard key={def.type} name={def.name} onClick={() => onAdd(def.create)} />
+        ))}
+        {galleryItems.length === 0 && modules.length === 0 && (
+          <div className="text-xs text-gray-400 italic py-4 text-center">
+            No modules in this category yet.
+          </div>
+        )}
+      </div>
+    </>
+  );
+}
+
+// ---------- Gallery panel (all gallery items grouped by category) ----------
+
+function GalleryPanel({ onAdd }: { onAdd: (item: GalleryItem) => void }) {
+  const galleries = galleryRegistry.listGalleries();
+  const items = galleryRegistry.list();
+
+  if (items.length === 0) {
+    return (
+      <>
+        <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-3">
+          Gallery
+        </h3>
+        <p className="text-xs text-gray-400 italic">No galleries loaded.</p>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">
+        Gallery
+      </h3>
+      <p className="text-[10px] text-gray-400 mb-3">
+        {items.length} element{items.length === 1 ? "" : "s"} across {galleries.length}{" "}
+        {galleries.length === 1 ? "gallery" : "galleries"}
+      </p>
+      <div className="flex flex-col gap-4">
+        {galleries.map((g) => {
+          const gItems = items.filter((i) => i.galleryId === g.id);
+          if (gItems.length === 0) return null;
+          return (
+            <div key={g.id}>
+              <div className="text-[11px] font-medium text-gray-600 mb-1.5">{g.name}</div>
+              <div className="grid grid-cols-1 gap-2">
+                {gItems.map((item) => (
+                  <ModuleCard
+                    key={item.type}
+                    name={item.name}
+                    badge={item.badge ?? "New"}
+                    sub={CATEGORY_LABELS[item.category]}
+                    onClick={() => onAdd(item)}
+                  />
+                ))}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </>
+  );
+}
+
+// ---------- Shared module card ----------
+
+function ModuleCard({
+  name,
+  onClick,
+  badge,
+  sub,
+}: {
+  name: string;
+  onClick: () => void;
+  badge?: string;
+  sub?: string;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className="relative text-left p-3 rounded border border-gray-200 bg-white hover:border-blue-400 hover:shadow-sm transition-all"
+    >
+      {badge && (
+        <span className="absolute top-1.5 right-1.5 text-[9px] font-semibold uppercase tracking-wide bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">
+          {badge}
+        </span>
+      )}
+      <div className="h-12 bg-gray-50 rounded mb-2 flex items-center justify-center text-xs text-gray-400 px-2 text-center">
+        {name}
+      </div>
+      <div className="text-xs font-medium text-gray-700">{name}</div>
+      {sub && <div className="text-[10px] text-gray-400">{sub}</div>}
+    </button>
   );
 }
 

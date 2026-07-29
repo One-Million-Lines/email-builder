@@ -3,6 +3,7 @@ import type { ModuleDefinition } from "../modules/registry";
 import { moduleRegistry } from "../modules/registry";
 import type { Theme } from "./types";
 import type { AIProvider } from "./aiActions";
+import { setAIProvider as setReactiveAIProvider } from "../ai/state";
 
 export interface AssetProvider {
   upload: (file: File) => Promise<{ url: string; alt?: string }>;
@@ -35,6 +36,8 @@ export const builder: BuilderHandle = {
   },
   setAIProvider: (p) => {
     aiProvider = p;
+    // Notify the reactive store so the AI chat panel appears/updates.
+    setReactiveAIProvider(p);
   },
 };
 

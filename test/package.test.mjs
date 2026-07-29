@@ -55,6 +55,12 @@ test("ESM build exposes the public API", async () => {
     "templateRegistry",
     "registerPlugin",
     "imageUploaderPlugin",
+    "galleryPlugin",
+    "galleryRegistry",
+    "sampleGallery",
+    "aiAssistantPlugin",
+    "buildCatalog",
+    "applyAIResponse",
   ]) {
     assert.ok(mod[name], `missing export: ${name}`);
   }
@@ -134,4 +140,41 @@ test("shipped stylesheet is non-empty and includes utilities", () => {
   const css = readFileSync(resolve(here, "../dist/styles.css"), "utf8");
   assert.ok(css.length > 0);
   assert.match(css, /\.flex|\.grid|contenteditable/);
+});
+
+test("gallery items surface in the catalog on top", async () => {
+  const { galleryRegistry, buildCatalog, sampleGallery } = await import(distEsm);
+  galleryRegistry.registerGallery(sampleGallery);
+  const catalog = buildCatalog();
+  const gallery = catalog.filter((e) => e.source === "gallery");
+  assert.ok(gallery.length > 0, "gallery entries present in catalog");
+  // Gallery entries are listed first so the AI prefers fresh styles.
+  assert.equal(catalog[0].source, "gallery");
+  // Every entry ships a concrete, renderable sample.
+  for (const e of catalog) assert.ok(Array.isArray(e.sample.children), "sample has children");
+  galleryRegistry.removeGallery(sampleGallery.id);
+});
+
+test("applyAIResponse validates, regenerates ids, and applies actions", async () => {
+  const { templateRegistry, applyAIResponse, documentSchema } = await import(distEsm);
+  const doc = templateRegistry.list()[0].build();
+  const before = doc.modules.length;
+  const sample = doc.modules[0];
+  const res = {
+    actions: [{ type: "insert_module", index: 0, module: sample }],
+    text: "added a block",
+  };
+  const out = applyAIResponse(doc, res);
+  assert.ok(out.ok, "response applied");
+  assert.equal(out.result.document.modules.length, before + 1, "module inserted");
+  // Inserted module gets a fresh id (no collision with the source module).
+  assert.notEqual(out.result.document.modules[0].id, sample.id);
+  assert.ok(documentSchema.safeParse(out.result.document).success, "result is valid");
+});
+
+test("applyAIResponse rejects an invalid document", async () => {
+  const { applyAIResponse, templateRegistry } = await import(distEsm);
+  const doc = templateRegistry.list()[0].build();
+  const bad = applyAIResponse(doc, { document: { version: "1.0" } });
+  assert.equal(bad.ok, false, "invalid document is rejected");
 });
