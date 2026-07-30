@@ -58,14 +58,19 @@ export function TopBar() {
   };
 
   return (
-    <div className="flex items-center gap-2 h-12 px-4 bg-white border-b border-gray-200 shrink-0">
-      <input
-        className="font-medium text-sm px-2 py-1 rounded hover:bg-gray-50 focus:bg-gray-50 outline-none w-64"
-        value={doc.meta.name}
-        onChange={(e) => updateMeta({ name: e.target.value })}
-      />
-      <div className="ml-auto flex items-center gap-1">
-        <div className="inline-flex items-center bg-gray-100 rounded p-0.5 mr-2">
+    <div className="flex items-center h-12 px-4 bg-white border-b border-gray-200 shrink-0">
+      {/* Left: email name */}
+      <div className="shrink-0 w-48">
+        <input
+          className="font-medium text-sm px-2 py-1 rounded hover:bg-gray-50 focus:bg-gray-50 outline-none w-full"
+          value={doc.meta.name}
+          onChange={(e) => updateMeta({ name: e.target.value })}
+        />
+      </div>
+
+      {/* Center: all action buttons */}
+      <div className="flex-1 flex items-center justify-center gap-1">
+        <div className="inline-flex items-center bg-gray-100 rounded p-0.5 mr-1">
           <button
             title="Desktop preview"
             onClick={() => setViewMode("desktop")}
@@ -105,8 +110,10 @@ export function TopBar() {
         <ToolButton title="Preview" onClick={handlePreview}>
           <Eye size={16} /> {previewing ? "Opened" : "Preview"}
         </ToolButton>
-        <Divider />
-        {/* Import / Export collapsed into one dropdown */}
+      </div>
+
+      {/* Right: Export dropdown */}
+      <div className="shrink-0 flex justify-end w-48">
         <input ref={fileRef} type="file" accept=".json" hidden onChange={handleImport} />
         <ExportDropdown
           onImport={() => fileRef.current?.click()}
@@ -114,6 +121,7 @@ export function TopBar() {
           onExportHtml={handleExportHtml}
         />
       </div>
+
       <TemplatesModal open={templatesOpen} onClose={() => setTemplatesOpen(false)} />
     </div>
   );
@@ -147,7 +155,7 @@ function ExportDropdown({
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded text-sm bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded text-sm text-gray-700 hover:bg-gray-100 border border-gray-200 transition-colors"
         title="Import / Export"
       >
         <FileCode size={16} />
@@ -172,7 +180,6 @@ function ExportDropdown({
             icon={<FileCode size={14} />}
             label="Export HTML"
             onClick={() => { onExportHtml(); setOpen(false); }}
-            highlight
           />
         </div>
       )}

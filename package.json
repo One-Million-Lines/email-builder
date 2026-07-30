@@ -1,6 +1,6 @@
 {
   "name": "@one-million-lines/email-builder",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Embeddable visual email builder (React + vanilla JS) that composes modular marketing emails from a JSON model and exports table-based HTML.",
   "type": "module",
   "license": "MIT",
@@ -61,7 +61,11 @@
     "lint": "eslint .",
     "test": "node --test test/*.test.mjs",
     "prepublishOnly": "npm run build",
-    "validate:pack": "npm run build && npm pack --dry-run"
+    "validate:pack": "npm run build && npm pack --dry-run",
+    "release": "node scripts/release.mjs",
+    "release:patch": "node scripts/release.mjs patch",
+    "release:minor": "node scripts/release.mjs minor",
+    "release:major": "node scripts/release.mjs major"
   },
   "peerDependencies": {
     "react": "^18.0.0 || ^19.0.0",
