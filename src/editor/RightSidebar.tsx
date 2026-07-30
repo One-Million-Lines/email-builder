@@ -15,7 +15,7 @@ import type {
   ProductGridElement,
   Product,
 } from "../core/types";
-import { Smartphone, Monitor, Trash2, Plus, RotateCcw, Upload, Loader2 } from "lucide-react";
+import { Smartphone, Monitor, Trash2, Plus, RotateCcw, Upload, Loader2, Check } from "lucide-react";
 
 export function RightSidebar() {
   const { selection, doc, viewMode } = useEmailStore();
@@ -332,20 +332,159 @@ function EmailSettingsPanel() {
       </Field>
 
       <div className="mt-6 pt-4 border-t border-gray-100">
-        <PanelTitle>Theme tokens (read-only preview)</PanelTitle>
-        <div className="text-xs space-y-1">
-          <div className="font-medium">{doc.theme.name}</div>
-          <div className="grid grid-cols-2 gap-1 text-gray-500">
-            {Object.entries(doc.theme.tokens.colors).map(([k, v]) => (
-              <div key={k} className="flex items-center gap-1">
-                <span className="w-3 h-3 rounded" style={{ background: v }} />
-                <span className="truncate">{k}</span>
-              </div>
-            ))}
-          </div>
-        </div>
+        <ThemeEditor />
       </div>
     </>
+  );
+}
+
+// ---------- Theme editor ----------
+
+function ThemeEditor() {
+  const { doc, themes, applyTheme } = useEmailStore();
+  const current = doc.theme;
+
+  // Detect whether the current theme's colors have been customised vs the preset.
+  const preset = themes.find((t) => t.id === current.id);
+  const isCustomised =
+    preset != null &&
+    Object.entries(current.tokens.colors).some(([k, v]) => preset.tokens.colors[k] !== v);
+
+  const updateColor = (key: string, hex: string) => {
+    applyTheme({
+      ...current,
+      tokens: {
+        ...current.tokens,
+        colors: { ...current.tokens.colors, [key]: hex },
+      },
+    });
+  };
+
+  return (
+    <>
+      {/* ── Preset switcher ─────────────────────────────────────── */}
+      <div className="flex items-center justify-between mb-2">
+        <PanelTitle>Theme</PanelTitle>
+        {isCustomised && (
+          <button
+            onClick={() => preset && applyTheme(preset)}
+            className="text-[10px] text-blue-600 hover:underline mb-3"
+            title="Discard color changes and restore the preset"
+          >
+            Reset to preset
+          </button>
+        )}
+      </div>
+      <div className="flex flex-col gap-1.5 mb-4">
+        {themes.map((t) => {
+          const active = t.id === current.id;
+          return (
+            <button
+              key={t.id}
+              onClick={() => applyTheme(t)}
+              title={t.name}
+              className={`flex items-center gap-2 px-2.5 py-2 rounded border text-xs transition-colors ${
+                active
+                  ? "border-blue-500 bg-blue-50 text-blue-700"
+                  : "border-gray-200 bg-white hover:border-gray-300 text-gray-700"
+              }`}
+            >
+              {/* Three color chips */}
+              <span
+                className="w-3 h-3 rounded-full shrink-0 ring-1 ring-black/10"
+                style={{ background: t.tokens.colors.primary }}
+              />
+              <span
+                className="w-3 h-3 rounded-full shrink-0 ring-1 ring-black/10"
+                style={{ background: t.tokens.colors.background }}
+              />
+              <span
+                className="w-3 h-3 rounded-full shrink-0 ring-1 ring-black/10"
+                style={{ background: t.tokens.colors.text }}
+              />
+              <span className="flex-1 text-left">{t.name}</span>
+              {active && <Check size={12} className="text-blue-600 shrink-0" />}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* ── Editable color tokens ────────────────────────────────── */}
+      <div className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">
+        Colors
+        {isCustomised && (
+          <span className="ml-2 normal-case font-normal text-[10px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded">
+            customised
+          </span>
+        )}
+      </div>
+      <div className="flex flex-col gap-2">
+        {Object.entries(current.tokens.colors).map(([key, value]) => (
+          <ThemeColorRow
+            key={key}
+            label={key}
+            value={value}
+            onChange={(hex) => updateColor(key, hex)}
+          />
+        ))}
+      </div>
+    </>
+  );
+}
+
+function ThemeColorRow({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  onChange: (hex: string) => void;
+}) {
+  // Keep a local text value so the user can type freely; commits on blur / Enter.
+  const [text, setText] = useState(value);
+  useEffect(() => setText(value), [value]);
+
+  // The native color picker needs a valid 6-digit hex.
+  const pickerHex = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(value)
+    ? value.length === 4
+      ? "#" + value.slice(1).split("").map((c) => c + c).join("")
+      : value
+    : "#000000";
+
+  const commit = (raw: string) => {
+    const v = raw.trim();
+    if (v) onChange(v);
+  };
+
+  return (
+    <div className="flex items-center gap-2">
+      <span className="text-xs text-gray-500 w-28 shrink-0 truncate" title={label}>
+        {label}
+      </span>
+      <label
+        className="relative w-7 h-7 rounded border border-gray-200 cursor-pointer overflow-hidden shrink-0"
+        style={{ background: pickerHex }}
+        title={`Pick ${label} color`}
+      >
+        <input
+          type="color"
+          value={pickerHex}
+          onChange={(e) => onChange(e.target.value)}
+          className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+        />
+      </label>
+      <input
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        onBlur={() => commit(text)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+        }}
+        className="flex-1 min-w-0 px-2 py-1 text-xs border border-gray-200 rounded focus:border-blue-500 focus:outline-none font-mono"
+        spellCheck={false}
+      />
+    </div>
   );
 }
 

@@ -1,6 +1,6 @@
 import { useEmailStore } from "../store/emailStore";
-import { Undo2, Redo2, Save, Download, Upload, Eye, FileCode, Monitor, Smartphone, LayoutTemplate, RotateCcw } from "lucide-react";
-import { useRef, useState } from "react";
+import { Undo2, Redo2, Save, Download, Upload, Eye, FileCode, Monitor, Smartphone, LayoutTemplate, RotateCcw, ChevronDown } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { TemplatesModal } from "./TemplatesModal";
 
 export function TopBar() {
@@ -106,21 +106,105 @@ export function TopBar() {
           <Eye size={16} /> {previewing ? "Opened" : "Preview"}
         </ToolButton>
         <Divider />
-        <ToolButton title="Import JSON" onClick={() => fileRef.current?.click()}>
-          <Upload size={16} /> Import
-        </ToolButton>
+        {/* Import / Export collapsed into one dropdown */}
         <input ref={fileRef} type="file" accept=".json" hidden onChange={handleImport} />
-        <ToolButton title="Export JSON" onClick={handleExportJson}>
-          <Download size={16} /> JSON
-        </ToolButton>
-        <ToolButton title="Export HTML" onClick={handleExportHtml} primary>
-          <FileCode size={16} /> Export HTML
-        </ToolButton>
+        <ExportDropdown
+          onImport={() => fileRef.current?.click()}
+          onExportJson={handleExportJson}
+          onExportHtml={handleExportHtml}
+        />
       </div>
       <TemplatesModal open={templatesOpen} onClose={() => setTemplatesOpen(false)} />
     </div>
   );
 }
+
+// ---------- Export dropdown ----------
+
+function ExportDropdown({
+  onImport,
+  onExportJson,
+  onExportHtml,
+}: {
+  onImport: () => void;
+  onExportJson: () => void;
+  onExportHtml: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  // Close when clicking outside the dropdown.
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [open]);
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded text-sm bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+        title="Import / Export"
+      >
+        <FileCode size={16} />
+        Export
+        <ChevronDown size={14} className={`transition-transform ${open ? "rotate-180" : ""}`} />
+      </button>
+
+      {open && (
+        <div className="absolute right-0 top-full mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50 py-1 text-sm">
+          <DropdownItem
+            icon={<Upload size={14} />}
+            label="Import JSON"
+            onClick={() => { onImport(); setOpen(false); }}
+          />
+          <div className="mx-2 my-1 border-t border-gray-100" />
+          <DropdownItem
+            icon={<Download size={14} />}
+            label="Export JSON"
+            onClick={() => { onExportJson(); setOpen(false); }}
+          />
+          <DropdownItem
+            icon={<FileCode size={14} />}
+            label="Export HTML"
+            onClick={() => { onExportHtml(); setOpen(false); }}
+            highlight
+          />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function DropdownItem({
+  icon,
+  label,
+  onClick,
+  highlight,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  onClick: () => void;
+  highlight?: boolean;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`w-full flex items-center gap-2 px-3 py-2 hover:bg-gray-50 transition-colors text-left ${
+        highlight ? "text-blue-600 font-medium" : "text-gray-700"
+      }`}
+    >
+      {icon}
+      {label}
+    </button>
+  );
+}
+
+// ---------- Shared primitives ----------
 
 function ToolButton({
   children,
@@ -154,3 +238,4 @@ function ToolButton({
 function Divider() {
   return <div className="w-px h-5 bg-gray-200 mx-1" />;
 }
+
