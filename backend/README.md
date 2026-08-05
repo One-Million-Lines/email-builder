@@ -133,16 +133,61 @@ Error response:
 | `422` | Recoverable failure (e.g. missing catalog).        |
 | `500` | Internal error.                                    |
 
+### `GET|POST /products/search`
+
+Backs the builder's product-search modal. Send the query as `?q=` (GET) or
+`{"query": "…"}` (POST); the service replies with a single best-matching product.
+
+```jsonc
+// GET /products/search?q=linen%20tote  ->  200
+{
+  "name": "Linen Tote Bag",
+  "final_price": "$39.00",
+  "old_price": "$59.00",
+  "description": "Heavyweight natural linen, made in Portugal.",
+  "link": "https://example.com/products/linen-tote-bag",
+  "image": "https://placehold.co/560x400?text=Linen+Tote",
+  "stars": 4.5,
+  "sku": "TOTE-LIN-01"
+}
+```
+
+`404 { "error": "No product matched '…'." }` signals no result. Connect it with
+`productSearchPlugin({ endpoint })` or `<EmailBuilder productEndpoint="…" />`;
+for the dev app set `VITE_PRODUCT_ENDPOINT`. The demo catalog lives in
+`product_service.py` — swap it for a real product source in production. Field
+mapping details: [`../src/plugins/productSearch/README.md`](../src/plugins/productSearch/README.md).
+
+### `GET /vouchers`
+
+Backs the builder's voucher-select dropdown. Returns a JSON array of vouchers.
+
+```jsonc
+// GET /vouchers  ->  200
+[
+  { "id": "voucher_welcome10", "title": "Welcome — 10% off", "code": "WELCOME10" },
+  { "id": "voucher_save20", "title": "Spring Sale — 20% off", "code": "SAVE20" },
+  { "id": "voucher_79jq", "title": "VIP personal code", "code": "**|voucher_79jq|**" }
+]
+```
+
+Connect it with `voucherPlugin({ endpoint })` or `<EmailBuilder voucherEndpoint="…" />`;
+for the dev app set `VITE_VOUCHER_ENDPOINT`. The demo list lives in
+`voucher_service.py`. Field mapping details:
+[`../src/plugins/voucherSelect/README.md`](../src/plugins/voucherSelect/README.md).
+
 ---
 
 ## Files
 
-| File               | Purpose                                                          |
-|--------------------|------------------------------------------------------------------|
-| `app.py`           | Flask app: `/health`, `/ai/generate`, CORS, `.env` loader.       |
-| `ai_service.py`    | Prompt building, model client, offline planner, module assembly. |
-| `requirements.txt` | `flask`, `flask-cors` (model client uses stdlib only).           |
-| `.env.example`     | Configuration template.                                          |
+| File                 | Purpose                                                             |
+|----------------------|---------------------------------------------------------------------|
+| `app.py`             | Flask app: `/health`, `/ai/generate`, `/products/search`, `/vouchers`. |
+| `ai_service.py`      | Prompt building, model client, offline planner, module assembly.    |
+| `product_service.py` | In-memory demo catalog + single-result search.                      |
+| `voucher_service.py` | In-memory demo voucher list.                                        |
+| `requirements.txt`   | `flask`, `flask-cors` (model client uses stdlib only).              |
+| `.env.example`       | Configuration template.                                             |
 
 ---
 

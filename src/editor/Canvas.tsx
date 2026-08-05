@@ -11,6 +11,7 @@ import type {
   Theme,
 } from "../core/types";
 import { resolveStyle, resolveToken } from "../core/theme";
+import { STAR_COLOR, starGlyphs } from "../core/utils";
 import { Copy, Trash2, GripVertical, ArrowUp, ArrowDown, MousePointer2 } from "lucide-react";
 import {
   DndContext,
@@ -631,6 +632,20 @@ function ProductGridRender({
             >
               {p.name}
             </div>
+            {el.showStars && p.stars != null && (
+              <div
+                className="stars"
+                style={{
+                  padding: "0 12px 4px 12px",
+                  color: STAR_COLOR,
+                  fontSize: 15,
+                  letterSpacing: 1,
+                }}
+                aria-label={`${p.stars} out of 5 stars`}
+              >
+                {starGlyphs(p.stars)}
+              </div>
+            )}
             <div style={{ padding: "0 12px 8px 12px", fontFamily: "Arial, Helvetica, sans-serif" }}>
               {el.showOldPrice && p.oldPrice && (
                 <span

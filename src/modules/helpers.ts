@@ -6,7 +6,7 @@ import { uid } from "../core/utils";
 export const text = (
   content: string,
   opts: Partial<{
-    role: "headline" | "subheadline" | "body" | "caption";
+    role: "headline" | "subheadline" | "body" | "caption" | "voucherCode";
     fontSize: number;
     fontFamily: string;
     fontWeight: number | string;
@@ -218,6 +218,24 @@ export const muted = (
     letterSpacing: opts.letterSpacing,
   });
 
+// Big, centered voucher/discount code. Marked with role "voucherCode" so the
+// voucher-select plugin can find and populate it from the backend catalog.
+export const voucherCode = (
+  code: string,
+  opts: { color?: string; fontSize?: number } = {}
+) =>
+  text(code, {
+    role: "voucherCode",
+    fontFamily: "{fonts.heading}",
+    fontSize: opts.fontSize ?? 36,
+    fontWeight: "bold",
+    align: "center",
+    color: opts.color ?? "{colors.primary}",
+    letterSpacing: 4,
+    paddingTop: 4,
+    paddingBottom: 16,
+  });
+
 export const PLACEHOLDER = (w: number, h: number, label = "Image") =>
   `https://placehold.co/${w}x${h}?text=${encodeURIComponent(label)}`;
 
@@ -234,6 +252,7 @@ export const product = (p: Partial<Product> & { name: string; finalPrice: string
     description: p.description,
     link: p.link ?? "#",
     buttonLabel: p.buttonLabel,
+    stars: p.stars,
   };
 };
 
@@ -244,6 +263,7 @@ export const productGrid = (
     showOldPrice: boolean;
     showButton: boolean;
     showDescription: boolean;
+    showStars: boolean;
     buttonLabel: string;
     cardBackgroundColor: string;
     nameColor: string;
@@ -265,6 +285,7 @@ export const productGrid = (
   showOldPrice: opts.showOldPrice ?? products.some((p) => !!p.oldPrice),
   showButton: opts.showButton ?? true,
   showDescription: opts.showDescription ?? false,
+  showStars: opts.showStars ?? products.some((p) => p.stars != null),
   buttonLabel: opts.buttonLabel ?? "Shop now",
   style: {
     cardBackgroundColor: opts.cardBackgroundColor ?? "{colors.surface}",

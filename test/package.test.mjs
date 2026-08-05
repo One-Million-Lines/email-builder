@@ -58,6 +58,11 @@ test("ESM build exposes the public API", async () => {
     "aiAssistantPlugin",
     "buildCatalog",
     "applyAIResponse",
+    "productSearchPlugin",
+    "createProductSearchProvider",
+    "voucherPlugin",
+    "createVoucherProvider",
+    "isVoucherAware",
   ]) {
     assert.ok(mod[name], `missing export: ${name}`);
   }
@@ -172,4 +177,108 @@ test("applyAIResponse rejects an invalid document", async () => {
   const doc = templateRegistry.list()[0].build();
   const bad = applyAIResponse(doc, { document: { version: "1.0" } });
   assert.equal(bad.ok, false, "invalid document is rejected");
+});
+
+test("product search provider maps a backend response to a product", async () => {
+  const { createProductSearchProvider } = await import(distEsm);
+
+  const captured = {};
+  const prevFetch = globalThis.fetch;
+  globalThis.fetch = async (url) => {
+    captured.url = String(url);
+    return {
+      ok: true,
+      status: 200,
+      text: async () =>
+        JSON.stringify({
+          name: "Linen Tote Bag",
+          final_price: "$39.00",
+          old_price: "$59.00",
+          description: "Heavyweight natural linen.",
+          image_url: "https://img.test/tote.png",
+          link: "https://shop.test/tote",
+          rating: 4.5,
+          sku: "TOTE-01",
+        }),
+    };
+  };
+
+  try {
+    const provider = createProductSearchProvider({ endpoint: "https://api.test/products/search" });
+    const result = await provider.search("linen tote");
+    assert.equal(result.name, "Linen Tote Bag");
+    assert.equal(result.finalPrice, "$39.00");
+    assert.equal(result.oldPrice, "$59.00");
+    assert.equal(result.image, "https://img.test/tote.png");
+    assert.equal(result.link, "https://shop.test/tote");
+    assert.equal(result.stars, 4.5);
+    assert.match(captured.url, /[?&]q=linen(\+|%20)tote/, "query sent as ?q=");
+
+    // Empty query short-circuits without a request.
+    assert.equal(await provider.search("   "), null);
+  } finally {
+    globalThis.fetch = prevFetch;
+  }
+});
+
+test("renderEmailHtml renders star glyphs when a grid shows stars", async () => {
+  const { renderEmailHtml, templateRegistry } = await import(distEsm);
+  // Find a template that contains a product grid.
+  let doc, grid;
+  for (const tpl of templateRegistry.list()) {
+    const d = tpl.build();
+    for (const m of d.modules) {
+      const g = m.children.find((c) => c.type === "productGrid");
+      if (g) {
+        doc = d;
+        grid = g;
+        break;
+      }
+    }
+    if (grid) break;
+  }
+  assert.ok(grid, "found a product grid template");
+  grid.showStars = true;
+  grid.products[0].stars = 4;
+  const html = renderEmailHtml(doc);
+  assert.match(html, /★/, "rendered HTML contains filled star glyphs");
+});
+
+test("voucher provider maps a backend list to vouchers", async () => {
+  const { createVoucherProvider } = await import(distEsm);
+  const prevFetch = globalThis.fetch;
+  globalThis.fetch = async () => ({
+    ok: true,
+    status: 200,
+    text: async () =>
+      JSON.stringify({
+        vouchers: [
+          { id: "v1", title: "Welcome 10%", voucher_code: "WELCOME10" },
+          { name: "Free shipping", code: "FREESHIP" },
+          { coupon: "SAVE20" }, // title + id fall back to the code
+        ],
+      }),
+  });
+  try {
+    const provider = createVoucherProvider({ endpoint: "https://api.test/vouchers" });
+    const list = await provider.list();
+    assert.equal(list.length, 3);
+    assert.equal(list[0].code, "WELCOME10");
+    assert.equal(list[0].title, "Welcome 10%");
+    assert.equal(list[1].code, "FREESHIP");
+    assert.equal(list[1].title, "Free shipping");
+    assert.equal(list[2].code, "SAVE20");
+    assert.equal(list[2].title, "SAVE20");
+  } finally {
+    globalThis.fetch = prevFetch;
+  }
+});
+
+test("ecom.voucher module is registered and voucher-aware", async () => {
+  const { buildCatalog, isVoucherAware } = await import(distEsm);
+  const entry = buildCatalog().find((e) => e.type === "ecom.voucher");
+  assert.ok(entry, "voucher module registered");
+  assert.ok(isVoucherAware(entry.sample), "voucher module is voucher-aware");
+  const code = entry.sample.children.find((c) => c.role === "voucherCode");
+  assert.ok(code, "has a voucherCode text element");
 });

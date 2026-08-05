@@ -6,8 +6,11 @@ Flask HTTP service for the OpenPostcards email builder AI assistant.
     AI_API_KEY=sk-... python app.py     # model-backed mode
 
 Endpoints
-    GET  /health        -> {"status": "ok", "model": <name>, "mode": "model"|"offline"}
-    POST /ai/generate   -> AIResponse   (accepts an AIRequest JSON body)
+    GET  /health           -> {"status": "ok", "model": <name>, "mode": "model"|"offline"}
+    POST /ai/generate       -> AIResponse   (accepts an AIRequest JSON body)
+    GET  /products/search    -> Product      (?q=<query>; single best match, 404 if none)
+    POST /products/search    -> Product      ({"query": <query>}; single best match)
+    GET  /vouchers           -> [Voucher]    (list of selectable discount codes)
 
 The wire protocol matches src/core/aiActions.ts (AIRequest / AIResponse). The
 client provides a module catalog in `context.catalog`; the service replies with
@@ -45,11 +48,21 @@ def _load_dotenv() -> None:
 _load_dotenv()
 
 import ai_service  # noqa: E402 — must follow _load_dotenv()
+import product_service  # noqa: E402
+import voucher_service  # noqa: E402
 
 app = Flask(__name__)
 # Restrict the origin in production via CORS_ORIGINS (comma-separated).
 _origins = os.environ.get("CORS_ORIGINS", "*")
-CORS(app, resources={r"/ai/*": {"origins": _origins}}, max_age=600)
+CORS(
+    app,
+    resources={
+        r"/ai/*": {"origins": _origins},
+        r"/products/*": {"origins": _origins},
+        r"/vouchers": {"origins": _origins},
+    },
+    max_age=600,
+)
 
 
 @app.get("/health")
@@ -72,6 +85,44 @@ def generate():
         return jsonify(error=str(exc)), 422
     except Exception as exc:  # noqa: BLE001 — return a readable message to the client
         app.logger.exception("AI generation failed")
+        return jsonify(error=f"Internal error: {exc}"), 500
+
+
+@app.route("/products/search", methods=["GET", "POST"])
+def products_search():
+    """Return a single best-matching product for a free-text query.
+
+    Accepts the query as `?q=` (GET) or `{"query": ...}` / `{"q": ...}` (POST).
+    Responds with the product object, or 404 `{"error": ...}` when nothing
+    matched — both of which the client's default mapping understands.
+    """
+    if request.method == "GET":
+        query = request.args.get("q", "")
+    else:
+        body = request.get_json(silent=True) or {}
+        query = body.get("query") or body.get("q") or ""
+
+    if not isinstance(query, str) or not query.strip():
+        return jsonify(error="A non-empty query is required."), 400
+
+    try:
+        product = product_service.search(query)
+    except Exception as exc:  # noqa: BLE001
+        app.logger.exception("Product search failed")
+        return jsonify(error=f"Internal error: {exc}"), 500
+
+    if product is None:
+        return jsonify(error=f"No product matched '{query}'."), 404
+    return jsonify(product)
+
+
+@app.get("/vouchers")
+def vouchers_list():
+    """Return the list of vouchers the user can choose from."""
+    try:
+        return jsonify(voucher_service.list_vouchers())
+    except Exception as exc:  # noqa: BLE001
+        app.logger.exception("Voucher listing failed")
         return jsonify(error=f"Internal error: {exc}"), 500
 
 

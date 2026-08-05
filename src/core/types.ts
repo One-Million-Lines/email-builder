@@ -23,7 +23,7 @@ export interface BaseStyle {
 export interface TextElement {
   id: string;
   type: "text";
-  role?: "headline" | "subheadline" | "body" | "caption";
+  role?: "headline" | "subheadline" | "body" | "caption" | "voucherCode";
   content: string; // may contain limited HTML (b, i, a)
   style?: BaseStyle & {
     fontFamily?: string;
@@ -81,6 +81,8 @@ export interface Product {
   description?: string;
   link?: string;
   buttonLabel?: string;
+  /** Optional 0–5 rating. Rendered as star glyphs when the grid shows stars. */
+  stars?: number;
 }
 
 export interface ProductGridElement {
@@ -91,6 +93,8 @@ export interface ProductGridElement {
   showOldPrice: boolean;
   showButton: boolean;
   showDescription: boolean;
+  /** Show the star rating on each product card. Optional for back-compat. */
+  showStars?: boolean;
   buttonLabel?: string;
   style?: BaseStyle & {
     nameColor?: string;

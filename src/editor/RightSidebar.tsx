@@ -2,8 +2,14 @@ import { useEffect, useRef, useState } from "react";
 import { useEmailStore } from "../store/emailStore";
 import { resolveToken } from "../core/theme";
 import { getAssetProvider } from "../core/plugins";
+import type { ProductSearchResult } from "../core/plugins";
 import { RecommendationsPanel } from "./RecommendationsPanel";
 import { isProductAware } from "../recommendations/logic";
+import { VoucherPanel } from "../plugins/voucherSelect/VoucherPanel";
+import { isVoucherAware } from "../plugins/voucherSelect/logic";
+import { product as makeProduct } from "../modules/helpers";
+import { ProductSearchModal } from "../plugins/productSearch/ProductSearchModal";
+import { useProductSearchAvailable } from "../plugins/productSearch/useProductSearch";
 import type {
   EmailElement,
   EmailModule,
@@ -15,18 +21,42 @@ import type {
   ProductGridElement,
   Product,
 } from "../core/types";
-import { Smartphone, Monitor, Trash2, Plus, RotateCcw, Upload, Loader2, Check } from "lucide-react";
+import { Smartphone, Monitor, Trash2, Plus, RotateCcw, Upload, Loader2, Check, Search, PanelRightClose, PanelRightOpen } from "lucide-react";
 
 export function RightSidebar() {
   const { selection, doc, viewMode } = useEmailStore();
+  const [open, setOpen] = useState(true);
+
+  // Collapsed state: a thin strip with a re-open button.
+  if (!open) {
+    return (
+      <div className="flex flex-col items-center w-6 bg-white border-l border-gray-200 shrink-0">
+        <button
+          onClick={() => setOpen(true)}
+          title="Show properties"
+          className="flex items-center justify-center w-full py-3 text-gray-400 hover:text-gray-600 hover:bg-gray-50 transition-colors"
+        >
+          <PanelRightOpen size={14} />
+        </button>
+      </div>
+    );
+  }
 
   return (
-    <div className="w-72 bg-white border-l border-gray-200 shrink-0 overflow-y-auto">
-      <div className={`px-4 py-2 text-[11px] flex items-center gap-1.5 border-b ${viewMode === "mobile" ? "bg-amber-50 text-amber-800 border-amber-200" : "bg-blue-50 text-blue-800 border-blue-100"}`}>
+    <div className="w-72 bg-white border-l border-gray-200 shrink-0 overflow-y-auto flex flex-col">
+      {/* Header: view-mode badge + collapse toggle */}
+      <div className={`px-3 py-2 text-[11px] flex items-center gap-1.5 border-b shrink-0 ${viewMode === "mobile" ? "bg-amber-50 text-amber-800 border-amber-200" : "bg-blue-50 text-blue-800 border-blue-100"}`}>
         {viewMode === "mobile" ? <Smartphone size={12} /> : <Monitor size={12} />}
-        Editing {viewMode} styles
+        <span className="flex-1">Editing {viewMode} styles</span>
+        <button
+          onClick={() => setOpen(false)}
+          title="Hide properties"
+          className={`ml-auto p-0.5 rounded hover:bg-black/10 transition-colors ${viewMode === "mobile" ? "text-amber-700 hover:text-amber-900" : "text-blue-700 hover:text-blue-900"}`}
+        >
+          <PanelRightClose size={13} />
+        </button>
       </div>
-      <div className="p-4">
+      <div className="p-4 flex-1">
         {!selection || selection.kind === "email" ? (
           <EmailSettingsPanel />
         ) : selection.kind === "module" ? (
@@ -519,6 +549,7 @@ function ModulePanel({ mod }: { mod: EmailModule }) {
         onChange={(v) => updateModule(mod.id, { style: { ...rawStyle, hideOn: v } })}
       />
       {isProductAware(mod) && <RecommendationsPanel mod={mod} />}
+      {isVoucherAware(mod) && <VoucherPanel mod={mod} />}
     </>
   );
 }
@@ -878,6 +909,39 @@ function ProductGridElementPanel({ mod, el }: { mod: EmailModule; el: ProductGri
     patch({ columns, products } as Partial<ProductGridElement>);
   };
 
+  const searchAvailable = useProductSearchAvailable();
+  // null = closed; { index: null } = add new; { index } = replace that row.
+  const [search, setSearch] = useState<{ index: number | null; query: string } | null>(null);
+
+  // Apply a searched product. Auto-enables the matching visibility toggles so
+  // the new data shows up immediately; every field stays editable afterwards.
+  const applySearchResult = (r: ProductSearchResult) => {
+    const built = makeProduct({
+      name: r.name,
+      finalPrice: r.finalPrice,
+      oldPrice: r.oldPrice,
+      description: r.description,
+      link: r.link,
+      image: r.image,
+      imageAlt: r.imageAlt,
+      stars: r.stars,
+    });
+    const flags: Partial<ProductGridElement> = {};
+    if (r.oldPrice && !el.showOldPrice) flags.showOldPrice = true;
+    if (r.description && !el.showDescription) flags.showDescription = true;
+    if (r.stars != null && !el.showStars) flags.showStars = true;
+
+    const products = el.products.slice();
+    if (search?.index != null) {
+      // Replace: keep the row's id and any per-product button override.
+      const existing = products[search.index];
+      products[search.index] = { ...built, id: existing.id, buttonLabel: existing.buttonLabel };
+    } else {
+      products.push(built);
+    }
+    patch({ products, ...flags } as Partial<ProductGridElement>);
+  };
+
   return (
     <>
       <PanelTitle>Product Grid</PanelTitle>
@@ -899,53 +963,63 @@ function ProductGridElementPanel({ mod, el }: { mod: EmailModule; el: ProductGri
         <p className="text-[10px] text-gray-400 mt-1">Always stacks to 1 column on mobile.</p>
       </Field>
 
-      <Field label="Show old price">
-        <Toggle
-          checked={el.showOldPrice}
-          onChange={(v) => patch({ showOldPrice: v } as Partial<ProductGridElement>)}
+      <ToggleRow
+        label="Show old price"
+        checked={el.showOldPrice}
+        onChange={(v) => patch({ showOldPrice: v } as Partial<ProductGridElement>)}
+      />
+      <ToggleRow
+        label="Show description"
+        checked={el.showDescription}
+        onChange={(v) => patch({ showDescription: v } as Partial<ProductGridElement>)}
+      />
+      <ToggleRow
+        label="Show stars"
+        checked={el.showStars ?? false}
+        onChange={(v) => patch({ showStars: v } as Partial<ProductGridElement>)}
+      />
+      <ToggleRow
+        label="Show button"
+        checked={el.showButton}
+        onChange={(v) => patch({ showButton: v } as Partial<ProductGridElement>)}
+      />
+      <Field label="Default button label">
+        <TextInput
+          value={el.buttonLabel ?? ""}
+          placeholder="Shop now"
+          onChange={(e) => patch({ buttonLabel: e.target.value } as Partial<ProductGridElement>)}
         />
       </Field>
-      <Field label="Show description">
-        <Toggle
-          checked={el.showDescription}
-          onChange={(v) => patch({ showDescription: v } as Partial<ProductGridElement>)}
-        />
-      </Field>
-      <Field label="Show button">
-        <Toggle
-          checked={el.showButton}
-          onChange={(v) => patch({ showButton: v } as Partial<ProductGridElement>)}
-        />
-      </Field>
-      {el.showButton && (
-        <Field label="Default button label">
-          <TextInput
-            value={el.buttonLabel ?? ""}
-            placeholder="Shop now"
-            onChange={(e) => patch({ buttonLabel: e.target.value } as Partial<ProductGridElement>)}
-          />
-        </Field>
-      )}
 
       <div className="mt-4 pt-3 border-t border-gray-100">
         <div className="flex items-center justify-between mb-2">
           <PanelTitle>Products ({el.products.length})</PanelTitle>
-          <button
-            onClick={() => setProducts([...el.products, newProduct(el.products.length)])}
-            className="flex items-center gap-1 px-1.5 py-0.5 text-[11px] text-blue-600 hover:bg-blue-50 rounded"
-            title="Add product"
-          >
-            <Plus size={12} /> Add
-          </button>
+          <div className="flex items-center gap-1">
+            {searchAvailable && (
+              <button
+                onClick={() => setSearch({ index: null, query: "" })}
+                className="flex items-center gap-1 px-1.5 py-0.5 text-[11px] text-blue-600 hover:bg-blue-50 rounded"
+                title="Find a product from your catalog"
+              >
+                <Search size={12} /> Find
+              </button>
+            )}
+            <button
+              onClick={() => setProducts([...el.products, newProduct(el.products.length)])}
+              className="flex items-center gap-1 px-1.5 py-0.5 text-[11px] text-blue-600 hover:bg-blue-50 rounded"
+              title="Add product"
+            >
+              <Plus size={12} /> Add
+            </button>
+          </div>
         </div>
         {el.products.map((p, idx) => (
           <ProductRow
             key={p.id}
             index={idx}
             product={p}
-            showOldPrice={el.showOldPrice}
-            showDescription={el.showDescription}
-            showButton={el.showButton}
+            canSearch={searchAvailable}
+            onSearch={() => setSearch({ index: idx, query: p.name })}
             onChange={(np) => {
               const next = [...el.products];
               next[idx] = np;
@@ -955,6 +1029,14 @@ function ProductGridElementPanel({ mod, el }: { mod: EmailModule; el: ProductGri
           />
         ))}
       </div>
+
+      <ProductSearchModal
+        open={search !== null}
+        initialQuery={search?.query}
+        title={search?.index != null ? "Replace product" : "Add product from search"}
+        onClose={() => setSearch(null)}
+        onSave={applySearchResult}
+      />
 
       <div className="mt-4 pt-3 border-t border-gray-100">
         <PanelTitle>Style</PanelTitle>
@@ -1009,8 +1091,16 @@ function ProductGridElementPanel({ mod, el }: { mod: EmailModule; el: ProductGri
 function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
   return (
     <button
-      onClick={() => onChange(!checked)}
-      className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      onClick={(e) => {
+        // Guard against a wrapping <label> re-dispatching the click (double toggle).
+        e.preventDefault();
+        e.stopPropagation();
+        onChange(!checked);
+      }}
+      className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors ${
         checked ? "bg-blue-600" : "bg-gray-300"
       }`}
     >
@@ -1023,20 +1113,38 @@ function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean
   );
 }
 
+// A toggle laid out as a single row (label left, switch right). Uses a <div>
+// (not a <label>) so the switch button is the only click target — this avoids
+// the label-forwards-click double toggle that made these switches feel broken.
+function ToggleRow({
+  label,
+  checked,
+  onChange,
+}: {
+  label: React.ReactNode;
+  checked: boolean;
+  onChange: (v: boolean) => void;
+}) {
+  return (
+    <div className="mb-3 flex items-center justify-between gap-2">
+      <span className="text-xs text-gray-600">{label}</span>
+      <Toggle checked={checked} onChange={onChange} />
+    </div>
+  );
+}
+
 function ProductRow({
   index,
   product,
-  showOldPrice,
-  showDescription,
-  showButton,
+  canSearch,
+  onSearch,
   onChange,
   onDelete,
 }: {
   index: number;
   product: Product;
-  showOldPrice: boolean;
-  showDescription: boolean;
-  showButton: boolean;
+  canSearch: boolean;
+  onSearch: () => void;
   onChange: (p: Product) => void;
   onDelete: () => void;
 }) {
@@ -1045,13 +1153,26 @@ function ProductRow({
     <div className="border border-gray-200 rounded p-2 mb-2 bg-gray-50">
       <div className="flex items-center justify-between mb-2">
         <span className="text-[11px] font-semibold text-gray-600">#{index + 1}</span>
-        <button
-          onClick={onDelete}
-          className="text-gray-400 hover:text-red-600"
-          title="Remove product"
-        >
-          <Trash2 size={12} />
-        </button>
+        <div className="flex items-center gap-1.5">
+          {canSearch && (
+            <button
+              type="button"
+              onClick={onSearch}
+              className="text-gray-400 hover:text-blue-600"
+              title="Replace from product search"
+            >
+              <Search size={12} />
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={onDelete}
+            className="text-gray-400 hover:text-red-600"
+            title="Remove product"
+          >
+            <Trash2 size={12} />
+          </button>
+        </div>
       </div>
       <Field label="Name">
         <TextInput value={product.name} onChange={(e) => set({ name: e.target.value })} />
@@ -1076,32 +1197,39 @@ function ProductRow({
             onChange={(e) => set({ finalPrice: e.target.value })}
           />
         </Field>
-        {showOldPrice && (
-          <Field label="Old price">
-            <TextInput
-              value={product.oldPrice ?? ""}
-              onChange={(e) => set({ oldPrice: e.target.value })}
-            />
-          </Field>
-        )}
+        <Field label="Old price">
+          <TextInput
+            value={product.oldPrice ?? ""}
+            placeholder="Optional"
+            onChange={(e) => set({ oldPrice: e.target.value || undefined })}
+          />
+        </Field>
       </div>
-      {showDescription && (
-        <Field label="Description">
-          <TextInput
-            value={product.description ?? ""}
-            onChange={(e) => set({ description: e.target.value })}
-          />
-        </Field>
-      )}
-      {showButton && (
-        <Field label="Button label (override)">
-          <TextInput
-            value={product.buttonLabel ?? ""}
-            placeholder="Inherit default"
-            onChange={(e) => set({ buttonLabel: e.target.value || undefined })}
-          />
-        </Field>
-      )}
+      <Field label="Description">
+        <TextInput
+          value={product.description ?? ""}
+          onChange={(e) => set({ description: e.target.value || undefined })}
+        />
+      </Field>
+      <Field label="Stars (0–5, optional)">
+        <NumberInput
+          value={product.stars ?? ""}
+          min={0}
+          max={5}
+          step={0.5}
+          placeholder="e.g. 4.5"
+          onChange={(e) =>
+            set({ stars: e.target.value === "" ? undefined : Number(e.target.value) })
+          }
+        />
+      </Field>
+      <Field label="Button label (override)">
+        <TextInput
+          value={product.buttonLabel ?? ""}
+          placeholder="Inherit default"
+          onChange={(e) => set({ buttonLabel: e.target.value || undefined })}
+        />
+      </Field>
     </div>
   );
 }

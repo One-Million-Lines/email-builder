@@ -14,7 +14,7 @@ import type {
   Theme,
 } from "./types";
 import { resolveStyle, resolveToken } from "./theme";
-import { escapeHtml, safeUrl } from "./utils";
+import { escapeHtml, safeUrl, starGlyphs, STAR_COLOR } from "./utils";
 
 function px(n: number | undefined, fallback = 0): string {
   return `${n ?? fallback}px`;
@@ -263,6 +263,9 @@ function renderProductGrid(el: ProductGridElement, ctx: RenderCtx): string {
     const desc = el.showDescription && p.description
       ? `<div style="font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:1.5;color:#6B7280;padding:0 0 12px 0;">${escapeHtml(p.description)}</div>`
       : "";
+    const stars = el.showStars && p.stars != null
+      ? `<div style="font-family:Arial,Helvetica,sans-serif;font-size:15px;letter-spacing:1px;color:${STAR_COLOR};">${starGlyphs(p.stars)}</div>`
+      : "";
     const btnLabel = p.buttonLabel ?? el.buttonLabel ?? "Shop now";
     const link = p.link ?? "#";
     const btn = el.showButton
@@ -283,6 +286,7 @@ function renderProductGrid(el: ProductGridElement, ctx: RenderCtx): string {
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:${resolveTokenSafe(cardBg, ctx.theme)};border-radius:${radius}px;">
     <tr><td style="padding:0;font-size:0;line-height:0;">${imgWrapped}</td></tr>
     <tr><td style="padding:12px 12px 4px 12px;font-family:Arial,Helvetica,sans-serif;font-size:15px;font-weight:bold;color:${resolveTokenSafe(nameColor, ctx.theme)};line-height:1.3;">${escapeHtml(p.name)}</td></tr>
+    ${stars ? `<tr><td style="padding:0 12px 4px 12px;">${stars}</td></tr>` : ""}
     <tr><td style="padding:0 12px 8px 12px;font-family:Arial,Helvetica,sans-serif;">${oldPrice}${finalPrice}</td></tr>
     ${desc ? `<tr><td style="padding:0 12px 4px 12px;">${desc}</td></tr>` : ""}
     ${btn ? `<tr><td align="center" style="padding:4px 12px 12px 12px;">${btn}</td></tr>` : ""}

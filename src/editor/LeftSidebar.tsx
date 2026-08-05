@@ -20,6 +20,8 @@ import {
   ArrowDown,
   Trash2,
   Copy,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from "lucide-react";
 
 const CATEGORIES: { id: ModuleCategory; icon: React.ComponentType<{ size?: number }> }[] = [
@@ -37,8 +39,15 @@ const CATEGORIES: { id: ModuleCategory; icon: React.ComponentType<{ size?: numbe
 
 export function LeftSidebar() {
   const [active, setActive] = useState<ModuleCategory | "themes" | "layers" | "ai">("layers");
+  const [panelOpen, setPanelOpen] = useState(true);
   const { addModule, themes, applyTheme, doc } = useEmailStore();
   const aiAvailable = useAIAvailable();
+
+  // Clicking a rail button while collapsed auto-expands the panel.
+  const handleRailClick = (id: typeof active) => {
+    setActive(id);
+    setPanelOpen(true);
+  };
 
   return (
     <div className="flex h-full bg-white border-r border-gray-200 shrink-0">
@@ -47,10 +56,10 @@ export function LeftSidebar() {
         {aiAvailable && (
           <>
             <button
-              onClick={() => setActive("ai")}
+              onClick={() => handleRailClick("ai")}
               title="AI Assistant"
               className={`flex flex-col items-center gap-0.5 w-14 py-2 rounded text-[10px] transition-colors ${
-                active === "ai" ? "bg-blue-50 text-blue-700" : "text-blue-600 hover:bg-blue-50"
+                active === "ai" && panelOpen ? "bg-blue-50 text-blue-700" : "text-blue-600 hover:bg-blue-50"
               }`}
             >
               <Sparkles size={20} />
@@ -60,10 +69,10 @@ export function LeftSidebar() {
           </>
         )}
         <button
-          onClick={() => setActive("layers")}
+          onClick={() => handleRailClick("layers")}
           title="Layout overview"
           className={`flex flex-col items-center gap-0.5 w-14 py-2 rounded text-[10px] transition-colors ${
-            active === "layers" ? "bg-blue-50 text-blue-700" : "text-gray-600 hover:bg-gray-50"
+            active === "layers" && panelOpen ? "bg-blue-50 text-blue-700" : "text-gray-600 hover:bg-gray-50"
           }`}
         >
           <Layers size={20} />
@@ -72,11 +81,11 @@ export function LeftSidebar() {
         <div className="h-px w-10 bg-gray-200 my-1" />
         {CATEGORIES.map((c) => {
           const Icon = c.icon;
-          const isActive = active === c.id;
+          const isActive = active === c.id && panelOpen;
           return (
             <button
               key={c.id}
-              onClick={() => setActive(c.id)}
+              onClick={() => handleRailClick(c.id)}
               title={CATEGORY_LABELS[c.id]}
               className={`flex flex-col items-center gap-0.5 w-14 py-2 rounded text-[10px] transition-colors ${
                 isActive ? "bg-blue-50 text-blue-700" : "text-gray-600 hover:bg-gray-50"
@@ -89,10 +98,10 @@ export function LeftSidebar() {
         })}
         <div className="mt-auto">
           <button
-            onClick={() => setActive("themes")}
+            onClick={() => handleRailClick("themes")}
             title="Themes"
             className={`flex flex-col items-center gap-0.5 w-14 py-2 rounded text-[10px] transition-colors ${
-              active === "themes" ? "bg-blue-50 text-blue-700" : "text-gray-600 hover:bg-gray-50"
+              active === "themes" && panelOpen ? "bg-blue-50 text-blue-700" : "text-gray-600 hover:bg-gray-50"
             }`}
           >
             <Palette size={20} />
@@ -101,17 +110,31 @@ export function LeftSidebar() {
         </div>
       </div>
 
-      {/* Module list panel */}
-      <div className="w-64 overflow-y-auto p-3">
-        {active === "layers" ? (
-          <LayersPanel />
-        ) : active === "ai" ? (
-          <AIChatPanel />
-        ) : active === "themes" ? (
-          <>
-            <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-3">
-              Themes
-            </h3>
+      {/* Collapsible panel */}
+      {panelOpen && (
+        <div className="w-64 overflow-y-auto p-3 flex flex-col">
+          {/* Collapse toggle */}
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[10px] font-semibold uppercase tracking-wide text-gray-400">
+              {active === "layers" ? "Layout"
+                : active === "ai" ? "AI"
+                : active === "themes" ? "Themes"
+                : CATEGORY_LABELS[active as ModuleCategory]}
+            </span>
+            <button
+              onClick={() => setPanelOpen(false)}
+              title="Hide panel"
+              className="text-gray-400 hover:text-gray-600 rounded p-0.5 hover:bg-gray-100 transition-colors"
+            >
+              <PanelLeftClose size={15} />
+            </button>
+          </div>
+
+          {active === "layers" ? (
+            <LayersPanel />
+          ) : active === "ai" ? (
+            <AIChatPanel />
+          ) : active === "themes" ? (
             <div className="flex flex-col gap-2">
               {themes.map((t) => {
                 const isActive = doc.theme.id === t.id;
@@ -144,34 +167,42 @@ export function LeftSidebar() {
                 );
               })}
             </div>
-          </>
-        ) : (
-          <>
-            <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-3">
-              {CATEGORY_LABELS[active]}
-            </h3>
-            <div className="grid grid-cols-1 gap-2">
-              {moduleRegistry.byCategory(active).map((def) => (
-                <button
-                  key={def.type}
-                  onClick={() => addModule(def.create())}
-                  className="text-left p-3 rounded border border-gray-200 bg-white hover:border-blue-400 hover:shadow-sm transition-all"
-                >
-                  <div className="h-12 bg-gray-50 rounded mb-2 flex items-center justify-center text-xs text-gray-400">
-                    {def.name}
+          ) : (
+            <>
+              <div className="grid grid-cols-1 gap-2">
+                {moduleRegistry.byCategory(active as ModuleCategory).map((def) => (
+                  <button
+                    key={def.type}
+                    onClick={() => addModule(def.create())}
+                    className="text-left p-3 rounded border border-gray-200 bg-white hover:border-blue-400 hover:shadow-sm transition-all"
+                  >
+                    <div className="h-12 bg-gray-50 rounded mb-2 flex items-center justify-center text-xs text-gray-400">
+                      {def.name}
+                    </div>
+                    <div className="text-xs font-medium text-gray-700">{def.name}</div>
+                  </button>
+                ))}
+                {moduleRegistry.byCategory(active as ModuleCategory).length === 0 && (
+                  <div className="text-xs text-gray-400 italic py-4 text-center">
+                    No modules in this category yet.
                   </div>
-                  <div className="text-xs font-medium text-gray-700">{def.name}</div>
-                </button>
-              ))}
-              {moduleRegistry.byCategory(active).length === 0 && (
-                <div className="text-xs text-gray-400 italic py-4 text-center">
-                  No modules in this category yet.
-                </div>
-              )}
-            </div>
-          </>
-        )}
-      </div>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* Collapsed: show re-open affordance */}
+      {!panelOpen && (
+        <button
+          onClick={() => setPanelOpen(true)}
+          title="Show panel"
+          className="flex items-center justify-center w-5 h-full text-gray-400 hover:text-gray-600 hover:bg-gray-50 transition-colors border-r border-gray-200"
+        >
+          <PanelLeftOpen size={14} />
+        </button>
+      )}
     </div>
   );
 }
@@ -184,22 +215,14 @@ function LayersPanel() {
 
   if (doc.modules.length === 0) {
     return (
-      <>
-        <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-3">
-          Layout
-        </h3>
-        <p className="text-xs text-gray-400 italic">
-          No blocks yet. Pick a category from the rail to add modules.
-        </p>
-      </>
+      <p className="text-xs text-gray-400 italic">
+        No blocks yet. Pick a category from the rail to add modules.
+      </p>
     );
   }
 
   return (
     <>
-      <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">
-        Layout
-      </h3>
       <p className="text-[10px] text-gray-400 mb-3">
         {doc.modules.length} block{doc.modules.length === 1 ? "" : "s"} · click to select
       </p>

@@ -12,6 +12,7 @@ import {
   PLACEHOLDER,
   product,
   productGrid,
+  voucherCode,
 } from "./helpers";
 
 export const ecommerceModules: ModuleDefinition[] = [
@@ -107,6 +108,20 @@ export const ecommerceModules: ModuleDefinition[] = [
           paddingTop: 4,
           paddingBottom: 16,
         }),
+        button("Redeem"),
+        spacer(24),
+      ]),
+  },
+  {
+    type: "ecom.voucher",
+    category: "ecommerce",
+    name: "Voucher Code",
+    description: "Personalized voucher block: 'Your code' label, a large voucher code and a Redeem button. With the voucher-select plugin, pick a code from your backend catalog; otherwise edit the code text directly.",
+    tags: ["voucher", "coupon", "discount", "code", "promo", "redeem"],
+    create: () =>
+      mod("ecom.voucher", "Voucher Code", [
+        muted("Your code", { align: "center" }),
+        voucherCode("SAVE20"),
         button("Redeem"),
         spacer(24),
       ]),

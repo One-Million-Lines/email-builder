@@ -20,3 +20,15 @@ export function safeUrl(url: string | undefined): string {
     return "#";
   }
 }
+
+/** Default gold used for product star ratings. */
+export const STAR_COLOR = "#F5A623";
+
+/**
+ * Build a 5-glyph star string for a 0–5 rating (rounded to the nearest whole
+ * star). Uses ★ (full) and ☆ (empty) so it renders in any email client.
+ */
+export function starGlyphs(rating: number): string {
+  const filled = Math.max(0, Math.min(5, Math.round(rating)));
+  return "★".repeat(filled) + "☆".repeat(5 - filled);
+}

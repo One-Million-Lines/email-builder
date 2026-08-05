@@ -11,8 +11,16 @@ import { App } from "./App";
 import { registerDefaultModules } from "./modules/defaultModules";
 import { moduleRegistry, type ModuleDefinition } from "./modules/registry";
 import type { AIProvider } from "./core/aiActions";
-import { builder, registerPlugin, type Plugin } from "./core/plugins";
+import {
+  builder,
+  registerPlugin,
+  type Plugin,
+  type ProductProvider,
+  type VoucherProvider,
+} from "./core/plugins";
 import { createHttpAIProvider, type HttpAIProviderOptions } from "./ai";
+import { createProductSearchProvider, type ProductSearchOptions } from "./plugins/productSearch";
+import { createVoucherProvider, loadVouchers, type VoucherOptions } from "./plugins/voucherSelect";
 
 export interface EmailBuilderProps {
   initialDocument?: EmailDocument;
@@ -24,6 +32,20 @@ export interface EmailBuilderProps {
    * Ignored when `aiProvider` is provided.
    */
   aiEndpoint?: string | HttpAIProviderOptions;
+  /** Product search provider (enables the "Find product" modal on product cards). */
+  productProvider?: ProductProvider;
+  /**
+   * Convenience: wire the built-in HTTP product-search provider by URL.
+   * Ignored when `productProvider` is provided.
+   */
+  productEndpoint?: string | ProductSearchOptions;
+  /** Voucher provider (enables the "Select voucher" dropdown on voucher blocks). */
+  voucherProvider?: VoucherProvider;
+  /**
+   * Convenience: wire the built-in HTTP voucher provider by URL.
+   * Ignored when `voucherProvider` is provided.
+   */
+  voucherEndpoint?: string | VoucherOptions;
   onChange?: (doc: EmailDocument) => void;
   onExportHtml?: (html: string) => void;
 }
@@ -39,6 +61,25 @@ export function EmailBuilder(props: EmailBuilderProps) {
       const opts =
         typeof props.aiEndpoint === "string" ? { endpoint: props.aiEndpoint } : props.aiEndpoint;
       builder.setAIProvider(createHttpAIProvider(opts));
+    }
+    if (props.productProvider) builder.registerProductProvider(props.productProvider);
+    else if (props.productEndpoint) {
+      const opts =
+        typeof props.productEndpoint === "string"
+          ? { endpoint: props.productEndpoint }
+          : props.productEndpoint;
+      builder.registerProductProvider(createProductSearchProvider(opts));
+    }
+    if (props.voucherProvider) builder.registerVoucherProvider(props.voucherProvider);
+    else if (props.voucherEndpoint) {
+      const opts =
+        typeof props.voucherEndpoint === "string"
+          ? { endpoint: props.voucherEndpoint }
+          : props.voucherEndpoint;
+      builder.registerVoucherProvider(createVoucherProvider(opts));
+      if (typeof props.voucherEndpoint !== "string" && props.voucherEndpoint.preload) {
+        void loadVouchers();
+      }
     }
     if (props.initialDocument) {
       const r = documentSchema.safeParse(props.initialDocument);
@@ -90,6 +131,29 @@ export type { Plugin, ModuleDefinition, AIProvider, EmailDocument, Theme };
 export { registerPlugin, renderEmailHtml, documentSchema };
 export { imageUploaderPlugin } from "./plugins/imageUploader";
 export type { ImageUploaderOptions } from "./plugins/imageUploader";
+
+// Product search — modal-driven catalog lookup backed by a configurable endpoint.
+export {
+  productSearchPlugin,
+  createProductSearchProvider,
+  getActiveProductProvider,
+  setActiveProductProvider,
+} from "./plugins/productSearch";
+export type {
+  ProductSearchOptions,
+  ProductProvider,
+  ProductSearchResult,
+} from "./plugins/productSearch";
+
+// Voucher select — pick discount codes from a backend list on voucher blocks.
+export {
+  voucherPlugin,
+  createVoucherProvider,
+  getActiveVoucherProvider,
+  setActiveVoucherProvider,
+  isVoucherAware,
+} from "./plugins/voucherSelect";
+export type { VoucherOptions, Voucher, VoucherProvider } from "./plugins/voucherSelect";
 
 // AI assistant module — chat-driven editing backed by the Python service.
 export {

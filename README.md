@@ -155,6 +155,49 @@ response is validated with Zod before it is applied. See
 [`src/ai/README.md`](./src/ai/README.md) and
 [`backend/README.md`](./backend/README.md).
 
+### Product search
+
+Connect product cards to your catalog. When a product provider is configured, a
+**Find** button appears on any product grid (and a search icon on each card).
+Searching opens a modal, previews the returned product, and — on **Save** —
+populates the card's fields (which stay fully editable afterwards).
+
+```tsx
+<EmailBuilder productEndpoint="http://localhost:3001/products/search" />
+```
+
+```ts
+import { registerPlugin, productSearchPlugin } from "@one-million-lines/email-builder";
+registerPlugin(productSearchPlugin({ endpoint: "http://localhost:3001/products/search" }));
+```
+
+The demo backend in [`backend/`](./backend) ships a `/products/search` endpoint
+over a small in-memory catalog. Product fields are `title`, `final_price`,
+`old_price` (optional), `description`, `link`, `image` and `stars` (optional).
+See [`src/plugins/productSearch/README.md`](./src/plugins/productSearch/README.md)
+for the wire protocol and response mapping.
+
+### Voucher select
+
+Let users pick a discount code from your backend instead of typing it. When a
+voucher provider is configured, selecting a **voucher block** (the built-in
+**Voucher Code** module, or any module with a `voucherCode` text element) shows a
+**Select voucher** dropdown that fills the code. The list is fetched once and
+cached (lazily, or eagerly with `preload`).
+
+```tsx
+<EmailBuilder voucherEndpoint="http://localhost:3001/vouchers" />
+```
+
+```ts
+import { registerPlugin, voucherPlugin } from "@one-million-lines/email-builder";
+registerPlugin(voucherPlugin({ endpoint: "http://localhost:3001/vouchers", preload: true }));
+```
+
+The demo backend ships a `GET /vouchers` endpoint. See
+[`src/plugins/voucherSelect/README.md`](./src/plugins/voucherSelect/README.md)
+for the wire protocol and response mapping.
+
 ### Styling & isolation
 
 The stylesheet at `@one-million-lines/email-builder/styles.css` is designed to

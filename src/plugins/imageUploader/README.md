@@ -19,7 +19,7 @@ A plugin is a plain object:
 ```ts
 interface Plugin {
   name: string;                                        // unique id, e.g. "image-uploader"
-  type: "modules" | "themes" | "asset-provider" | "ai-provider";
+  type: "modules" | "themes" | "asset-provider" | "product-provider" | "voucher-provider" | "ai-provider";
   setup: (builder: BuilderHandle) => void;             // called once on registration
 }
 ```
@@ -31,6 +31,8 @@ interface BuilderHandle {
   registerModule(def: ModuleDefinition): void;         // add a content block
   registerTheme(theme: Theme): void;                   // add a theme preset
   registerAssetProvider(provider: AssetProvider): void;// add a file uploader
+  registerProductProvider(provider: ProductProvider): void; // add catalog search
+  registerVoucherProvider(provider: VoucherProvider): void; // add voucher list
   setAIProvider(provider: AIProvider): void;           // wire AI generation
 }
 ```
@@ -42,6 +44,10 @@ Plugins are pure: call `setup()` once, register what you need, and return. They 
 The package ships several ready-made plugins that follow this model:
 
 - `imageUploaderPlugin({ endpoint })` — file upload asset provider (this doc).
+- `productSearchPlugin({ endpoint })` — search your catalog and populate product
+  cards. See [`../productSearch/README.md`](../productSearch/README.md).
+- `voucherPlugin({ endpoint })` — pick discount codes from a backend list on
+  voucher blocks. See [`../voucherSelect/README.md`](../voucherSelect/README.md).
 - `aiAssistantPlugin({ endpoint })` — wire the AI chat panel to a backend. See
   [`../../ai/README.md`](../../ai/README.md).
 
