@@ -4,6 +4,40 @@ All notable changes to this package are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/) and the
 [Keep a Changelog](https://keepachangelog.com/) format.
 
+## [0.6.1] — 2026-09-03
+
+### Fixed
+
+- **Rich-text toolbar position** — removed incorrect `window.scrollY` / `scrollX`
+  offsets from the `position: fixed` toolbar. `getBoundingClientRect()` already
+  returns viewport-relative coordinates; adding scroll offsets pushed the toolbar
+  far off-screen when the canvas was scrolled. Also: toolbar is now clamped to
+  the viewport on all four edges; all popovers (link, colour, emoji, merge-tag)
+  now open **upward** (`bottom-full`) instead of downward, preventing them from
+  falling off-screen when the toolbar is near the bottom of the visible area.
+- **Color inputs show resolved hex** — `ColorInput` in the right sidebar now
+  displays the resolved hex value (e.g., `#FFFFFF`) in the text field instead of
+  the raw theme token string (e.g., `{colors.buttonText}`). The token is still
+  preserved in the document until the user types a custom value. The **Reset to
+  theme token** button tooltip was updated to show the token path.
+
+### Changed
+
+- **Recommendations → opt-in plugin** — the Recommendations panel in the right
+  sidebar is now hidden by default and only appears when explicitly enabled.
+  This decouples the feature from the core editor for hosts that do not use
+  personalised recommendations.
+  - New React prop: `<EmailBuilder enableRecommendations />`.
+  - New plugin object: `recommendationsPlugin` (pass to `registerPlugin()`).
+  - New `BuilderHandle` method: `builder.registerRecommendationsPlugin()`.
+  - New reactive store export: `useRecommendationsStore`.
+  - New documentation: `src/recommendations/README.md` — covers the data
+    schema, algorithm catalog, activation, backend processor integration, and
+    the legacy Vibetrace interop shape.
+  - **No breaking change for existing documents** — any `module.data.recommendations`
+    already in saved JSON is preserved; the panel just won't be visible until
+    the plugin is registered.
+
 ## [0.6.0] — 2026-09-03
 
 ### Added

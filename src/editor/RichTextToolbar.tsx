@@ -176,7 +176,7 @@ function LinkPopover({
 
   return (
     <div
-      className="absolute top-full left-0 mt-1 z-50 bg-white border border-gray-200 rounded-lg shadow-xl p-3 w-80"
+      className="absolute bottom-full left-0 mb-1 z-50 bg-white border border-gray-200 rounded-lg shadow-xl p-3 w-80"
       onMouseDown={(e) => e.stopPropagation()}
     >
       <div className="flex items-center justify-between mb-2">
@@ -257,7 +257,7 @@ function ColorPopover({ onClose }: { onClose: () => void }) {
   };
   return (
     <div
-      className="absolute top-full left-0 mt-1 z-50 bg-white border border-gray-200 rounded-lg shadow-xl p-3"
+      className="absolute bottom-full left-0 mb-1 z-50 bg-white border border-gray-200 rounded-lg shadow-xl p-3"
       style={{ width: 196 }}
       onMouseDown={(e) => e.stopPropagation()}
     >
@@ -304,7 +304,7 @@ function EmojiPopover({ onClose }: { onClose: () => void }) {
   };
   return (
     <div
-      className="absolute top-full right-0 mt-1 z-50 bg-white border border-gray-200 rounded-lg shadow-xl p-2"
+      className="absolute bottom-full right-0 mb-1 z-50 bg-white border border-gray-200 rounded-lg shadow-xl p-2"
       style={{ width: 260 }}
       onMouseDown={(e) => e.stopPropagation()}
     >
@@ -334,7 +334,7 @@ function MergeTagPopover({ onClose }: { onClose: () => void }) {
   if (mergeTags.length === 0) return null;
   return (
     <div
-      className="absolute top-full right-0 mt-1 z-50 bg-white border border-gray-200 rounded-lg shadow-xl py-1"
+      className="absolute bottom-full right-0 mb-1 z-50 bg-white border border-gray-200 rounded-lg shadow-xl py-1"
       style={{ minWidth: 200 }}
       onMouseDown={(e) => e.stopPropagation()}
     >
@@ -382,14 +382,24 @@ export function RichTextToolbar() {
       rect = activeEl.getBoundingClientRect();
     }
     if (!rect || (rect.width === 0 && rect.height === 0)) return;
-    const toolbarH = 40;
-    const toolbarW = toolbarRef.current?.offsetWidth ?? 480;
-    let top = rect.top - toolbarH - 6 + window.scrollY;
-    let left = rect.left + rect.width / 2 - toolbarW / 2 + window.scrollX;
-    // Keep inside viewport
-    if (top < 8) top = rect.bottom + 6 + window.scrollY;
-    if (left < 8) left = 8;
-    if (left + toolbarW > window.innerWidth - 8) left = window.innerWidth - toolbarW - 8;
+
+    // The toolbar uses `position: fixed` so coordinates must be viewport-relative.
+    // getBoundingClientRect() already returns viewport-relative values —
+    // do NOT add window.scrollY / scrollX here.
+    const toolbarH = toolbarRef.current?.offsetHeight ?? 40;
+    const toolbarW = toolbarRef.current?.offsetWidth ?? 440;
+
+    // Prefer above the selection; flip below if not enough room above.
+    let top = rect.top - toolbarH - 6;
+    if (top < 8) top = rect.bottom + 6;
+    // Clamp to viewport so it never overflows bottom (e.g. when text is at page bottom).
+    top = Math.min(top, window.innerHeight - toolbarH - 8);
+    top = Math.max(top, 8);
+
+    // Horizontally centre over the selection / element, clamped to viewport.
+    let left = rect.left + rect.width / 2 - toolbarW / 2;
+    left = Math.max(8, Math.min(left, window.innerWidth - toolbarW - 8));
+
     setPos({ top, left });
   }, [activeEl]);
 

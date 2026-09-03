@@ -60,6 +60,14 @@ export interface EmailBuilderProps {
    * ```
    */
   mergeTags?: MergeTag[];
+  /**
+   * Set to `true` to enable the Recommendations panel in the right sidebar.
+   * When enabled, any module containing a `productGrid` element shows a
+   * recommendations configuration panel where algorithm stack, fallback
+   * strategy, and product filters can be set.
+   * Defaults to `false` — the panel is hidden unless explicitly enabled.
+   */
+  enableRecommendations?: boolean;
   onChange?: (doc: EmailDocument) => void;
   onExportHtml?: (html: string) => void;
 }
@@ -96,6 +104,7 @@ export function EmailBuilder(props: EmailBuilderProps) {
       }
     }
     if (props.mergeTags) builder.registerMergeTags(props.mergeTags);
+    if (props.enableRecommendations) builder.registerRecommendationsPlugin();
     if (props.initialDocument) {
       const r = documentSchema.safeParse(props.initialDocument);
       if (r.success) useEmailStore.getState().applyDoc(r.data as EmailDocument, false);
@@ -205,3 +214,23 @@ export type {
   FallbackId,
   RecommendationMode,
 } from "./recommendations/logic";
+
+// Recommendations plugin — opt-in activation and helper exports.
+export { useRecommendationsStore } from "./plugins/recommendations/state";
+
+/**
+ * Convenience plugin object.  Pass to `registerPlugin()` or use
+ * `<EmailBuilder enableRecommendations />` to activate the recommendations
+ * panel for product-grid modules.
+ *
+ * @example
+ * ```ts
+ * import { registerPlugin, recommendationsPlugin } from "@one-million-lines/email-builder";
+ * registerPlugin(recommendationsPlugin);
+ * ```
+ */
+export const recommendationsPlugin = {
+  name: "recommendations",
+  type: "recommendations" as const,
+  setup: (b: import("./core/plugins").BuilderHandle) => b.registerRecommendationsPlugin(),
+};

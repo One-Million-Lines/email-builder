@@ -7,6 +7,7 @@ import { setAIProvider as setReactiveAIProvider } from "../ai/state";
 import { setProductProvider as setReactiveProductProvider } from "../plugins/productSearch/state";
 import { setVoucherProvider as setReactiveVoucherProvider } from "../plugins/voucherSelect/state";
 import { setMergeTagsGlobal } from "../plugins/mergeTags/state";
+import { enableRecommendations } from "../plugins/recommendations/state";
 
 export interface AssetProvider {
   upload: (file: File) => Promise<{ url: string; alt?: string }>;
@@ -60,6 +61,12 @@ export interface BuilderHandle {
   setAIProvider: (provider: AIProvider) => void;
   /** Configure the list of merge tags available in the text element sidebar. */
   registerMergeTags: (tags: MergeTag[]) => void;
+  /**
+   * Opt in to the recommendations engine. When called, the Recommendations
+   * panel appears in the right sidebar for any module that contains a
+   * `productGrid` element. Without this call the panel stays hidden.
+   */
+  registerRecommendationsPlugin: () => void;
 }
 
 export type PluginType =
@@ -101,6 +108,7 @@ export const builder: BuilderHandle = {
     setReactiveAIProvider(p);
   },
   registerMergeTags: (tags) => setMergeTagsGlobal(tags),
+  registerRecommendationsPlugin: () => enableRecommendations(),
 };
 
 export function registerPlugin(plugin: Plugin) {

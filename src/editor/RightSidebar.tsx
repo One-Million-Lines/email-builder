@@ -5,6 +5,7 @@ import { getAssetProvider } from "../core/plugins";
 import type { ProductSearchResult } from "../core/plugins";
 import { RecommendationsPanel } from "./RecommendationsPanel";
 import { isProductAware } from "../recommendations/logic";
+import { useRecommendationsStore } from "../plugins/recommendations/state";
 import { VoucherPanel } from "../plugins/voucherSelect/VoucherPanel";
 import { isVoucherAware } from "../plugins/voucherSelect/logic";
 import { product as makeProduct } from "../modules/helpers";
@@ -264,8 +265,6 @@ function ColorInput({
   const theme = useEmailStore((s) => s.doc.theme);
   const isToken = typeof value === "string" && value.startsWith("{");
 
-  // Remember the most recent token seen so the user can reset back to it
-  // even after picking a custom hex color.
   const lastTokenRef = useRef<string | undefined>(
     defaultValue && defaultValue.startsWith("{") ? defaultValue : isToken ? value : undefined
   );
@@ -274,7 +273,7 @@ function ColorInput({
     else if (defaultValue && defaultValue.startsWith("{")) lastTokenRef.current = defaultValue;
   }, [value, isToken, defaultValue]);
 
-  // Hex shown in the native picker swatch (resolves tokens against theme).
+  // Hex shown in the swatch and resolved for display in the text input.
   const swatchHex = (() => {
     const resolved = resolveToken(value, theme);
     if (typeof resolved === "string" && /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(resolved)) {
@@ -288,15 +287,24 @@ function ColorInput({
   const resetTarget = defaultValue ?? lastTokenRef.current;
   const canReset = !!resetTarget && resetTarget !== value;
 
-  // Local text mirrors prop but lets user type freely (commits on blur/Enter).
-  const [text, setText] = useState(value ?? "");
-  useEffect(() => setText(value ?? ""), [value]);
+  // Display the resolved hex when the value is a theme token so users see the
+  // actual colour rather than a raw `{colors.x}` string.
+  // We track what was *displayed* in a ref so blur can detect a real user edit.
+  const displayValue = isToken ? swatchHex : (value ?? "");
+  const [text, setText] = useState(displayValue);
+  const lastDisplayRef = useRef(displayValue);
+
+  useEffect(() => {
+    const dv = isToken ? swatchHex : (value ?? "");
+    lastDisplayRef.current = dv;
+    setText(dv);
+  }, [value, isToken, swatchHex]);
 
   return (
     <div className="flex gap-1 items-center">
       <label
         className="relative w-9 h-8 border border-gray-200 rounded cursor-pointer overflow-hidden shrink-0"
-        title={isToken ? `Token → ${swatchHex} (click to override)` : "Pick color"}
+        title={isToken ? `Theme token (${value}) → click to override` : "Pick color"}
         style={{ background: swatchHex }}
       >
         <input
@@ -315,7 +323,14 @@ function ColorInput({
       <input
         value={text}
         onChange={(e) => setText(e.target.value)}
-        onBlur={() => text !== value && onChange(text)}
+        onBlur={() => {
+          // Only call onChange when the user has actually typed a new value,
+          // not when they focused then blurred without changing anything.
+          if (text !== lastDisplayRef.current) {
+            onChange(text);
+            lastDisplayRef.current = text;
+          }
+        }}
         onKeyDown={(e) => {
           if (e.key === "Enter") (e.target as HTMLInputElement).blur();
         }}
@@ -326,7 +341,7 @@ function ColorInput({
           type="button"
           onClick={() => onChange(resetTarget!)}
           className="shrink-0 p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded"
-          title={`Reset to ${resetTarget}`}
+          title={`Reset to theme token (${resetTarget})`}
         >
           <RotateCcw size={12} />
         </button>
@@ -585,6 +600,7 @@ function ThemeColorRow({
 function ModulePanel({ mod }: { mod: EmailModule }) {
   const updateModule = useEmailStore((s) => s.updateModule);
   const viewMode = useEmailStore((s) => s.viewMode);
+  const recsEnabled = useRecommendationsStore((s) => s.enabled);
   const rawStyle = (mod.style ?? {}) as Record<string, unknown>;
   const style = readStyle(rawStyle, viewMode);
   const mobileKeys = new Set(Object.keys((rawStyle.mobile as Record<string, unknown>) ?? {}));
@@ -610,7 +626,7 @@ function ModulePanel({ mod }: { mod: EmailModule }) {
         hideOn={rawStyle.hideOn as "mobile" | "desktop" | undefined}
         onChange={(v) => updateModule(mod.id, { style: { ...rawStyle, hideOn: v } })}
       />
-      {isProductAware(mod) && <RecommendationsPanel mod={mod} />}
+      {recsEnabled && isProductAware(mod) && <RecommendationsPanel mod={mod} />}
       {isVoucherAware(mod) && <VoucherPanel mod={mod} />}
     </>
   );
