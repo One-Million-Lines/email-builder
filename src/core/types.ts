@@ -3,6 +3,34 @@
 
 export type ElementType = "text" | "image" | "button" | "spacer" | "divider" | "productGrid";
 
+/**
+ * Marks a link as a well-known system link. Backend processors replace the
+ * placeholder href (e.g. `{{unsubscribe_url}}`) with a real per-recipient URL.
+ * The rendered HTML also carries a `data-link-type` attribute so backends that
+ * parse HTML can find and replace these links without inspecting the JSON.
+ */
+export type SpecialLinkType = "unsubscribe" | "view_in_browser" | "manage_preferences" | "user_profile";
+
+/** Placeholder href values automatically set when a SpecialLinkType is chosen. */
+export const SPECIAL_LINK_PLACEHOLDERS: Record<SpecialLinkType, string> = {
+  unsubscribe: "{{unsubscribe_url}}",
+  view_in_browser: "{{view_in_browser_url}}",
+  manage_preferences: "{{manage_preferences_url}}",
+  user_profile: "{{user_profile_url}}",
+};
+
+/**
+ * A merge tag / personalisation token. Configured via the `mergeTags` prop on
+ * `<EmailBuilder>` or via `builder.registerMergeTags(tags)`.
+ * When the user picks a tag, `{attribute}` is inserted into the text content.
+ */
+export interface MergeTag {
+  /** Dot-notation path used as the placeholder, e.g. `"user.firstname"`. */
+  attribute: string;
+  /** Human-readable label shown in the sidebar dropdown, e.g. `"First name"`. */
+  title: string;
+}
+
 export interface BaseStyle {
   paddingTop?: number;
   paddingBottom?: number;
@@ -33,6 +61,8 @@ export interface TextElement {
     fontWeight?: number | string;
     color?: string;
     link?: string;
+    /** Marks the element link as a well-known system link (e.g. unsubscribe). */
+    linkType?: SpecialLinkType;
   };
 }
 
@@ -42,6 +72,8 @@ export interface ImageElement {
   src: string;
   alt?: string;
   link?: string;
+  /** Marks the image link as a well-known system link. */
+  linkType?: SpecialLinkType;
   style?: BaseStyle & { width?: number; height?: number };
 }
 
@@ -50,6 +82,8 @@ export interface ButtonElement {
   type: "button";
   label: string;
   link: string;
+  /** Marks the button link as a well-known system link. */
+  linkType?: SpecialLinkType;
   style?: BaseStyle & {
     backgroundColor?: string;
     color?: string;

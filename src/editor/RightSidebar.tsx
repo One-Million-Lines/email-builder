@@ -20,12 +20,22 @@ import type {
   DividerElement,
   ProductGridElement,
   Product,
+  SpecialLinkType,
 } from "../core/types";
-import { Smartphone, Monitor, Trash2, Plus, RotateCcw, Upload, Loader2, Check, Search, PanelRightClose, PanelRightOpen } from "lucide-react";
+import { SPECIAL_LINK_PLACEHOLDERS } from "../core/types";
+import { Smartphone, Monitor, Trash2, Plus, RotateCcw, Upload, Loader2, Check, Search, PanelRightClose, PanelRightOpen, Tag, ChevronsLeft, ChevronsRight } from "lucide-react";
+
+const SPECIAL_LINK_LABELS: Record<SpecialLinkType, string> = {
+  unsubscribe: "Unsubscribe",
+  view_in_browser: "View in browser",
+  manage_preferences: "Manage preferences",
+  user_profile: "User profile",
+};
 
 export function RightSidebar() {
   const { selection, doc, viewMode } = useEmailStore();
   const [open, setOpen] = useState(true);
+  const [expanded, setExpanded] = useState(false);
 
   // Collapsed state: a thin strip with a re-open button.
   if (!open) {
@@ -42,16 +52,27 @@ export function RightSidebar() {
     );
   }
 
+  const panelWidth = expanded ? "w-[576px]" : "w-72";
+
   return (
-    <div className="w-72 bg-white border-l border-gray-200 shrink-0 overflow-y-auto flex flex-col">
-      {/* Header: view-mode badge + collapse toggle */}
+    <div className={`${panelWidth} bg-white border-l border-gray-200 shrink-0 overflow-y-auto flex flex-col transition-all duration-200`}>
+      {/* Header: view-mode badge + expand + collapse toggles */}
       <div className={`px-3 py-2 text-[11px] flex items-center gap-1.5 border-b shrink-0 ${viewMode === "mobile" ? "bg-amber-50 text-amber-800 border-amber-200" : "bg-blue-50 text-blue-800 border-blue-100"}`}>
         {viewMode === "mobile" ? <Smartphone size={12} /> : <Monitor size={12} />}
         <span className="flex-1">Editing {viewMode} styles</span>
+        {/* Expand / narrow toggle */}
+        <button
+          onClick={() => setExpanded(!expanded)}
+          title={expanded ? "Narrow panel" : "Expand panel"}
+          className={`p-0.5 rounded hover:bg-black/10 transition-colors ${viewMode === "mobile" ? "text-amber-700 hover:text-amber-900" : "text-blue-700 hover:text-blue-900"}`}
+        >
+          {expanded ? <ChevronsRight size={13} /> : <ChevronsLeft size={13} />}
+        </button>
+        {/* Collapse to strip */}
         <button
           onClick={() => setOpen(false)}
           title="Hide properties"
-          className={`ml-auto p-0.5 rounded hover:bg-black/10 transition-colors ${viewMode === "mobile" ? "text-amber-700 hover:text-amber-900" : "text-blue-700 hover:text-blue-900"}`}
+          className={`p-0.5 rounded hover:bg-black/10 transition-colors ${viewMode === "mobile" ? "text-amber-700 hover:text-amber-900" : "text-blue-700 hover:text-blue-900"}`}
         >
           <PanelRightClose size={13} />
         </button>
@@ -320,6 +341,47 @@ function Select(props: React.SelectHTMLAttributes<HTMLSelectElement>) {
       {...props}
       className="w-full px-2 py-1.5 text-sm border border-gray-200 rounded focus:border-blue-500 focus:outline-none bg-white"
     />
+  );
+}
+
+// ---------- Special link role field ----------
+
+function LinkRoleField({
+  linkType,
+  onChangeLinkType,
+  onChangeLink,
+}: {
+  linkType: string | undefined;
+  onChangeLinkType: (v: SpecialLinkType | undefined) => void;
+  onChangeLink: (url: string) => void;
+}) {
+  return (
+    <Field label="Link role">
+      <Select
+        value={linkType ?? ""}
+        onChange={(e) => {
+          const v = e.target.value as SpecialLinkType | "";
+          if (v === "") {
+            onChangeLinkType(undefined);
+          } else {
+            onChangeLinkType(v);
+            onChangeLink(SPECIAL_LINK_PLACEHOLDERS[v]);
+          }
+        }}
+      >
+        <option value="">— None —</option>
+        <option value="unsubscribe">Unsubscribe</option>
+        <option value="view_in_browser">View in browser</option>
+        <option value="manage_preferences">Manage preferences</option>
+        <option value="user_profile">User profile</option>
+      </Select>
+      {linkType && (
+        <p className="text-[10px] text-blue-600 mt-1 flex items-center gap-1">
+          <Tag size={10} />
+          Placeholder: <code className="font-mono">{SPECIAL_LINK_PLACEHOLDERS[linkType as SpecialLinkType]}</code>
+        </p>
+      )}
+    </Field>
   );
 }
 
@@ -611,36 +673,25 @@ function TextElementPanel({ mod, el }: { mod: EmailModule; el: TextElement }) {
     patch({ style: writeStylePatch(rawStyle, p, viewMode) } as Partial<TextElement>);
   return (
     <>
-      <PanelTitle>Text</PanelTitle>
-      <Field label="Content">
-        <textarea
-          value={el.content.replace(/<br\s*\/?>/g, "\n")}
-          onChange={(e) =>
-            patch({ content: e.target.value.replace(/\n/g, "<br/>") } as Partial<TextElement>)
-          }
-          rows={3}
-          className="w-full px-2 py-1.5 text-sm border border-gray-200 rounded focus:border-blue-500 focus:outline-none"
-        />
+      <PanelTitle>Text block</PanelTitle>
+
+      <p className="text-[10px] text-gray-400 mb-3 leading-relaxed">
+        Click the text in the canvas to edit it inline. Select words to apply
+        bold, italic, colour, links and more using the floating toolbar.
+      </p>
+
+      <Field label="Default align">
+        <Select
+          value={(style.align as string) ?? "left"}
+          onChange={(e) => setStyle({ align: e.target.value })}
+        >
+          <option value="left">Left</option>
+          <option value="center">Center</option>
+          <option value="right">Right</option>
+        </Select>
       </Field>
-      <Field label="Font family">
-        <TextInput
-          value={(style.fontFamily as string) ?? ""}
-          onChange={(e) => setStyle({ fontFamily: e.target.value })}
-        />
-      </Field>
+
       <div className="grid grid-cols-2 gap-2">
-        <Field label="Font size">
-          <NumberInput
-            value={(style.fontSize as number) ?? 16}
-            onChange={(e) => setStyle({ fontSize: Number(e.target.value) })}
-          />
-        </Field>
-        <Field label="Weight">
-          <TextInput
-            value={String(style.fontWeight ?? "")}
-            onChange={(e) => setStyle({ fontWeight: e.target.value || undefined })}
-          />
-        </Field>
         <Field label="Line height">
           <NumberInput
             step={0.1}
@@ -655,41 +706,12 @@ function TextElementPanel({ mod, el }: { mod: EmailModule; el: TextElement }) {
           />
         </Field>
       </div>
-      <Field label="Color">
-        <ColorInput
-          value={(style.color as string) ?? "#000000"}
-          onChange={(v) => setStyle({ color: v })}
-        />
-      </Field>
-      <Field label="Align">
-        <Select
-          value={(style.align as string) ?? "left"}
-          onChange={(e) => setStyle({ align: e.target.value })}
-        >
-          <option value="left">Left</option>
-          <option value="center">Center</option>
-          <option value="right">Right</option>
-        </Select>
-      </Field>
-      <Field label="Link URL">
-        <TextInput
-          value={(style.link as string) ?? ""}
-          onChange={(e) => setStyle({ link: e.target.value })}
-        />
-      </Field>
+
       <PaddingFields style={style} mobileKeys={mobileKeys} onSet={setStyle} />
       <VisibilityField
         hideOn={rawStyle.hideOn as "mobile" | "desktop" | undefined}
         onChange={(v) => patch({ style: { ...rawStyle, hideOn: v } } as Partial<TextElement>)}
       />
-      <button
-        onClick={() =>
-          patch({ content: `${el.content} ✨` } as Partial<TextElement>)
-        }
-        className="w-full mt-2 px-3 py-2 text-xs bg-purple-50 text-purple-700 border border-purple-200 rounded hover:bg-purple-100"
-      >
-        ✨ AI rewrite (mock)
-      </button>
     </>
   );
 }
@@ -724,6 +746,11 @@ function ImageElementPanel({ mod, el }: { mod: EmailModule; el: ImageElement }) 
           onChange={(e) => patch({ link: e.target.value } as Partial<ImageElement>)}
         />
       </Field>
+      <LinkRoleField
+        linkType={el.linkType}
+        onChangeLinkType={(v) => patch({ linkType: v } as Partial<ImageElement>)}
+        onChangeLink={(url) => patch({ link: url } as Partial<ImageElement>)}
+      />
       <div className="grid grid-cols-2 gap-2">
         <Field label={<>Width<MobileBadge overridden={mobileKeys.has("width")} /></>}>
           <NumberInput
@@ -780,6 +807,11 @@ function ButtonElementPanel({ mod, el }: { mod: EmailModule; el: ButtonElement }
       <Field label="Link">
         <TextInput value={el.link} onChange={(e) => patch({ link: e.target.value } as Partial<ButtonElement>)} />
       </Field>
+      <LinkRoleField
+        linkType={el.linkType}
+        onChangeLinkType={(v) => patch({ linkType: v } as Partial<ButtonElement>)}
+        onChangeLink={(url) => patch({ link: url } as Partial<ButtonElement>)}
+      />
       <Field label="Background color">
         <ColorInput
           value={(style.backgroundColor as string) ?? ""}

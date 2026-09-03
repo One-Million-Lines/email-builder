@@ -17,6 +17,7 @@ const elementSchema = z.discriminatedUnion("type", [
     src: z.string(),
     alt: z.string().optional(),
     link: z.string().optional(),
+    linkType: z.string().optional(),
     style: styleSchema,
   }),
   z.object({
@@ -24,6 +25,7 @@ const elementSchema = z.discriminatedUnion("type", [
     type: z.literal("button"),
     label: z.string(),
     link: z.string(),
+    linkType: z.string().optional(),
     style: styleSchema,
   }),
   z.object({

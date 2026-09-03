@@ -30,7 +30,9 @@ import {
   arrayMove,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { RichTextToolbar } from "./RichTextToolbar";
+import { useRichTextStore } from "./richTextState";
 
 const MOBILE_WIDTH = 375;
 
@@ -114,50 +116,53 @@ export function Canvas() {
   const canvasWidth = viewMode === "mobile" ? MOBILE_WIDTH : doc.settings.width;
 
   return (
-    <div
-      className="flex-1 overflow-y-auto"
-      style={{ background: bg }}
-      onClick={() => setSelection({ kind: "email" })}
-    >
-      <div className="py-8 flex justify-center">
-        <div
-          className={`shadow-lg transition-all duration-200 ${viewMode === "mobile" ? "rounded-[28px] border-[10px] border-gray-800" : ""}`}
-          style={{ width: canvasWidth, background: cbg, minHeight: 300 }}
-          onClick={(e) => e.stopPropagation()}
-        >
-          {doc.modules.length === 0 && (
-            <div className="p-12 text-center text-gray-400 text-sm">
-              Add modules from the left sidebar to start building your email.
-            </div>
-          )}
-          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-            <SortableContext items={reorderedIds} strategy={verticalListSortingStrategy}>
-              {doc.modules.map((m, i) => (
-                <SortableModule
-                  key={m.id}
-                  mod={m}
-                  index={i}
-                  viewMode={viewMode}
-                  selected={selection?.kind === "module" && selection.moduleId === m.id}
-                  selectionEl={
-                    selection?.kind === "element" && selection.moduleId === m.id
-                      ? selection.elementId
-                      : null
-                  }
-                  theme={doc.theme}
-                  onSelectModule={() => setSelection({ kind: "module", moduleId: m.id })}
-                  onSelectElement={(elId) =>
-                    setSelection({ kind: "element", moduleId: m.id, elementId: elId })
-                  }
-                  onDuplicate={() => duplicateModule(m.id)}
-                  onDelete={() => deleteModule(m.id)}
-                />
-              ))}
-            </SortableContext>
-          </DndContext>
+    <>
+      <RichTextToolbar />
+      <div
+        className="flex-1 overflow-y-auto"
+        style={{ background: bg }}
+        onClick={() => setSelection({ kind: "email" })}
+      >
+        <div className="py-8 flex justify-center">
+          <div
+            className={`shadow-lg transition-all duration-200 ${viewMode === "mobile" ? "rounded-[28px] border-[10px] border-gray-800" : ""}`}
+            style={{ width: canvasWidth, background: cbg, minHeight: 300 }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {doc.modules.length === 0 && (
+              <div className="p-12 text-center text-gray-400 text-sm">
+                Add modules from the left sidebar to start building your email.
+              </div>
+            )}
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+              <SortableContext items={reorderedIds} strategy={verticalListSortingStrategy}>
+                {doc.modules.map((m, i) => (
+                  <SortableModule
+                    key={m.id}
+                    mod={m}
+                    index={i}
+                    viewMode={viewMode}
+                    selected={selection?.kind === "module" && selection.moduleId === m.id}
+                    selectionEl={
+                      selection?.kind === "element" && selection.moduleId === m.id
+                        ? selection.elementId
+                        : null
+                    }
+                    theme={doc.theme}
+                    onSelectModule={() => setSelection({ kind: "module", moduleId: m.id })}
+                    onSelectElement={(elId) =>
+                      setSelection({ kind: "element", moduleId: m.id, elementId: elId })
+                    }
+                    onDuplicate={() => duplicateModule(m.id)}
+                    onDelete={() => deleteModule(m.id)}
+                  />
+                ))}
+              </SortableContext>
+            </DndContext>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
 
@@ -450,13 +455,31 @@ function TextRender({
   moduleId: string;
 }) {
   const updateElement = useEmailStore((s) => s.updateElement);
+  const setActiveEl = useRichTextStore((s) => s.setActiveEl);
+
+  const divRef = useRef<HTMLDivElement>(null);
+  const isFocusedRef = useRef(false);
+  const editingRef = useRef(false);
+  // Keep latest store content in a ref so the blur handler can compare
+  // without needing el.content as a dep that causes re-renders.
+  const storeContentRef = useRef(el.content);
+  storeContentRef.current = el.content;
+
+  // KEY FIX: sync innerHTML from the store ONLY when the element is NOT focused.
+  // This prevents React from clobbering an in-progress text selection or cursor
+  // position whenever a parent re-renders (which was the root cause of selection
+  // being lost as soon as the user started editing).
+  useEffect(() => {
+    const div = divRef.current;
+    if (!div || isFocusedRef.current) return;
+    if (div.innerHTML !== el.content) {
+      div.innerHTML = el.content;
+    }
+  });
+
   const merged = mergeMobile(el.style as Record<string, unknown>, viewMode);
   const s = resolveStyle(merged, theme);
   const color = (s.color as string) ?? "#000000";
-
-  // Canvas-only: add a subtle text-shadow when the text colour is very light
-  // (white or near-white) so content is readable against any module background
-  // while editing. This shadow is NOT present in the exported HTML.
   const isLightColor = isColorLight(color);
 
   const style: React.CSSProperties = {
@@ -473,22 +496,39 @@ function TextRender({
     paddingRight: (s.paddingRight as number) ?? 16,
     margin: 0,
     minHeight: "1.5em",
+    outline: "none",
     ...(isLightColor
       ? { textShadow: "0 0 8px rgba(0,0,0,0.55), 0 1px 2px rgba(0,0,0,0.45)" }
       : undefined),
   };
+
   return (
     <div
+      ref={divRef}
+      data-email-text="true"
       style={style}
       contentEditable
       suppressContentEditableWarning
+      onFocus={(e) => {
+        isFocusedRef.current = true;
+        editingRef.current = true;
+        setActiveEl(e.currentTarget);
+      }}
       onBlur={(e) => {
+        isFocusedRef.current = false;
+        editingRef.current = false;
+        const related = e.relatedTarget as HTMLElement | null;
+        if (!related?.closest("[data-rich-toolbar]")) {
+          setActiveEl(null);
+        }
         const next = e.currentTarget.innerHTML;
-        if (next !== el.content) {
+        if (next !== storeContentRef.current) {
           updateElement(moduleId, el.id, { content: next } as Partial<TextElement>);
         }
       }}
-      dangerouslySetInnerHTML={{ __html: el.content }}
+      onClick={(e) => {
+        if (editingRef.current) e.stopPropagation();
+      }}
     />
   );
 }

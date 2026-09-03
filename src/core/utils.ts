@@ -12,6 +12,8 @@ export function escapeHtml(s: string): string {
 
 export function safeUrl(url: string | undefined): string {
   if (!url) return "#";
+  // Allow placeholder/merge-tag URLs, e.g. {{unsubscribe_url}}, *|UNSUB|*, [UNSUB].
+  if (url.startsWith("{{") || url.startsWith("*|") || url.startsWith("[")) return url;
   try {
     const u = new URL(url, "https://example.com");
     if (!["http:", "https:", "mailto:"].includes(u.protocol)) return "#";

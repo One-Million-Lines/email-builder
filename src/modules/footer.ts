@@ -1,5 +1,5 @@
 import type { ModuleDefinition } from "./registry";
-import { text, mod, divider, image, muted, PLACEHOLDER } from "./helpers";
+import { text, mod, divider, image, muted, footerLinks, PLACEHOLDER } from "./helpers";
 
 const baseFooterStyle = {
   backgroundColor: "{colors.background}",
@@ -21,13 +21,10 @@ export const footerModules: ModuleDefinition[] = [
         [
           muted("© 2026 Your Company. All rights reserved.", { align: "center", fontSize: 12 }),
           muted("123 Main St · City · Country", { align: "center", fontSize: 12 }),
-          text("Unsubscribe · View in browser", {
-            align: "center",
-            color: "{colors.muted}",
-            fontSize: 12,
-            paddingTop: 4,
-            paddingBottom: 24,
-          }),
+          footerLinks([
+            { label: "Unsubscribe", type: "unsubscribe" },
+            { label: "View in browser", type: "view_in_browser" },
+          ]),
         ],
         { ...baseFooterStyle, paddingTop: 24 }
       ),
@@ -50,11 +47,8 @@ export const footerModules: ModuleDefinition[] = [
             paddingBottom: 12,
           }),
           divider(),
-          muted("© 2026 Your Company · Unsubscribe", {
-            align: "center",
-            fontSize: 12,
-          }),
-          text(" ", { align: "center", paddingBottom: 24 }),
+          muted("© 2026 Your Company", { align: "center", fontSize: 12 }),
+          footerLinks([{ label: "Unsubscribe", type: "unsubscribe" }], { paddingBottom: 24 }),
         ],
         baseFooterStyle
       ),
@@ -80,12 +74,10 @@ export const footerModules: ModuleDefinition[] = [
               paddingTop: 24,
             }
           ),
-          text("Privacy Policy · Terms · Unsubscribe", {
-            align: "center",
-            color: "{colors.muted}",
-            fontSize: 11,
-            paddingBottom: 24,
-          }),
+          footerLinks([
+            { label: "Privacy Policy", type: "user_profile" },
+            { label: "Unsubscribe", type: "unsubscribe" },
+          ], { paddingBottom: 24 }),
         ],
         baseFooterStyle
       ),
@@ -113,13 +105,10 @@ export const footerModules: ModuleDefinition[] = [
           muted("Editor: Jane Doe · Producer: Alex Kim", { align: "center", fontSize: 12 }),
           divider({ paddingTop: 12, paddingBottom: 12 }),
           muted("© 2026 The Weekly · 350 Madison Ave · NY 10017", { align: "center", fontSize: 11 }),
-          text("Manage preferences · Unsubscribe", {
-            align: "center",
-            color: "{colors.muted}",
-            fontSize: 11,
-            paddingTop: 4,
-            paddingBottom: 24,
-          }),
+          footerLinks([
+            { label: "Manage preferences", type: "manage_preferences" },
+            { label: "Unsubscribe", type: "unsubscribe" },
+          ], { paddingBottom: 24 }),
         ],
         baseFooterStyle
       ),
@@ -139,8 +128,8 @@ export const footerModules: ModuleDefinition[] = [
           image(PLACEHOLDER(135, 40, "App Store"), "App Store", { width: 135, align: "center", paddingTop: 0, paddingBottom: 4 }),
           image(PLACEHOLDER(135, 40, "Google Play"), "Google Play", { width: 135, align: "center", paddingTop: 0, paddingBottom: 16 }),
           divider(),
-          muted("© 2026 Your Brand · Unsubscribe", { align: "center", fontSize: 11 }),
-          text(" ", { align: "center", paddingBottom: 24 }),
+          muted("© 2026 Your Brand", { align: "center", fontSize: 11 }),
+          footerLinks([{ label: "Unsubscribe", type: "unsubscribe" }], { paddingBottom: 24 }),
         ],
         baseFooterStyle
       ),
@@ -160,7 +149,7 @@ export const footerModules: ModuleDefinition[] = [
             align: "center",
             fontSize: 11,
           }),
-          text(" ", { align: "center", paddingBottom: 16 }),
+          footerLinks([{ label: "Unsubscribe", type: "unsubscribe" }], { paddingBottom: 16 }),
         ],
         { ...baseFooterStyle, paddingTop: 16 }
       ),
@@ -177,12 +166,10 @@ export const footerModules: ModuleDefinition[] = [
         "Preferences",
         [
           text("Getting too many emails?", { align: "center", paddingTop: 24, paddingBottom: 4 }),
-          text("Update your preferences · Send less often · Unsubscribe", {
-            align: "center",
-            color: "{colors.primary}",
-            fontSize: 13,
-            paddingBottom: 16,
-          }),
+          footerLinks([
+            { label: "Update your preferences", type: "manage_preferences" },
+            { label: "Unsubscribe", type: "unsubscribe" },
+          ], { color: "{colors.primary}", fontSize: 13, paddingTop: 4, paddingBottom: 16 }),
           divider(),
           muted("© 2026 Your Company", { align: "center", fontSize: 11 }),
           text(" ", { align: "center", paddingBottom: 24 }),
@@ -204,11 +191,10 @@ export const footerModules: ModuleDefinition[] = [
           text("Until next week,", { paddingTop: 24, paddingBottom: 4 }),
           text("— Jane", { fontFamily: "{fonts.heading}", fontSize: 22, paddingBottom: 16 }),
           divider(),
-          muted("Reply directly · Unsubscribe · 123 Main St, Brooklyn", {
-            fontSize: 11,
-            align: "center",
-          }),
-          text(" ", { align: "center", paddingBottom: 24 }),
+          footerLinks([
+            { label: "Unsubscribe", type: "unsubscribe" },
+          ], { align: "left", fontSize: 11, paddingTop: 4, paddingBottom: 24,
+            separator: " · " }),
         ],
         { ...baseFooterStyle, paddingTop: 0 }
       ),

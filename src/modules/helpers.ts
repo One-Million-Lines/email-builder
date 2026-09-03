@@ -1,6 +1,8 @@
 // Shared element builders for module definitions.
 // Keeps individual module files terse and consistent.
 import type { EmailElement, EmailModule, Product, ProductGridElement } from "../core/types";
+import type { SpecialLinkType } from "../core/types";
+import { SPECIAL_LINK_PLACEHOLDERS } from "../core/types";
 import { uid } from "../core/utils";
 
 export const text = (
@@ -19,6 +21,7 @@ export const text = (
     lineHeight: number;
     letterSpacing: number;
     link: string;
+    linkType: SpecialLinkType;
     mobile: Record<string, unknown>;
   }> = {}
 ): EmailElement => {
@@ -48,6 +51,7 @@ export const text = (
       lineHeight: opts.lineHeight ?? 1.5,
       letterSpacing: opts.letterSpacing,
       link: opts.link,
+      linkType: opts.linkType,
       mobile: { ...mobileDefaults, ...(opts.mobile ?? {}) },
     },
   };
@@ -99,6 +103,7 @@ export const button = (
     borderRadius: number;
     paddingTop: number;
     paddingBottom: number;
+    linkType: SpecialLinkType;
     mobile: Record<string, unknown>;
   }> = {}
 ): EmailElement => ({
@@ -106,6 +111,7 @@ export const button = (
   type: "button",
   label,
   link,
+  linkType: opts.linkType,
   style: {
     backgroundColor: opts.backgroundColor ?? "{colors.buttonBackground}",
     color: opts.color ?? "{colors.buttonText}",
@@ -204,6 +210,7 @@ export const muted = (
     paddingBottom?: number;
     lineHeight?: number;
     link?: string;
+    linkType?: SpecialLinkType;
     letterSpacing?: number;
   } = {}
 ) =>
@@ -215,6 +222,7 @@ export const muted = (
     paddingBottom: opts.paddingBottom,
     lineHeight: opts.lineHeight,
     link: opts.link,
+    linkType: opts.linkType,
     letterSpacing: opts.letterSpacing,
   });
 
@@ -301,3 +309,43 @@ export const productGrid = (
     paddingRight: opts.paddingRight ?? 16,
   },
 });
+
+/**
+ * Creates a text element whose content is a series of inline `<a>` links,
+ * each carrying a `data-link-type` attribute so backend processors can
+ * identify and replace the placeholder href with a real per-recipient URL.
+ *
+ * Usage:
+ * ```ts
+ * footerLinks([
+ *   { label: "Unsubscribe", type: "unsubscribe" },
+ *   { label: "View in browser", type: "view_in_browser" },
+ * ], { align: "center", fontSize: 12 })
+ * ```
+ */
+export const footerLinks = (
+  links: { label: string; type: SpecialLinkType }[],
+  opts: {
+    align?: "left" | "center" | "right";
+    fontSize?: number;
+    color?: string;
+    paddingTop?: number;
+    paddingBottom?: number;
+    separator?: string;
+  } = {}
+): EmailElement => {
+  const sep = opts.separator ?? " · ";
+  const content = links
+    .map(
+      (l) =>
+        `<a href="${SPECIAL_LINK_PLACEHOLDERS[l.type]}" data-link-type="${l.type}" style="color:inherit;text-decoration:underline">${l.label}</a>`
+    )
+    .join(sep);
+  return text(content, {
+    color: opts.color ?? "{colors.muted}",
+    align: opts.align ?? "center",
+    fontSize: opts.fontSize ?? 12,
+    paddingTop: opts.paddingTop ?? 4,
+    paddingBottom: opts.paddingBottom ?? 24,
+  });
+};

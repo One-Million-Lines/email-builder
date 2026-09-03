@@ -119,8 +119,10 @@ function renderText(el: TextElement, ctx: RenderCtx): string {
     margin: 0,
   });
   const link = s.link as string | undefined;
+  const linkType = s.linkType as string | undefined;
+  const linkTypeAttr = linkType ? ` data-link-type="${escapeHtml(linkType)}"` : "";
   const inner = link
-    ? `<a href="${safeUrl(link)}" style="color:inherit;text-decoration:underline">${el.content}</a>`
+    ? `<a href="${safeUrl(link)}"${linkTypeAttr} style="color:inherit;text-decoration:underline">${el.content}</a>`
     : el.content;
   const cls = collectMobile(ctx, el.style as Record<string, unknown>);
   return `<div${cls ? ` class="${cls}"` : ""} style="${css}">${inner}</div>`;
@@ -151,7 +153,7 @@ function renderImage(el: ImageElement, ctx: RenderCtx): string {
   });
   const widthAttr = s.width ? ` width="${s.width}"` : "";
   const img = `<img src="${escapeHtml(el.src)}" alt="${escapeHtml(el.alt ?? "")}"${widthAttr} style="${imgCss}" />`;
-  const wrapped = el.link ? `<a href="${safeUrl(el.link)}">${img}</a>` : img;
+  const wrapped = el.link ? `<a href="${safeUrl(el.link)}"${el.linkType ? ` data-link-type="${escapeHtml(el.linkType)}"` : ""}>${img}</a>` : img;
   const cls = collectMobile(ctx, el.style as Record<string, unknown>);
   return `<div${cls ? ` class="${cls}"` : ""} style="${wrapCss}">${wrapped}</div>`;
 }
@@ -189,6 +191,7 @@ function renderButton(el: ButtonElement, ctx: RenderCtx): string {
   });
   const label = escapeHtml(el.label);
   const href = safeUrl(el.link);
+  const linkTypeAttr = el.linkType ? ` data-link-type="${escapeHtml(el.linkType)}"` : "";
   const arcsize = Math.min(50, Math.round((radius / 22) * 100));
   const vml = `<!--[if mso]>
 <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="${href}" style="height:44px;v-text-anchor:middle;width:200px;" arcsize="${arcsize}%" stroke="f" fillcolor="${bg}">
@@ -196,7 +199,7 @@ function renderButton(el: ButtonElement, ctx: RenderCtx): string {
 <center style="color:${color};font-family:${fontFamily};font-size:${fontSize}px;font-weight:${fontWeight};">${label}</center>
 </v:roundrect>
 <![endif]-->`;
-  const html = `<!--[if !mso]><!-- --><a href="${href}" style="${btnCss}">${label}</a><!--<![endif]-->`;
+  const html = `<!--[if !mso]><!-- --><a href="${href}"${linkTypeAttr} style="${btnCss}">${label}</a><!--<![endif]-->`;
   const cls = collectMobile(ctx, el.style as Record<string, unknown>);
   return `<div${cls ? ` class="${cls}"` : ""} style="${wrapCss}">${vml}${html}</div>`;
 }

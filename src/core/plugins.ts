@@ -1,11 +1,12 @@
 // Plugin API. Plugins can add modules, themes, AI providers, asset providers.
 import type { ModuleDefinition } from "../modules/registry";
 import { moduleRegistry } from "../modules/registry";
-import type { Theme } from "./types";
+import type { Theme, MergeTag } from "./types";
 import type { AIProvider } from "./aiActions";
 import { setAIProvider as setReactiveAIProvider } from "../ai/state";
 import { setProductProvider as setReactiveProductProvider } from "../plugins/productSearch/state";
 import { setVoucherProvider as setReactiveVoucherProvider } from "../plugins/voucherSelect/state";
+import { setMergeTagsGlobal } from "../plugins/mergeTags/state";
 
 export interface AssetProvider {
   upload: (file: File) => Promise<{ url: string; alt?: string }>;
@@ -57,6 +58,8 @@ export interface BuilderHandle {
   registerProductProvider: (provider: ProductProvider) => void;
   registerVoucherProvider: (provider: VoucherProvider) => void;
   setAIProvider: (provider: AIProvider) => void;
+  /** Configure the list of merge tags available in the text element sidebar. */
+  registerMergeTags: (tags: MergeTag[]) => void;
 }
 
 export type PluginType =
@@ -87,19 +90,17 @@ export const builder: BuilderHandle = {
   },
   registerProductProvider: (p) => {
     productProvider = p;
-    // Notify the reactive store so the product-search UI appears/updates.
     setReactiveProductProvider(p);
   },
   registerVoucherProvider: (p) => {
     voucherProvider = p;
-    // Notify the reactive store so the voucher-select UI appears/updates.
     setReactiveVoucherProvider(p);
   },
   setAIProvider: (p) => {
     aiProvider = p;
-    // Notify the reactive store so the AI chat panel appears/updates.
     setReactiveAIProvider(p);
   },
+  registerMergeTags: (tags) => setMergeTagsGlobal(tags),
 };
 
 export function registerPlugin(plugin: Plugin) {

@@ -7,6 +7,14 @@ import "./welcomeOnboarding";
 import "./eventInvite";
 import "./orderReceipt";
 import "./blogDigest";
+import "./backInStock";
+import "./priceDropAlert";
+import "./postPurchaseFollowUp";
+import "./reviewRequest";
+import "./replenishmentReminder";
+import "./vipEarlyAccess";
+import "./birthdayReward";
+import "./winBackCampaign";
 
 export {
   templateRegistry,

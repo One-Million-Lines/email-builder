@@ -3,7 +3,7 @@
 import { createRoot, type Root } from "react-dom/client";
 import { createElement, useEffect } from "react";
 import "./lib.css";
-import type { EmailDocument, Theme } from "./core/types";
+import type { EmailDocument, Theme, MergeTag } from "./core/types";
 import { documentSchema } from "./core/validation";
 import { renderEmailHtml } from "./core/renderer";
 import { useEmailStore } from "./store/emailStore";
@@ -46,6 +46,20 @@ export interface EmailBuilderProps {
    * Ignored when `voucherProvider` is provided.
    */
   voucherEndpoint?: string | VoucherOptions;
+  /**
+   * List of merge tags (personalisation tokens) available in the text element
+   * sidebar. When configured, a "Insert merge tag" dropdown appears allowing
+   * the user to insert `{attribute}` placeholders into text content.
+   *
+   * Example:
+   * ```ts
+   * mergeTags={[
+   *   { attribute: "user.firstname", title: "First name" },
+   *   { attribute: "user.lastname",  title: "Last name" },
+   * ]}
+   * ```
+   */
+  mergeTags?: MergeTag[];
   onChange?: (doc: EmailDocument) => void;
   onExportHtml?: (html: string) => void;
 }
@@ -81,6 +95,7 @@ export function EmailBuilder(props: EmailBuilderProps) {
         void loadVouchers();
       }
     }
+    if (props.mergeTags) builder.registerMergeTags(props.mergeTags);
     if (props.initialDocument) {
       const r = documentSchema.safeParse(props.initialDocument);
       if (r.success) useEmailStore.getState().applyDoc(r.data as EmailDocument, false);
@@ -127,7 +142,7 @@ export function createEmailBuilder(opts: VanillaOptions): VanillaInstance {
 }
 
 // Re-exports for plugin authors.
-export type { Plugin, ModuleDefinition, AIProvider, EmailDocument, Theme };
+export type { Plugin, ModuleDefinition, AIProvider, EmailDocument, Theme, MergeTag };
 export { registerPlugin, renderEmailHtml, documentSchema };
 export { imageUploaderPlugin } from "./plugins/imageUploader";
 export type { ImageUploaderOptions } from "./plugins/imageUploader";
