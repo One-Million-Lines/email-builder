@@ -129,27 +129,58 @@ function Sep() {
 
 // ─── Link popover ─────────────────────────────────────────────────────────
 
+/** State captured at the moment the link button is clicked. */
+interface LinkInitial {
+  selectedText: string;
+  href: string;
+  linkType: SpecialLinkType | "";
+  isEditing: boolean; // true when cursor was inside an existing <a>
+}
+
+const EMPTY_LINK_INITIAL: LinkInitial = { selectedText: "", href: "", linkType: "", isEditing: false };
+
+/** Reverse-lookup: given an href, return the matching SpecialLinkType if any. */
+function hrefToLinkType(href: string): SpecialLinkType | "" {
+  const entry = (Object.entries(SPECIAL_LINK_PLACEHOLDERS) as [SpecialLinkType, string][])
+    .find(([, ph]) => ph === href);
+  return entry?.[0] ?? "";
+}
+
 function LinkPopover({
   savedRange,
+  initial,
   onClose,
 }: {
   savedRange: Range | null;
+  initial: LinkInitial;
   onClose: () => void;
 }) {
-  const [url, setUrl] = useState("");
-  const [linkType, setLinkType] = useState<SpecialLinkType | "">("");
+  const [url, setUrl] = useState(initial.href);
+  const [linkType, setLinkType] = useState<SpecialLinkType | "">(initial.linkType);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    setTimeout(() => inputRef.current?.focus(), 30);
+    // Focus the URL input (slight delay lets the popover render first)
+    setTimeout(() => inputRef.current?.focus(), 20);
   }, []);
 
+  const handleUrlChange = (v: string) => {
+    setUrl(v);
+    // Auto-detect if user types a placeholder URL
+    setLinkType(hrefToLinkType(v));
+  };
+
+  const handleLinkTypeChange = (lt: SpecialLinkType | "") => {
+    setLinkType(lt);
+    // Auto-fill URL with the placeholder so users see what goes in the href
+    setUrl(lt ? SPECIAL_LINK_PLACEHOLDERS[lt] : "");
+  };
+
   const apply = () => {
-    if (!url && !linkType) { onClose(); return; }
-    const href = linkType ? SPECIAL_LINK_PLACEHOLDERS[linkType] : url;
+    const href = url.trim();
     if (!href) { onClose(); return; }
 
-    // Focus the contenteditable and restore the saved selection before inserting.
+    // Re-focus the contenteditable and restore the saved selection
     if (savedRange) {
       const container = savedRange.commonAncestorContainer;
       const textEl = (
@@ -157,15 +188,19 @@ function LinkPopover({
           ? (container as HTMLElement)
           : container.parentElement
       )?.closest<HTMLElement>("[data-email-text]");
-      if (textEl) textEl.focus();
-      restoreRange(savedRange);
+      if (textEl) {
+        textEl.focus();
+        restoreRange(savedRange);
+      }
     }
 
-    const innerHtml = savedRange ? (() => {
+    // Build the inner HTML — use the original selection or the href as fallback text
+    const innerHtml = (() => {
+      if (!savedRange) return href;
       const div = document.createElement("div");
       div.appendChild(savedRange.cloneContents());
       return div.innerHTML || div.textContent || href;
-    })() : href;
+    })();
 
     const typeAttr = linkType ? ` data-link-type="${linkType}"` : "";
     insertHtml(
@@ -174,73 +209,91 @@ function LinkPopover({
     onClose();
   };
 
+  const isSpecialPlaceholder = linkType !== "";
+  const canApply = url.trim().length > 0;
+
   return (
     <div
-      className="absolute bottom-full left-0 mb-1 z-50 bg-white border border-gray-200 rounded-lg shadow-xl p-3 w-80"
+      className="absolute bottom-full left-0 mb-1 z-50 bg-white border border-gray-200 rounded-xl shadow-xl"
+      style={{ width: 320 }}
       onMouseDown={(e) => e.stopPropagation()}
     >
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-xs font-semibold text-gray-700">Insert link</span>
-        <button
-          onClick={onClose}
-          className="text-gray-400 hover:text-gray-600 p-0.5 rounded"
-        >
-          <X size={13} />
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 pt-4 pb-2">
+        <span className="text-sm font-semibold text-gray-900">
+          {initial.isEditing ? "Edit link" : "Insert link"}
+        </span>
+        <button onClick={onClose} className="text-gray-400 hover:text-gray-600 rounded p-0.5">
+          <X size={14} />
         </button>
       </div>
 
-      <input
-        ref={inputRef}
-        type="url"
-        placeholder="https://example.com"
-        value={url}
-        onChange={(e) => {
-          setUrl(e.target.value);
-          if (e.target.value) setLinkType("");
-        }}
-        className="w-full px-2 py-1.5 text-xs border border-gray-200 rounded mb-2 focus:border-blue-500 focus:outline-none"
-        onKeyDown={(e) => {
-          if (e.key === "Enter") apply();
-          if (e.key === "Escape") onClose();
-        }}
-      />
+      <div className="px-4 pb-4 flex flex-col gap-3">
+        {/* Linked text preview */}
+        {initial.selectedText && (
+          <div className="flex items-start gap-2 text-xs bg-gray-50 rounded-lg px-3 py-2">
+            <span className="text-gray-500 shrink-0 mt-0.5">Text:</span>
+            <span className="text-gray-700 font-medium truncate">{initial.selectedText}</span>
+          </div>
+        )}
 
-      <div className="mb-2">
-        <div className="text-[10px] text-gray-500 mb-1">Or use a special link</div>
-        <select
-          value={linkType}
-          onChange={(e) => {
-            setLinkType(e.target.value as SpecialLinkType | "");
-            if (e.target.value) setUrl("");
-          }}
-          className="w-full px-2 py-1.5 text-xs border border-gray-200 rounded focus:border-blue-500 focus:outline-none bg-white"
-        >
-          <option value="">— none —</option>
-          {(Object.keys(SPECIAL_LINK_LABELS) as SpecialLinkType[]).map((k) => (
-            <option key={k} value={k}>{SPECIAL_LINK_LABELS[k]}</option>
-          ))}
-        </select>
-      </div>
+        {/* URL input */}
+        <div>
+          <label className="block text-xs text-gray-500 mb-1">URL</label>
+          <input
+            ref={inputRef}
+            type="text"
+            placeholder="https://example.com"
+            value={url}
+            onChange={(e) => handleUrlChange(e.target.value)}
+            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && canApply) apply();
+              if (e.key === "Escape") onClose();
+            }}
+          />
+          {isSpecialPlaceholder && (
+            <p className="text-[11px] text-blue-600 mt-1 flex items-center gap-1">
+              <span>↳ This placeholder will be replaced with the real URL at send time.</span>
+            </p>
+          )}
+        </div>
 
-      {linkType && (
-        <p className="text-[10px] text-blue-600 mb-2">
-          Placeholder: <code>{SPECIAL_LINK_PLACEHOLDERS[linkType]}</code>
-        </p>
-      )}
+        {/* Special link type */}
+        <div>
+          <label className="block text-xs text-gray-500 mb-1">
+            Link type <span className="text-gray-400 font-normal">(optional — for system links)</span>
+          </label>
+          <select
+            value={linkType}
+            onChange={(e) => handleLinkTypeChange(e.target.value as SpecialLinkType | "")}
+            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none bg-white"
+          >
+            <option value="">— Custom URL (no special type) —</option>
+            {(Object.keys(SPECIAL_LINK_LABELS) as SpecialLinkType[]).map((k) => (
+              <option key={k} value={k}>
+                {SPECIAL_LINK_LABELS[k]} — {SPECIAL_LINK_PLACEHOLDERS[k]}
+              </option>
+            ))}
+          </select>
+        </div>
 
-      <div className="flex gap-2">
-        <button
-          onClick={apply}
-          className="flex-1 px-3 py-1.5 bg-blue-600 text-white text-xs rounded hover:bg-blue-700"
-        >
-          Apply
-        </button>
-        <button
-          onClick={onClose}
-          className="px-3 py-1.5 text-xs border border-gray-200 rounded hover:bg-gray-50"
-        >
-          Cancel
-        </button>
+        {/* Actions */}
+        <div className="flex gap-2 pt-1">
+          <button
+            onClick={apply}
+            disabled={!canApply}
+            className="flex-1 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          >
+            {initial.isEditing ? "Update link" : "Insert link"}
+          </button>
+          <button
+            onClick={onClose}
+            className="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            Cancel
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -365,6 +418,7 @@ export function RichTextToolbar() {
   const [formats, setFormats] = useState({ bold: false, italic: false, underline: false });
   const [openPopover, setOpenPopover] = useState<Popover>(null);
   const [savedRange, setSavedRange] = useState<Range | null>(null);
+  const [linkInitial, setLinkInitial] = useState<LinkInitial>(EMPTY_LINK_INITIAL);
 
   const toolbarRef = useRef<HTMLDivElement>(null);
   const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -455,9 +509,47 @@ export function RichTextToolbar() {
   };
 
   const togglePopover = (name: Popover) => {
+    if (name === "link") {
+      // Capture everything we need from the current selection
+      const range = saveRange();
+      setSavedRange(range);
+
+      // Extract selected text, existing href, and link type
+      let selectedText = "";
+      let existingHref = "";
+      let existingLinkType: SpecialLinkType | "" = "";
+      let isEditing = false;
+
+      if (range) {
+        // Selected text for display
+        const div = document.createElement("div");
+        div.appendChild(range.cloneContents());
+        selectedText = (div.textContent || "").trim();
+
+        // Detect if cursor/selection is inside an existing <a>
+        const sel = window.getSelection();
+        const focusNode = sel?.focusNode;
+        const anchorEl = focusNode
+          ? (focusNode.nodeType === Node.ELEMENT_NODE
+              ? (focusNode as HTMLElement).closest("a")
+              : focusNode.parentElement?.closest("a"))
+          : null;
+
+        if (anchorEl) {
+          isEditing = true;
+          existingHref = anchorEl.getAttribute("href") || "";
+          const lt = anchorEl.getAttribute("data-link-type") || "";
+          existingLinkType = hrefToLinkType(existingHref) || (lt as SpecialLinkType | "");
+          // If it's a known special link, keep the canonical placeholder as the href
+          if (existingLinkType) existingHref = SPECIAL_LINK_PLACEHOLDERS[existingLinkType];
+        }
+      }
+
+      setLinkInitial({ selectedText, href: existingHref, linkType: existingLinkType, isEditing });
+      setOpenPopover((cur) => (cur === "link" ? null : "link"));
+      return;
+    }
     setOpenPopover((cur) => (cur === name ? null : name));
-    // Save selection before showing link / color popovers that steal focus
-    if (name === "link") setSavedRange(saveRange());
   };
 
   const hasSelection = () => {
@@ -549,7 +641,7 @@ export function RichTextToolbar() {
           <Link2 size={13} />
         </TBtn>
         {openPopover === "link" && (
-          <LinkPopover savedRange={savedRange} onClose={closePopover} />
+          <LinkPopover savedRange={savedRange} initial={linkInitial} onClose={closePopover} />
         )}
       </div>
 

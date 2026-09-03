@@ -4,6 +4,31 @@ All notable changes to this package are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/) and the
 [Keep a Changelog](https://keepachangelog.com/) format.
 
+## [0.6.2] — 2026-09-03
+
+### Changed
+
+- **Link popover — complete UX overhaul**
+  - **Shows linked text preview** — a "Text:" row displays the selected text so
+    users know exactly what will become clickable.
+  - **URL ↔ special link are now two-way synced** — selecting a special link type
+    (Unsubscribe, View in browser, etc.) auto-fills the URL field with the
+    corresponding placeholder (`{{unsubscribe_url}}`). Typing a placeholder URL
+    in the field auto-selects the matching link type. Selecting "— Custom URL —"
+    clears the placeholder.
+  - **Placeholder appears in the URL field** — the href that will be written into
+    the `<a>` tag is always visible and editable in the URL input, so users
+    understand that the placeholder IS the href value.
+  - **"Insert link" / "Update link" primary CTA** — replaced the small "Apply"
+    button with a full-width blue primary button. The label changes to
+    "Update link" when re-opening an existing link.
+  - **Detects existing links on re-open** — when the cursor is inside or a
+    selection spans an existing `<a>` tag, the popover pre-fills the href and
+    auto-selects the special link type (if the href matches a known placeholder).
+  - **Enter key** confirms the link; **Escape** closes without applying.
+  - Link type select now shows the placeholder inline in each option for
+    clarity: `Unsubscribe — {{unsubscribe_url}}`.
+
 ## [0.6.1] — 2026-09-03
 
 ### Fixed
