@@ -4,6 +4,13 @@ All notable changes to this package are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/) and the
 [Keep a Changelog](https://keepachangelog.com/) format.
 
+## [0.8.3] — 2026-09-10
+
+### Fix
+
+- **`dev/` Fixed loading Zustand component
+- fix problem with recommendations logic generating infinite loop
+
 ## [0.8.0] — 2026-09-10
 
 ### Added
