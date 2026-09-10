@@ -20,7 +20,8 @@ interface Props {
 }
 
 export function RecommendationsPanel({ mod }: Props) {
-  const { doc, updateModule } = useEmailStore((s) => ({ doc: s.doc, updateModule: s.updateModule }));
+  const doc = useEmailStore((s) => s.doc);
+  const updateModule = useEmailStore((s) => s.updateModule);
   const slots = productSlotCount(mod) || 2;
   const logic = readLogic(mod.data) ?? defaultLogic(slots);
 

@@ -8,7 +8,7 @@ interface RecommendationsPluginState {
 
 export const useRecommendationsStore = create<RecommendationsPluginState>((set) => ({
   enabled: false,
-  setEnabled: (v) => set({ enabled: v }),
+  setEnabled: (v) => set((s) => (s.enabled === v ? s : { enabled: v })),
 }));
 
 export function enableRecommendations(): void {

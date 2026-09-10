@@ -54,11 +54,20 @@ export const usePluginSlotStore = create<PluginSlotState>((set) => ({
   modulePanels: [],
   productSearch: null,
   registerModulePanel: (slot) =>
-    set((s) => ({
-      modulePanels: [
-        ...s.modulePanels.filter((p) => p.id !== slot.id),
-        slot,
-      ],
-    })),
-  registerProductSearch: (slot) => set({ productSearch: slot }),
+    set((s) => {
+      const idx = s.modulePanels.findIndex((p) => p.id === slot.id);
+      if (idx === -1) return { modulePanels: [...s.modulePanels, slot] };
+      const existing = s.modulePanels[idx];
+      if (existing.Component === slot.Component && existing.shouldShow === slot.shouldShow) {
+        return s;
+      }
+      const next = [...s.modulePanels];
+      next[idx] = slot;
+      return { modulePanels: next };
+    }),
+  registerProductSearch: (slot) =>
+    set((s) => {
+      if (s.productSearch?.Component === slot.Component) return s;
+      return { productSearch: slot };
+    }),
 }));

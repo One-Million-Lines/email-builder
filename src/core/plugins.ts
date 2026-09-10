@@ -38,6 +38,26 @@ function safeLazy(factory: () => Promise<{ default: React.ComponentType<any> }>)
   );
 }
 
+const ProductSearchModalSlot =
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  safeLazy(() =>
+    import("../plugins/productSearch/ProductSearchModal").then((m) => ({
+      default: m.ProductSearchModal,
+    }))
+  ) as any;
+
+const VoucherPanelSlot = safeLazy(() =>
+  import("../plugins/voucherSelect/VoucherPanel").then((m) => ({
+    default: m.VoucherPanel,
+  }))
+);
+
+const RecommendationsPanelSlot = safeLazy(() =>
+  import("../plugins/recommendations/RecommendationsPanel").then((m) => ({
+    default: m.RecommendationsPanel,
+  }))
+);
+
 export interface AssetProvider {
   upload: (file: File) => Promise<{ url: string; alt?: string }>;
 }
@@ -130,12 +150,7 @@ export const builder: BuilderHandle = {
     // Register the product-search modal as a lazy slot so RightSidebar
     // never statically imports the plugin file.
     usePluginSlotStore.getState().registerProductSearch({
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      Component: safeLazy(() =>
-        import("../plugins/productSearch/ProductSearchModal").then((m) => ({
-          default: m.ProductSearchModal,
-        }))
-      ) as any,
+      Component: ProductSearchModalSlot,
     });
   },
   registerVoucherProvider: (p) => {
@@ -145,11 +160,7 @@ export const builder: BuilderHandle = {
     usePluginSlotStore.getState().registerModulePanel({
       id: "voucher",
       shouldShow: isVoucherModule,
-      Component: safeLazy(() =>
-        import("../plugins/voucherSelect/VoucherPanel").then((m) => ({
-          default: m.VoucherPanel,
-        }))
-      ),
+      Component: VoucherPanelSlot,
     });
   },
   setAIProvider: (p) => {
@@ -163,11 +174,7 @@ export const builder: BuilderHandle = {
     usePluginSlotStore.getState().registerModulePanel({
       id: "recommendations",
       shouldShow: isProductGridModule,
-      Component: safeLazy(() =>
-        import("../plugins/recommendations/RecommendationsPanel").then((m) => ({
-          default: m.RecommendationsPanel,
-        }))
-      ),
+      Component: RecommendationsPanelSlot,
     });
   },
 };
