@@ -204,7 +204,8 @@ export {
   defaultLogic as defaultRecommendationsLogic,
   readLogic as readRecommendationsLogic,
   toLegacyShape as recommendationsToLegacyShape,
-} from "./recommendations/logic";
+  isProductAware,
+} from "./plugins/recommendations/logic";
 export type {
   RecommendationsLogic,
   RecommendationFilters,
@@ -213,7 +214,7 @@ export type {
   AlgorithmParamSpec,
   FallbackId,
   RecommendationMode,
-} from "./recommendations/logic";
+} from "./plugins/recommendations/logic";
 
 // Recommendations plugin — opt-in activation and helper exports.
 export { useRecommendationsStore } from "./plugins/recommendations/state";

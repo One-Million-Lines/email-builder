@@ -3,7 +3,7 @@
 // Any module that contains a `productGrid` child becomes "product-aware" and the
 // Recommendations panel auto-appears in the right sidebar when the module is selected.
 
-import type { EmailModule } from "../core/types";
+import type { EmailModule } from "../../core/types";
 
 export type RecommendationMode = "manual" | "recommender";
 
@@ -190,4 +190,20 @@ export function toLegacyShape(l: RecommendationsLogic) {
     sourceFeed: l.sourceFeed ?? "",
     manualProducts: l.manualProducts,
   };
+}
+
+/**
+ * Assign the next available vtproduct position ID (e.g. "pos01", "pos02") for a module.
+ * Scans existing modules to avoid collisions.
+ */
+export function nextVtproduct(modules: EmailModule[], excludeModuleId: string): string {
+  const existing = new Set(
+    modules
+      .filter((m) => m.id !== excludeModuleId)
+      .map((m) => m.data?.vtproduct as string | undefined)
+      .filter(Boolean)
+  );
+  let n = 1;
+  while (existing.has(`pos${String(n).padStart(2, "0")}`)) n++;
+  return `pos${String(n).padStart(2, "0")}`;
 }

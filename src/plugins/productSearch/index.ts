@@ -19,8 +19,6 @@ export {
   getProductProvider as getActiveProductProvider,
   setProductProvider as setActiveProductProvider,
 } from "./state";
-export { ProductSearchModal } from "./ProductSearchModal";
-export { useProductSearchAvailable } from "./useProductSearch";
 
 export interface ProductSearchOptions {
   /** Absolute or same-origin URL that implements the search. Required. */

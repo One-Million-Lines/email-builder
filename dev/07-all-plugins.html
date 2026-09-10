@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Email Builder — 07 All Plugins</title>
+  <link rel="stylesheet" href="/dist/styles.css" />
+  <style>
+    html, body { margin: 0; height: 100%; display: flex; flex-direction: column; font-family: system-ui, sans-serif; }
+    .banner { display: flex; align-items: center; gap: 8px; padding: 8px 16px; background: #1e293b; color: #e2e8f0; font-size: 13px; flex-shrink: 0; flex-wrap: wrap; }
+    .banner strong { color: #fff; white-space: nowrap; }
+    .badge { padding: 2px 8px; border-radius: 99px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+    .badge-blue   { background: #1d4ed8; color: #bfdbfe; }
+    .badge-green  { background: #166534; color: #bbf7d0; }
+    .badge-amber  { background: #92400e; color: #fef3c7; }
+    .badge-purple { background: #7c3aed; color: #ede9fe; }
+    .badge-cyan   { background: #0e7490; color: #cffafe; }
+    .badge-server { background: #334155; color: #94a3b8; }
+    .badge-server.ok { background: #166534; color: #bbf7d0; }
+    .tip { margin-left: auto; color: #64748b; font-size: 12px; white-space: nowrap; }
+    .tip a { color: #7dd3fc; }
+    #builder { flex: 1; min-height: 0; }
+    #export-panel { flex-shrink: 0; border-top: 1px solid #e2e8f0; background: #f8fafc; }
+    #export-panel summary { padding: 8px 16px; cursor: pointer; font-size: 13px; color: #475569; font-weight: 500; user-select: none; }
+    #export-panel summary:hover { background: #f1f5f9; }
+    .export-tabs { display: flex; gap: 8px; padding: 8px 16px 0; }
+    .export-tab { padding: 4px 12px; border-radius: 6px 6px 0 0; font-size: 12px; cursor: pointer; background: #e2e8f0; color: #475569; border: none; }
+    .export-tab.active { background: #0f172a; color: #7dd3fc; }
+    #export-pre { margin: 0; padding: 12px 16px; font-size: 11px; overflow: auto; max-height: 220px; background: #0f172a; color: #7dd3fc; line-height: 1.5; }
+  </style>
+</head>
+<body>
+  <div class="banner">
+    <strong>🔌 07 — All Plugins</strong>
+    <span class="badge badge-blue">imageUploader</span>
+    <span class="badge badge-green">productSearch</span>
+    <span class="badge badge-amber">voucherSelect</span>
+    <span class="badge badge-cyan">recommendations</span>
+    <span class="badge badge-purple">aiAssistant</span>
+    <span class="badge badge-server" id="server-badge">checking…</span>
+    <span class="tip"><a href="index.html">← Back to index</a></span>
+  </div>
+  <div id="builder"></div>
+  <details id="export-panel">
+    <summary>📋 Export — inspect JSON / HTML output</summary>
+    <div class="export-tabs">
+      <button class="export-tab active" onclick="showTab('json')">JSON</button>
+      <button class="export-tab" onclick="showTab('html')">HTML</button>
+      <button class="export-tab" onclick="showTab('recs')">Recommendations</button>
+    </div>
+    <pre id="export-pre">Make a change to see the exported output here.</pre>
+  </details>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "react": "https://esm.sh/react@19",
+      "react-dom": "https://esm.sh/react-dom@19",
+      "react-dom/client": "https://esm.sh/react-dom@19/client",
+      "react/jsx-runtime": "https://esm.sh/react@19/jsx-runtime",
+      "zustand": "https://esm.sh/zustand@5"
+    }
+  }
+  </script>
+  <script type="module">
+    import {
+      createEmailBuilder,
+      imageUploaderPlugin,
+      productSearchPlugin,
+      voucherPlugin,
+      aiAssistantPlugin,
+      registerPlugin,
+    } from '/dist/email-builder.js';
+
+    registerPlugin(imageUploaderPlugin({
+      endpoint: '/api/upload',
+    }));
+
+    registerPlugin(productSearchPlugin({
+      endpoint: '/api/products/search',
+    }));
+
+    registerPlugin(voucherPlugin({
+      endpoint: '/api/vouchers',
+      preload: true,
+    }));
+
+    registerPlugin(aiAssistantPlugin({
+      endpoint: '/api/ai/generate',
+    }));
+
+    let currentDoc = null;
+
+    const instance = createEmailBuilder({
+      container: document.getElementById('builder'),
+      enableRecommendations: true,
+      onChange(doc) {
+        currentDoc = doc;
+        // Keep the visible tab fresh
+        refreshTab(window.__activeTab ?? 'json', doc);
+      },
+    });
+
+    window.__emailBuilder = instance;
+    window.__activeTab = 'json';
+
+    window.showTab = function(tab) {
+      window.__activeTab = tab;
+      document.querySelectorAll('.export-tab').forEach(b => b.classList.remove('active'));
+      event.currentTarget.classList.add('active');
+      if (currentDoc) refreshTab(tab, currentDoc);
+    };
+
+    function refreshTab(tab, doc) {
+      const pre = document.getElementById('export-pre');
+      if (tab === 'json') {
+        pre.textContent = JSON.stringify(doc, null, 2);
+      } else if (tab === 'html') {
+        pre.textContent = instance.exportHtml();
+      } else if (tab === 'recs') {
+        const recsModules = doc.modules
+          .filter(m => m.data?.recommendations || m.data?.vtproduct)
+          .map(m => ({
+            id: m.id,
+            name: m.name,
+            vtproduct: m.data?.vtproduct,
+            recommendations: m.data?.recommendations,
+          }));
+        pre.textContent = recsModules.length > 0
+          ? JSON.stringify(recsModules, null, 2)
+          : 'No product-grid modules with recommendations configured yet.\n' +
+            'Add an Ecommerce block, select it, and configure the Products Source panel.';
+      }
+    }
+
+    // Check all endpoints
+    Promise.allSettled([
+      fetch('/api/upload', { method: 'POST', body: new FormData() }),
+      fetch('/api/products/search?q=mug'),
+      fetch('/api/vouchers'),
+      fetch('/api/ai/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ task: 'generate_subject' }),
+      }),
+    ]).then(results => {
+      const allOk = results.every(r => r.status === 'fulfilled');
+      const badge = document.getElementById('server-badge');
+      if (allOk) {
+        badge.textContent = 'mock server ✓ (all endpoints)';
+        badge.classList.add('ok');
+      } else {
+        const failed = results.filter(r => r.status === 'rejected').length;
+        badge.textContent = `⚠ ${failed} endpoint(s) offline`;
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,7 +1,7 @@
-import { useState } from "react";
-import { ChevronUp, ChevronDown, Trash2, Plus, X, Sparkles, Hand } from "lucide-react";
-import { useEmailStore } from "../store/emailStore";
-import type { EmailModule } from "../core/types";
+import { useEffect, useState } from "react";
+import { ChevronUp, ChevronDown, Trash2, Plus, X, Sparkles, Hash } from "lucide-react";
+import { useEmailStore } from "../../store/emailStore";
+import type { EmailModule } from "../../core/types";
 import {
   ALGORITHMS,
   ALGORITHM_BY_ID,
@@ -10,18 +10,36 @@ import {
   defaultLogic,
   readLogic,
   productSlotCount,
+  nextVtproduct,
   type RecommendationsLogic,
   type StackEntry,
-} from "../recommendations/logic";
+} from "./logic";
 
 interface Props {
   mod: EmailModule;
 }
 
 export function RecommendationsPanel({ mod }: Props) {
-  const updateModule = useEmailStore((s) => s.updateModule);
+  const { doc, updateModule } = useEmailStore((s) => ({ doc: s.doc, updateModule: s.updateModule }));
   const slots = productSlotCount(mod) || 2;
   const logic = readLogic(mod.data) ?? defaultLogic(slots);
+
+  // Auto-assign a unique vtproduct position ID (e.g. "pos01") the first time
+  // this panel opens for a module. Handles fresh modules and duplicates that
+  // share an ID with their original.
+  useEffect(() => {
+    const current = mod.data?.vtproduct as string | undefined;
+    if (current) {
+      // Check for collision with another module (e.g. after duplication).
+      const conflict = doc.modules.some(
+        (m) => m.id !== mod.id && (m.data?.vtproduct as string | undefined) === current
+      );
+      if (!conflict) return;
+    }
+    const vtproduct = nextVtproduct(doc.modules, mod.id);
+    updateModule(mod.id, { data: { ...(mod.data ?? {}), vtproduct } });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mod.id]);
 
   const update = (patch: Partial<RecommendationsLogic>) => {
     const next = { ...logic, ...patch };
@@ -31,13 +49,24 @@ export function RecommendationsPanel({ mod }: Props) {
   const updateFilters = (patch: Partial<RecommendationsLogic["filters"]>) =>
     update({ filters: { ...logic.filters, ...patch } });
 
+  const vtproduct = mod.data?.vtproduct as string | undefined;
+
   return (
     <div className="border border-blue-200 rounded-lg bg-blue-50/40 mt-4 overflow-hidden">
       <div className="px-3 py-2 flex items-center gap-2 border-b border-blue-200 bg-blue-50">
         <Sparkles size={14} className="text-blue-700" />
-        <div className="text-xs font-semibold text-blue-900 uppercase tracking-wide">
+        <div className="text-xs font-semibold text-blue-900 uppercase tracking-wide flex-1">
           Products Source
         </div>
+        {vtproduct && (
+          <span
+            className="flex items-center gap-1 text-[10px] font-mono bg-blue-100 text-blue-700 border border-blue-200 px-1.5 py-0.5 rounded"
+            title="Backend position identifier (vtproduct HTML attribute)"
+          >
+            <Hash size={9} />
+            {vtproduct}
+          </span>
+        )}
       </div>
 
       {/* Step 1 — choose how products are sourced */}
@@ -45,14 +74,12 @@ export function RecommendationsPanel({ mod }: Props) {
         <div className="grid grid-cols-2 gap-2">
           <ModeCard
             active={logic.mode === "manual"}
-            
             title="Select Items"
             subtitle="Hand-pick from a feed"
             onClick={() => update({ mode: "manual" })}
           />
           <ModeCard
             active={logic.mode === "recommender"}
-            
             title="Recommender"
             subtitle="Algorithms + filters"
             onClick={() => update({ mode: "recommender" })}
@@ -296,13 +323,11 @@ const inputCls =
 
 function ModeCard({
   active,
-  icon,
   title,
   subtitle,
   onClick,
 }: {
   active: boolean;
-  icon?: React.ReactNode;
   title: string;
   subtitle: string;
   onClick: () => void;
@@ -318,7 +343,6 @@ function ModeCard({
       }
     >
       <div className={"flex items-center gap-1.5 " + (active ? "text-teal-700" : "text-gray-700")}>
-        {icon}
         <span className="text-xs font-semibold">{title}</span>
       </div>
       <span className="text-[10px] text-gray-500">{subtitle}</span>

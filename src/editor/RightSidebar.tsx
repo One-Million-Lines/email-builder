@@ -1,16 +1,10 @@
-import { useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useEmailStore } from "../store/emailStore";
 import { resolveToken } from "../core/theme";
 import { getAssetProvider } from "../core/plugins";
 import type { ProductSearchResult } from "../core/plugins";
-import { RecommendationsPanel } from "./RecommendationsPanel";
-import { isProductAware } from "../recommendations/logic";
-import { useRecommendationsStore } from "../plugins/recommendations/state";
-import { VoucherPanel } from "../plugins/voucherSelect/VoucherPanel";
-import { isVoucherAware } from "../plugins/voucherSelect/logic";
+import { usePluginSlotStore } from "../core/pluginSlots";
 import { product as makeProduct } from "../modules/helpers";
-import { ProductSearchModal } from "../plugins/productSearch/ProductSearchModal";
-import { useProductSearchAvailable } from "../plugins/productSearch/useProductSearch";
 import type {
   EmailElement,
   EmailModule,
@@ -600,7 +594,7 @@ function ThemeColorRow({
 function ModulePanel({ mod }: { mod: EmailModule }) {
   const updateModule = useEmailStore((s) => s.updateModule);
   const viewMode = useEmailStore((s) => s.viewMode);
-  const recsEnabled = useRecommendationsStore((s) => s.enabled);
+  const modulePanels = usePluginSlotStore((s) => s.modulePanels);
   const rawStyle = (mod.style ?? {}) as Record<string, unknown>;
   const style = readStyle(rawStyle, viewMode);
   const mobileKeys = new Set(Object.keys((rawStyle.mobile as Record<string, unknown>) ?? {}));
@@ -626,8 +620,13 @@ function ModulePanel({ mod }: { mod: EmailModule }) {
         hideOn={rawStyle.hideOn as "mobile" | "desktop" | undefined}
         onChange={(v) => updateModule(mod.id, { style: { ...rawStyle, hideOn: v } })}
       />
-      {recsEnabled && isProductAware(mod) && <RecommendationsPanel mod={mod} />}
-      {isVoucherAware(mod) && <VoucherPanel mod={mod} />}
+      {modulePanels
+        .filter((slot) => slot.shouldShow(mod))
+        .map(({ id, Component }) => (
+          <Suspense key={id} fallback={null}>
+            <Component mod={mod} />
+          </Suspense>
+        ))}
     </>
   );
 }
@@ -957,7 +956,8 @@ function ProductGridElementPanel({ mod, el }: { mod: EmailModule; el: ProductGri
     patch({ columns, products } as Partial<ProductGridElement>);
   };
 
-  const searchAvailable = useProductSearchAvailable();
+  const productSearch = usePluginSlotStore((s) => s.productSearch);
+  const searchAvailable = productSearch !== null;
   // null = closed; { index: null } = add new; { index } = replace that row.
   const [search, setSearch] = useState<{ index: number | null; query: string } | null>(null);
 
@@ -1078,13 +1078,17 @@ function ProductGridElementPanel({ mod, el }: { mod: EmailModule; el: ProductGri
         ))}
       </div>
 
-      <ProductSearchModal
-        open={search !== null}
-        initialQuery={search?.query}
-        title={search?.index != null ? "Replace product" : "Add product from search"}
-        onClose={() => setSearch(null)}
-        onSave={applySearchResult}
-      />
+      {productSearch && search !== null && (
+        <Suspense fallback={null}>
+          <productSearch.Component
+            open={true}
+            initialQuery={search.query}
+            title={search.index != null ? "Replace product" : "Add product from search"}
+            onClose={() => setSearch(null)}
+            onSave={applySearchResult}
+          />
+        </Suspense>
+      )}
 
       <div className="mt-4 pt-3 border-t border-gray-100">
         <PanelTitle>Style</PanelTitle>

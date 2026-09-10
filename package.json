@@ -1,6 +1,6 @@
 {
   "name": "@one-million-lines/email-builder",
-  "version": "0.6.2",
+  "version": "0.8.0",
   "description": "Embeddable visual email builder (React + vanilla JS) that composes modular marketing emails from a JSON model and exports table-based HTML.",
   "type": "module",
   "license": "MIT",
@@ -55,6 +55,7 @@
   ],
   "scripts": {
     "dev": "vite",
+    "dev:mock": "node dev/mock-server.mjs",
     "build": "vite build --config vite.lib.config.ts",
     "build:demo": "tsc -b && vite build",
     "preview": "vite preview",

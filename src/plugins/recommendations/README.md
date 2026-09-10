@@ -37,7 +37,37 @@ builder.registerRecommendationsPlugin();
 ## Where the data lives
 
 Recommendations logic is stored as free-form JSON on the `EmailModule.data`
-field under the key `"recommendations"`:
+field under two keys:
+
+- **`recommendations`** — the algorithm/filter logic configured in the panel
+- **`vtproduct`** — a unique position identifier (e.g. `"pos01"`) automatically
+  assigned by the panel the first time it opens for a module. Used by the backend
+  to match each HTML position to its product list.
+
+The `vtproduct` ID is stable per module. If a module is duplicated the clone
+receives a new ID the next time its recommendations panel is opened.
+
+### Backend HTML attributes
+
+When a module has both `data.vtproduct` and `data.recommendations` set, the
+renderer emits the following attributes on the module's `<td>` wrapper:
+
+```html
+<td reccs-editable vtproduct="pos01" ...>
+  <!-- product grid rows -->
+  <td reccs-item class="stack" ...>...</td>
+  <td reccs-item class="stack" ...>...</td>
+</td>
+```
+
+The backend can then:
+1. Select all `[reccs-editable]` elements to find recommendation positions.
+2. Read `vtproduct` to look up the right product list (`products.pos01`).
+3. Process `[reccs-item]` children as the repeating product slot template.
+
+---
+
+## JSON module example
 
 ```json
 {
@@ -69,7 +99,8 @@ field under the key `"recommendations"`:
       },
       "manualProducts": [],
       "sourceFeed": ""
-    }
+    },
+    "vtproduct": "pos01"
   }
 }
 ```

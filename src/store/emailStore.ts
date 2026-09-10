@@ -135,10 +135,15 @@ export const useEmailStore = create<State>((set, get) => ({
     const idx = doc.modules.findIndex((m) => m.id === moduleId);
     if (idx === -1) return;
     const original = doc.modules[idx];
+    // Strip vtproduct so the clone gets a fresh unique ID when its recommendations
+    // panel is first opened, preventing two modules sharing the same position ID.
+    const cloneData = original.data ? { ...original.data } : undefined;
+    if (cloneData) delete cloneData["vtproduct"];
     const clone: EmailModule = {
       ...original,
       id: uid("module"),
       children: original.children.map((c) => ({ ...c, id: uid("el") })),
+      data: cloneData,
     };
     const modules = [...doc.modules];
     modules.splice(idx + 1, 0, clone);

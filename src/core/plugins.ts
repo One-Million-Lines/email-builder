@@ -1,4 +1,6 @@
 // Plugin API. Plugins can add modules, themes, AI providers, asset providers.
+import { lazy } from "react";
+import type React from "react";
 import type { ModuleDefinition } from "../modules/registry";
 import { moduleRegistry } from "../modules/registry";
 import type { Theme, MergeTag } from "./types";
@@ -8,6 +10,33 @@ import { setProductProvider as setReactiveProductProvider } from "../plugins/pro
 import { setVoucherProvider as setReactiveVoucherProvider } from "../plugins/voucherSelect/state";
 import { setMergeTagsGlobal } from "../plugins/mergeTags/state";
 import { enableRecommendations } from "../plugins/recommendations/state";
+import { usePluginSlotStore } from "./pluginSlots";
+
+// Gate helpers — inlined so `plugins.ts` doesn't need to import from plugin
+// logic files (those may not exist in trimmed builds).
+import type { EmailModule, TextElement } from "./types";
+
+function isProductGridModule(mod: EmailModule) {
+  return mod.children?.some((c) => c.type === "productGrid") ?? false;
+}
+
+function isVoucherModule(mod: EmailModule) {
+  return (
+    mod.children?.some(
+      (c): c is TextElement => c.type === "text" && c.role === "voucherCode"
+    ) ?? false
+  );
+}
+
+// Null-safe lazy import: if the file doesn't exist (e.g. tree-shaken build),
+// the slot just renders nothing instead of crashing.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function safeLazy(factory: () => Promise<{ default: React.ComponentType<any> }>) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return lazy<React.ComponentType<any>>(() =>
+    factory().catch(() => ({ default: (() => null) as React.ComponentType<any> }))
+  );
+}
 
 export interface AssetProvider {
   upload: (file: File) => Promise<{ url: string; alt?: string }>;
@@ -98,17 +127,49 @@ export const builder: BuilderHandle = {
   registerProductProvider: (p) => {
     productProvider = p;
     setReactiveProductProvider(p);
+    // Register the product-search modal as a lazy slot so RightSidebar
+    // never statically imports the plugin file.
+    usePluginSlotStore.getState().registerProductSearch({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      Component: safeLazy(() =>
+        import("../plugins/productSearch/ProductSearchModal").then((m) => ({
+          default: m.ProductSearchModal,
+        }))
+      ) as any,
+    });
   },
   registerVoucherProvider: (p) => {
     voucherProvider = p;
     setReactiveVoucherProvider(p);
+    // Register the voucher module panel as a lazy slot.
+    usePluginSlotStore.getState().registerModulePanel({
+      id: "voucher",
+      shouldShow: isVoucherModule,
+      Component: safeLazy(() =>
+        import("../plugins/voucherSelect/VoucherPanel").then((m) => ({
+          default: m.VoucherPanel,
+        }))
+      ),
+    });
   },
   setAIProvider: (p) => {
     aiProvider = p;
     setReactiveAIProvider(p);
   },
   registerMergeTags: (tags) => setMergeTagsGlobal(tags),
-  registerRecommendationsPlugin: () => enableRecommendations(),
+  registerRecommendationsPlugin: () => {
+    enableRecommendations();
+    // Register the recommendations module panel as a lazy slot.
+    usePluginSlotStore.getState().registerModulePanel({
+      id: "recommendations",
+      shouldShow: isProductGridModule,
+      Component: safeLazy(() =>
+        import("../plugins/recommendations/RecommendationsPanel").then((m) => ({
+          default: m.RecommendationsPanel,
+        }))
+      ),
+    });
+  },
 };
 
 export function registerPlugin(plugin: Plugin) {

@@ -22,8 +22,6 @@ export {
   setVoucherProvider as setActiveVoucherProvider,
   loadVouchers,
 } from "./state";
-export { VoucherPanel } from "./VoucherPanel";
-export { useVouchers } from "./useVouchers";
 export { isVoucherAware, findVoucherCodeElement, readSelectedVoucher } from "./logic";
 
 export interface VoucherOptions {

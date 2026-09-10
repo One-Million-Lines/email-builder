@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Email Builder — 03 Product Search</title>
+  <link rel="stylesheet" href="/dist/styles.css" />
+  <style>
+    html, body { margin: 0; height: 100%; display: flex; flex-direction: column; font-family: system-ui, sans-serif; }
+    .banner { display: flex; align-items: center; gap: 12px; padding: 8px 16px; background: #1e293b; color: #e2e8f0; font-size: 13px; flex-shrink: 0; }
+    .banner strong { color: #fff; }
+    .badge { padding: 2px 8px; border-radius: 99px; font-size: 11px; font-weight: 600; }
+    .badge-green { background: #166534; color: #bbf7d0; }
+    .badge-gray { background: #334155; color: #94a3b8; }
+    .tip { margin-left: auto; color: #64748b; font-size: 12px; }
+    .tip a { color: #7dd3fc; }
+    #server-status { padding: 2px 8px; border-radius: 99px; font-size: 11px; font-weight: 600; background: #334155; color: #94a3b8; }
+    #server-status.ok { background: #166534; color: #bbf7d0; }
+    #builder { flex: 1; min-height: 0; }
+  </style>
+</head>
+<body>
+  <div class="banner">
+    <strong>🛒 03 — Product Search</strong>
+    <span class="badge badge-green">productSearch</span>
+    <span id="server-status">checking…</span>
+    <span class="tip">
+      Add an Ecommerce block → click <b>Find</b> or the search icon on a product card → type "mug", "lamp", "tote" etc.
+      <a href="index.html">← Index</a>
+    </span>
+  </div>
+  <div id="builder"></div>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "react": "https://esm.sh/react@19",
+      "react-dom": "https://esm.sh/react-dom@19",
+      "react-dom/client": "https://esm.sh/react-dom@19/client",
+      "react/jsx-runtime": "https://esm.sh/react@19/jsx-runtime",
+      "zustand": "https://esm.sh/zustand@5"
+    }
+  }
+  </script>
+  <script type="module">
+    import { createEmailBuilder, productSearchPlugin, registerPlugin } from '/dist/email-builder.js';
+
+    registerPlugin(productSearchPlugin({
+      endpoint: '/api/products/search',
+      method: 'GET',
+    }));
+
+    const instance = createEmailBuilder({
+      container: document.getElementById('builder'),
+    });
+
+    window.__emailBuilder = instance;
+
+    // Server health check
+    fetch('/api/products/search?q=mug')
+      .then(r => {
+        const el = document.getElementById('server-status');
+        if (r.ok || r.status === 404) {
+          el.textContent = 'mock server ✓ (8 products)';
+          el.classList.add('ok');
+        } else {
+          el.textContent = '⚠ server error';
+        }
+      })
+      .catch(() => {
+        document.getElementById('server-status').textContent = '⚠ mock server offline';
+      });
+  </script>
+</body>
+</html>

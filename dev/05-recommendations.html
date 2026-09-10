@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Email Builder — 05 Recommendations</title>
+  <link rel="stylesheet" href="/dist/styles.css" />
+  <style>
+    html, body { margin: 0; height: 100%; display: flex; flex-direction: column; font-family: system-ui, sans-serif; }
+    .banner { display: flex; align-items: center; gap: 12px; padding: 8px 16px; background: #1e293b; color: #e2e8f0; font-size: 13px; flex-shrink: 0; }
+    .banner strong { color: #fff; }
+    .badge { padding: 2px 8px; border-radius: 99px; font-size: 11px; font-weight: 600; }
+    .badge-blue { background: #1d4ed8; color: #bfdbfe; }
+    .badge-cyan { background: #0e7490; color: #cffafe; }
+    .tip { margin-left: auto; color: #64748b; font-size: 12px; }
+    .tip a { color: #7dd3fc; }
+    #builder { flex: 1; min-height: 0; }
+    #export-panel { flex-shrink: 0; border-top: 1px solid #e2e8f0; background: #f8fafc; }
+    #export-panel summary { padding: 8px 16px; cursor: pointer; font-size: 13px; color: #475569; font-weight: 500; }
+    #export-panel pre { margin: 0; padding: 12px 16px; font-size: 11px; overflow: auto; max-height: 200px; background: #0f172a; color: #7dd3fc; line-height: 1.5; }
+  </style>
+</head>
+<body>
+  <div class="banner">
+    <strong>✨ 05 — Recommendations</strong>
+    <span class="badge badge-blue">recommendations</span>
+    <span class="badge badge-cyan">vtproduct IDs</span>
+    <span class="tip">
+      Add an Ecommerce block → select the module → configure algorithms, filters, and fallback in the sidebar.
+      <a href="index.html">← Index</a>
+    </span>
+  </div>
+  <div id="builder"></div>
+  <details id="export-panel">
+    <summary>📋 Inspect exported JSON (recommendations + vtproduct)</summary>
+    <pre id="json-out">Select a module with a product grid to see its recommendations logic here.</pre>
+  </details>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "react": "https://esm.sh/react@19",
+      "react-dom": "https://esm.sh/react-dom@19",
+      "react-dom/client": "https://esm.sh/react-dom@19/client",
+      "react/jsx-runtime": "https://esm.sh/react@19/jsx-runtime",
+      "zustand": "https://esm.sh/zustand@5"
+    }
+  }
+  </script>
+  <script type="module">
+    import { createEmailBuilder } from '/dist/email-builder.js';
+
+    const instance = createEmailBuilder({
+      container: document.getElementById('builder'),
+      enableRecommendations: true,
+      onChange(doc) {
+        // Show modules that have recommendations configured
+        const recsModules = doc.modules.filter(m => m.data?.recommendations || m.data?.vtproduct);
+        if (recsModules.length > 0) {
+          const out = recsModules.map(m => ({
+            id: m.id,
+            name: m.name,
+            vtproduct: m.data?.vtproduct,
+            recommendations: m.data?.recommendations,
+          }));
+          document.getElementById('json-out').textContent = JSON.stringify(out, null, 2);
+        } else {
+          document.getElementById('json-out').textContent =
+            'No product-grid modules with recommendations configured yet.\n' +
+            'Add an Ecommerce block, select it, and configure the Products Source panel.';
+        }
+      },
+    });
+
+    window.__emailBuilder = instance;
+  </script>
+</body>
+</html>

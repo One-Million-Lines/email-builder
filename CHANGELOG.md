@@ -4,6 +4,92 @@ All notable changes to this package are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/) and the
 [Keep a Changelog](https://keepachangelog.com/) format.
 
+## [0.8.0] — 2026-09-10
+
+### Added
+
+- **`dev/` — development demo suite** — interactive HTML pages and a zero-dependency
+  mock backend server for developing and testing each plugin locally.
+  Start with `node dev/mock-server.mjs` (or `npm run dev:mock`) then open
+  `http://localhost:3001/dev/`.
+
+  | File | Purpose |
+  |------|---------|
+  | `dev/mock-server.mjs` | Node.js HTTP server (no deps) — serves static files + all mock API endpoints |
+  | `dev/index.html` | Landing page with links to all demos and server health check |
+  | `dev/01-plain.html` | Base editor, no plugins |
+  | `dev/02-image-uploader.html` | Image uploader → `POST /api/upload` |
+  | `dev/03-product-search.html` | Product search → `GET /api/products/search?q=` |
+  | `dev/04-voucher-select.html` | Voucher select → `GET /api/vouchers` |
+  | `dev/05-recommendations.html` | Recommendations plugin + live JSON inspector |
+  | `dev/06-ai-assistant.html` | AI assistant → `POST /api/ai/generate` |
+  | `dev/07-all-plugins.html` | All plugins together + JSON / HTML / recs export panel |
+
+- **`npm run dev:mock`** — convenience script alias for `node dev/mock-server.mjs`.
+
+- **Mock API endpoints** (implemented in `mock-server.mjs`):
+  - `POST /api/upload` — accepts any multipart body; returns a `placehold.co` URL.
+  - `GET|POST /api/products/search` — keyword-scored 8-item in-memory catalog
+    (try "mug", "lamp", "tote", "skillet", "candle"…).
+  - `GET /api/vouchers` — 5 demo codes including a merge-tag VIP code.
+  - `POST /api/ai/generate` — smart mock: `create_email` picks modules from the
+    live catalog; `generate_subject`/`generate_preview` rotate canned lines;
+    `rewrite_text` echoes the instruction with a mock prefix.
+
+## [0.7.0] — 2026-09-10
+
+### Added
+
+- **Plugin slot registry (`core/pluginSlots.ts`)** — a new Zustand store that
+  holds lazy-loaded UI component registrations for plugins. Editor components
+  (right sidebar) read from this registry at runtime rather than statically
+  importing plugin files, so plugin code is never bundled or executed unless the
+  plugin is actually registered by the host application.
+
+### Changed
+
+- **Plugin UI components are now lazy-loaded** — `RecommendationsPanel`,
+  `VoucherPanel`, and `ProductSearchModal` are loaded as separate async chunks
+  only when their respective plugin is registered:
+  - Calling `builder.registerRecommendationsPlugin()` registers the
+    `RecommendationsPanel` lazy slot.
+  - Calling `builder.registerVoucherProvider()` registers the `VoucherPanel`
+    lazy slot.
+  - Calling `builder.registerProductProvider()` registers the
+    `ProductSearchModal` lazy slot.
+  - If any plugin file is absent (e.g. in a trimmed build), the lazy import
+    silently resolves to nothing — the editor continues to work.
+- **`RightSidebar` no longer imports any plugin files** — module panel extras
+  are rendered by iterating `usePluginSlotStore().modulePanels`; each slot's
+  `shouldShow` gate replaces the old `isProductAware` / `isVoucherAware` static
+  calls; wrapped in `<Suspense fallback={null}>`.
+- **Core bundle size reduced** — plugin UI code moved to separate async chunks.
+  ESM core bundle: 288 kB → 276 kB (gzip 81 kB → 68 kB). Plugin chunks load
+  on demand only.
+- **`ProductSearchModal` and `VoucherPanel` removed from plugin `index.ts`
+  exports** — these are internal editor components, not public API surface.
+
+### Added (Recommendations plugin consolidation from 0.6.3)
+
+- **`src/recommendations/` removed** — all recommendations logic and UI have
+  been consolidated into `src/plugins/recommendations/`. The plugin is now
+  fully self-contained.
+- **`vtproduct` position identifier** — each product-grid module with
+  recommendations configured is automatically assigned a unique position ID
+  (e.g. `"pos01"`, `"pos02"`). Stored in `module.data.vtproduct` and shown as
+  a badge in the Recommendations panel header.
+- **Backend HTML attributes** — the renderer now emits `reccs-editable
+  vtproduct="posXX"` on the module `<td>` and `reccs-item` on each product card
+  `<td>` when a module has both `data.vtproduct` and `data.recommendations`
+  set, making the position identifiable by the Python backend processor.
+- **Duplicate-safe vtproduct** — `duplicateModule` strips `vtproduct` from the
+  clone's data; the clone gets a fresh unique ID when its recommendations panel
+  is first opened.
+- **`isProductAware` added to public API** — now exported from
+  `@one-million-lines/email-builder`.
+- **`nextVtproduct(modules, excludeId)` utility** — exported from the
+  recommendations plugin for host-side use.
+
 ## [0.6.2] — 2026-09-03
 
 ### Changed

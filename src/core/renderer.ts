@@ -217,7 +217,7 @@ function renderDivider(el: DividerElement, ctx: RenderCtx): string {
   return `<div style="padding-top:${padTop};padding-bottom:${padBot};"><hr style="border:0;border-top:${thickness}px solid ${color};margin:0;height:0;" /></div>`;
 }
 
-function renderElement(el: EmailElement, ctx: RenderCtx): string {
+function renderElement(el: EmailElement, ctx: RenderCtx, vtproduct?: string): string {
   switch (el.type) {
     case "text":
       return renderText(el, ctx);
@@ -230,11 +230,11 @@ function renderElement(el: EmailElement, ctx: RenderCtx): string {
     case "divider":
       return renderDivider(el, ctx);
     case "productGrid":
-      return renderProductGrid(el, ctx);
+      return renderProductGrid(el, ctx, vtproduct);
   }
 }
 
-function renderProductGrid(el: ProductGridElement, ctx: RenderCtx): string {
+function renderProductGrid(el: ProductGridElement, ctx: RenderCtx, vtproduct?: string): string {
   const s = resolveStyle((el.style ?? {}) as Record<string, unknown>, ctx.theme);
   const cols = el.columns;
   const products = el.products.slice(0, cols * 6); // sane upper bound
@@ -285,7 +285,9 @@ function renderProductGrid(el: ProductGridElement, ctx: RenderCtx): string {
       : img;
 
     // Each cell: stack on mobile via class. Vertical-align top.
-    return `<td class="stack" valign="top" style="padding:0 ${last ? 0 : 8}px 16px ${last ? 0 : 0}px;width:${colWidthPct};vertical-align:top;">
+    // reccs-item marks this as a product slot for backend recommendation processing.
+    const recsItemAttr = vtproduct ? " reccs-item" : "";
+    return `<td${recsItemAttr} class="stack" valign="top" style="padding:0 ${last ? 0 : 8}px 16px ${last ? 0 : 0}px;width:${colWidthPct};vertical-align:top;">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:${resolveTokenSafe(cardBg, ctx.theme)};border-radius:${radius}px;">
     <tr><td style="padding:0;font-size:0;line-height:0;">${imgWrapped}</td></tr>
     <tr><td style="padding:12px 12px 4px 12px;font-family:Arial,Helvetica,sans-serif;font-size:15px;font-weight:bold;color:${resolveTokenSafe(nameColor, ctx.theme)};line-height:1.3;">${escapeHtml(p.name)}</td></tr>
@@ -340,9 +342,19 @@ function renderModule(m: EmailModule, ctx: RenderCtx): string {
     "padding-right": px(s.paddingRight as number, 0),
     "border-radius": s.borderRadius ? `${s.borderRadius}px` : undefined,
   });
-  const inner = m.children.map((c) => renderElement(c, ctx)).join("\n");
+  // Emit reccs-editable + vtproduct when this module has recommendations configured.
+  // The backend identifies each recommendations position via the vtproduct attribute
+  // (e.g. vtproduct="pos01") and processes the reccs-item children accordingly.
+  const vtproduct =
+    m.data?.vtproduct && m.data?.recommendations
+      ? (m.data.vtproduct as string)
+      : undefined;
+  const recsAttrs = vtproduct
+    ? ` reccs-editable vtproduct="${escapeHtml(vtproduct)}"`
+    : "";
+  const inner = m.children.map((c) => renderElement(c, ctx, vtproduct)).join("\n");
   const cls = collectMobile(ctx, m.style as Record<string, unknown>);
-  return `<tr><td${cls ? ` class="${cls}"` : ""} style="${css}">${inner}</td></tr>`;
+  return `<tr><td${cls ? ` class="${cls}"` : ""}${recsAttrs} style="${css}">${inner}</td></tr>`;
 }
 
 export function renderEmailHtml(doc: EmailDocument): string {
