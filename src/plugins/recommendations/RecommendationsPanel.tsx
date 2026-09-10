@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ChevronUp, ChevronDown, Trash2, Plus, X, Sparkles, Hash } from "lucide-react";
 import { useEmailStore } from "../../store/emailStore";
 import type { EmailModule } from "../../core/types";
@@ -90,12 +90,12 @@ export function RecommendationsPanel({ mod }: Props) {
       {/* Step 2 — per-mode body */}
       <div className="p-3 bg-white space-y-3">
         <Field label="Number of products">
-          <input
+          <DeferredInput
             type="number"
             min={1}
             max={20}
             value={logic.noProducts}
-            onChange={(e) => update({ noProducts: Number(e.target.value) || 1 })}
+            onCommit={(v) => update({ noProducts: Math.max(1, Number(v) || 1) })}
             className={inputCls}
           />
           <div className="text-[11px] text-gray-500 mt-1">
@@ -138,11 +138,11 @@ function ManualSection({
   return (
     <>
       <Field label="Source feed">
-        <input
+        <DeferredInput
           type="text"
           placeholder="e.g. main-catalog"
           value={logic.sourceFeed ?? ""}
-          onChange={(e) => update({ sourceFeed: e.target.value })}
+          onCommit={(v) => update({ sourceFeed: v })}
           className={inputCls}
         />
       </Field>
@@ -250,20 +250,20 @@ function RecommenderSection({
 
       <div className="grid grid-cols-2 gap-2">
         <Field label="Minimum stock">
-          <input
+          <DeferredInput
             type="number"
             min={0}
             value={logic.filters.minStock ?? 0}
-            onChange={(e) => updateFilters({ minStock: Number(e.target.value) || 0 })}
+            onCommit={(v) => updateFilters({ minStock: Math.max(0, Number(v) || 0) })}
             className={inputCls}
           />
         </Field>
         <Field label="Minimum price">
-          <input
+          <DeferredInput
             type="number"
             min={0}
             value={logic.filters.minPrice ?? 0}
-            onChange={(e) => updateFilters({ minPrice: Number(e.target.value) || 0 })}
+            onCommit={(v) => updateFilters({ minPrice: Math.max(0, Number(v) || 0) })}
             className={inputCls}
           />
         </Field>
@@ -295,11 +295,11 @@ function RecommenderSection({
         onChange={(v) => updateFilters({ matchTitle: v })}
       />
       <Field label="Match same fields (comma-separated)">
-        <input
+        <DeferredInput
           type="text"
           placeholder="brand, color"
           value={logic.filters.sameField ?? ""}
-          onChange={(e) => updateFilters({ sameField: e.target.value })}
+          onCommit={(v) => updateFilters({ sameField: v })}
           className={inputCls}
         />
       </Field>
@@ -494,15 +494,11 @@ function StackList({
                     ))}
                   </select>
                 ) : (
-                  <input
+                  <DeferredInput
                     type={p.type === "number" ? "number" : "text"}
                     value={String(s.params?.[p.key] ?? p.default ?? "")}
-                    onChange={(e) =>
-                      setParam(
-                        i,
-                        p.key,
-                        p.type === "number" ? Number(e.target.value) : e.target.value
-                      )
+                    onCommit={(v) =>
+                      setParam(i, p.key, p.type === "number" ? Number(v) : v)
                     }
                     className="flex-1 text-xs border border-gray-200 rounded px-1.5 py-1"
                   />
@@ -625,6 +621,48 @@ function TokenInput({
   );
 }
 
+/**
+ * Input that keeps its own local state while focused and commits the value to
+ * the store only on blur. Prevents update storms when the host React app
+ * observes every document change.
+ */
+function DeferredInput({
+  value,
+  onCommit,
+  className,
+  type = "text",
+  ...rest
+}: Omit<React.InputHTMLAttributes<HTMLInputElement>, "value" | "onChange" | "onBlur"> & {
+  value: string | number;
+  onCommit: (v: string) => void;
+}) {
+  const [local, setLocal] = useState(String(value));
+  const focusedRef = useRef(false);
+
+  // Sync from outside when not focused (e.g., undo/redo, programmatic updates)
+  useEffect(() => {
+    if (!focusedRef.current) {
+      setLocal(String(value));
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value]);
+
+  return (
+    <input
+      type={type}
+      value={local}
+      className={className}
+      onFocus={() => { focusedRef.current = true; }}
+      onChange={(e) => setLocal(e.target.value)}
+      onBlur={(e) => {
+        focusedRef.current = false;
+        onCommit(e.target.value);
+      }}
+      {...rest}
+    />
+  );
+}
+
 function JsonEdit({
   value,
   onChange,
@@ -634,20 +672,45 @@ function JsonEdit({
 }) {
   const [text, setText] = useState(() => JSON.stringify(value, null, 2));
   const [error, setError] = useState<string | null>(null);
+  const focusedRef = useRef(false);
+
+  // Sync from outside when not focused (e.g., undo/redo)
+  useEffect(() => {
+    if (!focusedRef.current) {
+      setText(JSON.stringify(value, null, 2));
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value]);
+
+  const tryCommit = (t: string) => {
+    try {
+      const parsed = JSON.parse(t || "{}") as Record<string, unknown>;
+      setError(null);
+      onChange(parsed);
+    } catch (err) {
+      setError(String((err as Error).message));
+    }
+  };
+
   return (
     <div>
       <textarea
         value={text}
+        onFocus={() => { focusedRef.current = true; }}
         onChange={(e) => {
           const t = e.target.value;
           setText(t);
+          // Show parse errors inline while typing, but don't commit until blur
           try {
-            const parsed = JSON.parse(t || "{}");
+            JSON.parse(t || "{}");
             setError(null);
-            onChange(parsed);
           } catch (err) {
             setError(String((err as Error).message));
           }
+        }}
+        onBlur={(e) => {
+          focusedRef.current = false;
+          tryCommit(e.target.value);
         }}
         rows={6}
         spellCheck={false}
