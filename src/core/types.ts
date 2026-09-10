@@ -1,4 +1,4 @@
-// JSON-first document model for OpenPostcards AI Builder.
+// JSON-first document model for OpenEmailBuilder AI Builder.
 // All emails are stored as structured JSON; HTML is generated from JSON.
 
 export type ElementType = "text" | "image" | "button" | "spacer" | "divider" | "productGrid";

@@ -1,6 +1,6 @@
-# OpenPostcards AI Builder
+# OpenEmailBuilder AI Builder
 
-OpenPostcards AI Builder is a visual email builder for composing modular marketing emails from a JSON document model and exporting table-based HTML. It can run as a standalone app or be embedded into other products through a React component or a vanilla JavaScript wrapper.
+OpenEmailBuilder AI Builder is a visual email builder for composing modular marketing emails from a JSON document model and exporting table-based HTML. It can run as a standalone app or be embedded into other products through a React component or a vanilla JavaScript wrapper.
 
 ## What it does
 
