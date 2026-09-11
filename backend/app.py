@@ -1,5 +1,5 @@
 """
-Flask HTTP service for the OpenPostcards email builder AI assistant.
+Flask HTTP service for the OpenEmailBuilder email builder AI assistant.
 
     pip install -r requirements.txt
     python app.py                       # offline heuristic mode (no API key)

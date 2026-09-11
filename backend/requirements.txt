@@ -1,4 +1,4 @@
-# AI service for the OpenPostcards email builder.
+# AI service for the OpenEmailBuilder email builder.
 # Only Flask + flask-cors are required; the model client uses the Python stdlib
 # (urllib) so there is no hard dependency on any AI SDK.
 flask>=3.0

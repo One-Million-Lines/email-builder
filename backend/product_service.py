@@ -1,5 +1,5 @@
 """
-Product search service for the OpenPostcards email builder.
+Product search service for the OpenEmailBuilder email builder.
 
 A tiny, dependency-free demo backend for the builder's product-search modal.
 It exposes a single `search(query)` function over an in-memory catalog and

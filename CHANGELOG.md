@@ -4,6 +4,11 @@ All notable changes to this package are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/) and the
 [Keep a Changelog](https://keepachangelog.com/) format.
 
+## [0.8.6] — 2026-09-11
+
+- ** Empty Editor - when a new template is requested for creation
+- ** Rename local constants
+
 ## [0.8.5] — 2026-09-11
 
 ### Fixed

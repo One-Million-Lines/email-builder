@@ -1,5 +1,5 @@
 """
-AI service for the OpenPostcards email builder.
+AI service for the OpenEmailBuilder email builder.
 
 This module turns a natural-language instruction into a structured `AIResponse`
 that the editor can apply. The design guarantees that whatever the model chooses,

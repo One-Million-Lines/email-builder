@@ -1,5 +1,5 @@
 """
-Voucher list service for the OpenPostcards email builder.
+Voucher list service for the OpenEmailBuilder email builder.
 
 A tiny, dependency-free demo backend for the builder's voucher-select dropdown.
 Exposes a `list()` function returning the vouchers/discount codes a user can pick

@@ -11,6 +11,7 @@ import { App } from "./App";
 import { registerDefaultModules } from "./modules/defaultModules";
 import { moduleRegistry, type ModuleDefinition } from "./modules/registry";
 import type { AIProvider } from "./core/aiActions";
+import { STORAGE_KEY } from "./store/emailStore";
 import {
   builder,
   registerPlugin,
@@ -148,6 +149,28 @@ export function createEmailBuilder(opts: VanillaOptions): VanillaInstance {
     exportHtml: () => useEmailStore.getState().exportHtml(),
     exportJson: () => useEmailStore.getState().exportJson(),
   };
+}
+
+/**
+ * Reset the email builder to an empty document and clear its localStorage
+ * draft, so the next mount starts fresh instead of restoring the previous
+ * session.
+ *
+ * Call this before opening the builder for a brand-new content item to avoid
+ * the previous edit bleeding into the new template.
+ *
+ * @example
+ *   // In ContentEditPage when isNew:
+ *   clearEmailBuilderDocument();
+ *   setBuilderKey(k => k + 1); // remount the builder
+ */
+export function clearEmailBuilderDocument(): void {
+  useEmailStore.getState().resetDocument();
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+  } catch {
+    // ignore (e.g. SSR or restricted storage)
+  }
 }
 
 // Re-exports for plugin authors.

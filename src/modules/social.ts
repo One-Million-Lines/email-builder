@@ -48,7 +48,7 @@ export const socialModules: ModuleDefinition[] = [
           eyebrow("From the community"),
           image(PLACEHOLDER(48, 48, "👤"), "Avatar", { width: 48, borderRadius: 24 }),
           text("@maker · 2h", { color: "{colors.muted}", fontSize: 13, paddingTop: 4, paddingBottom: 4 }),
-          text("\"Just shipped my newsletter using OpenPostcards. Honestly the smoothest email build I've ever done.\"", {
+          text("\"Just shipped my newsletter using OpenEmailBuilder. Honestly the smoothest email build I've ever done.\"", {
             paddingBottom: 8,
             lineHeight: 1.6,
           }),

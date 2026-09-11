@@ -62,7 +62,7 @@ interface State {
   saveToLocalStorage: () => void;
 }
 
-const STORAGE_KEY = "openpostcards.draft";
+export const STORAGE_KEY = "openpostcards.draft";
 
 function emptyDoc(theme: Theme): EmailDocument {
   return {
