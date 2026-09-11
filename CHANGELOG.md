@@ -4,7 +4,62 @@ All notable changes to this package are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/) and the
 [Keep a Changelog](https://keepachangelog.com/) format.
 
-## [0.8.3] — 2026-09-10
+## [0.8.5] — 2026-09-11
+
+### Fixed
+
+- **CSS cascade isolation — toggles and buttons now render correctly when
+  embedded in a Tailwind/ShadCN host application.**
+
+  Root cause (two-part bug):
+
+  1. **`lib.css` layer order** — `@layer base` (scoped element resets) was
+     declared **after** `@import "tailwindcss/utilities"`. In CSS, a layer
+     declared later has higher cascade priority, so the scoped reset
+     `.oml-email-builder button { background-color: transparent }` was
+     overriding the utility classes (`bg-blue-600`, `bg-gray-300`, etc.)
+     used to colour toggles and buttons. Fix: moved `@layer base` to **before**
+     the utilities import so `utilities > base` within the builder's own CSS.
+
+  2. **Host-app layer order** — the consuming app was declaring
+     `@layer external-editors` first (lowest priority) so that the host
+     Tailwind Preflight `button { background-color: transparent }` in
+     `@layer base` (higher priority) overrode all builder Tailwind utilities.
+     Fix: the host app must now declare
+     `@layer base, external-editors, utilities` so the builder's utilities
+     sit between host `base` and host `utilities`:
+     - `external-editors` > `base` → builder buttons/toggles use their
+       correct colours (not transparent)
+     - `utilities` > `external-editors` → host colour overrides still win
+
+  The builder's styles remain scoped to `.oml-email-builder` and do not
+  affect any host-app elements regardless of layer position.
+
+
+
+### Changed
+
+- **`ProductSearchModal` redesigned** — the product-search modal now:
+  - Is centered on screen (`items-center justify-center` on the backdrop).
+  - Returns and displays **all** matching products as a scrollable list instead
+    of previewing a single result. Each row shows the product title and price.
+  - Each list row is an **accordion**: clicking the title row expands a full
+    product preview (image, price, description, external link) inline.
+  - An **Insert** button sits on the right of every row and immediately applies
+    that product to the target slot — no separate "Save" step.
+  - The "Save product" footer button is removed; cancel is the only footer action.
+
+- **Multi-product grid support** — per-product search was already available via
+  the `🔍` icon on each product card in the `ProductGridElement` sidebar panel;
+  this release makes it clearly visible by keeping the icon and adding the
+  revamped modal that lets you pick any of the returned results.
+
+- **`ProductProvider.search()` now accepts array responses** — `provider.search()`
+  may now return `ProductSearchResult[]` in addition to the previous
+  `ProductSearchResult | null`. The modal handles both shapes, so existing
+  providers that return a single result continue to work without change.
+
+
 
 ### Fix
 

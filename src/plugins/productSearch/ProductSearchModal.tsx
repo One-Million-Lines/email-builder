@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import { Search, X, Loader2, Check, Star, ExternalLink, PackageSearch } from "lucide-react";
+import { Search, X, Loader2, ChevronDown, ChevronUp, Star, ExternalLink, PackageSearch } from "lucide-react";
 import { getProductProvider } from "./state";
 import type { ProductSearchResult } from "../../core/plugins";
 
 interface Props {
   open: boolean;
   onClose: () => void;
-  /** Called with the picked product when the user saves. */
+  /** Called with the chosen product when the user clicks Insert. */
   onSave: (result: ProductSearchResult) => void;
   /** Prefill the search box (e.g. the current product name). */
   initialQuery?: string;
@@ -18,17 +18,19 @@ export function ProductSearchModal({ open, onClose, onSave, initialQuery, title 
   const [query, setQuery] = useState(initialQuery ?? "");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [result, setResult] = useState<ProductSearchResult | null>(null);
+  const [results, setResults] = useState<ProductSearchResult[]>([]);
   const [searched, setSearched] = useState(false);
+  const [expandedIdx, setExpandedIdx] = useState<number | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   // Reset + focus whenever the modal opens.
   useEffect(() => {
     if (!open) return;
     setQuery(initialQuery ?? "");
-    setResult(null);
+    setResults([]);
     setError(null);
     setSearched(false);
+    setExpandedIdx(null);
     const t = setTimeout(() => inputRef.current?.focus(), 40);
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -48,11 +50,19 @@ export function ProductSearchModal({ open, onClose, onSave, initialQuery, title 
     if (!provider || !q || busy) return;
     setBusy(true);
     setError(null);
-    setResult(null);
+    setResults([]);
     setSearched(true);
+    setExpandedIdx(null);
     try {
       const found = await provider.search(q);
-      setResult(found);
+      // provider.search may return an array (multiple results) or a single result.
+      if (Array.isArray(found)) {
+        setResults(found.filter(Boolean));
+      } else if (found) {
+        setResults([found]);
+      } else {
+        setResults([]);
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
@@ -60,15 +70,14 @@ export function ProductSearchModal({ open, onClose, onSave, initialQuery, title 
     }
   };
 
-  const handleSave = () => {
-    if (!result) return;
-    onSave(result);
+  const handleInsert = (r: ProductSearchResult) => {
+    onSave(r);
     onClose();
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex bg-black/60 backdrop-blur-sm p-4">
-      <div className="m-auto flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+      <div className="flex max-h-[85vh] w-full max-w-lg flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-neutral-200 px-5 py-4">
           <div className="flex items-center gap-2">
@@ -119,52 +128,57 @@ export function ProductSearchModal({ open, onClose, onSave, initialQuery, title 
           </form>
         </div>
 
-        {/* Body / preview */}
-        <div className="min-h-[220px] flex-1 overflow-y-auto p-5">
+        {/* Results list */}
+        <div className="min-h-[200px] flex-1 overflow-y-auto">
           {busy && (
-            <div className="flex h-full flex-col items-center justify-center gap-2 py-10 text-sm text-neutral-500">
+            <div className="flex h-full flex-col items-center justify-center gap-2 py-12 text-sm text-neutral-500">
               <Loader2 size={22} className="animate-spin" />
               Searching…
             </div>
           )}
 
           {!busy && error && (
-            <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            <div className="m-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
               {error}
             </div>
           )}
 
-          {!busy && !error && searched && !result && (
-            <div className="flex h-full flex-col items-center justify-center gap-2 py-10 text-center text-sm text-neutral-500">
+          {!busy && !error && searched && results.length === 0 && (
+            <div className="flex h-full flex-col items-center justify-center gap-2 py-12 text-center text-sm text-neutral-500">
               <PackageSearch size={22} className="text-neutral-300" />
-              No product matched “{query.trim()}”. Try another name or SKU.
+              No products matched "{query.trim()}". Try another name or SKU.
             </div>
           )}
 
           {!busy && !error && !searched && (
-            <div className="flex h-full flex-col items-center justify-center gap-2 py-10 text-center text-sm text-neutral-400">
+            <div className="flex h-full flex-col items-center justify-center gap-2 py-12 text-center text-sm text-neutral-400">
               <PackageSearch size={22} className="text-neutral-300" />
-              Search your catalog, then preview and save the product.
+              Search your catalog, then choose a product to insert.
             </div>
           )}
 
-          {!busy && result && <ProductPreview result={result} />}
+          {!busy && results.length > 0 && (
+            <ul className="divide-y divide-neutral-100">
+              {results.map((r, idx) => (
+                <ResultRow
+                  key={idx}
+                  result={r}
+                  expanded={expandedIdx === idx}
+                  onToggle={() => setExpandedIdx(expandedIdx === idx ? null : idx)}
+                  onInsert={() => handleInsert(r)}
+                />
+              ))}
+            </ul>
+          )}
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-2 border-t border-neutral-200 px-5 py-3">
+        <div className="flex items-center justify-end border-t border-neutral-200 px-5 py-3">
           <button
             onClick={onClose}
             className="rounded-lg px-4 py-2 text-sm font-medium text-neutral-600 hover:bg-neutral-100"
           >
             Cancel
-          </button>
-          <button
-            onClick={handleSave}
-            disabled={!result}
-            className="flex items-center gap-1.5 rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:bg-neutral-300"
-          >
-            <Check size={15} /> Save product
           </button>
         </div>
       </div>
@@ -172,23 +186,74 @@ export function ProductSearchModal({ open, onClose, onSave, initialQuery, title 
   );
 }
 
+/** A single row in the results list. Title shown by default; click to expand details. */
+function ResultRow({
+  result,
+  expanded,
+  onToggle,
+  onInsert,
+}: {
+  result: ProductSearchResult;
+  expanded: boolean;
+  onToggle: () => void;
+  onInsert: () => void;
+}) {
+  return (
+    <li className="bg-white">
+      {/* Accordion header row */}
+      <div className="flex items-center gap-3 px-4 py-3 hover:bg-neutral-50">
+        <button
+          type="button"
+          onClick={onToggle}
+          className="flex flex-1 items-center gap-2 text-left min-w-0"
+        >
+          <span className="flex-1 truncate text-sm font-medium text-neutral-900">
+            {result.name}
+          </span>
+          {result.finalPrice && (
+            <span className="shrink-0 text-sm font-semibold text-blue-600">
+              {result.finalPrice}
+            </span>
+          )}
+          {expanded ? (
+            <ChevronUp size={14} className="shrink-0 text-neutral-400" />
+          ) : (
+            <ChevronDown size={14} className="shrink-0 text-neutral-400" />
+          )}
+        </button>
+        {/* Insert button — always visible on the right */}
+        <button
+          type="button"
+          onClick={onInsert}
+          className="shrink-0 rounded-lg px-3 py-1.5 text-xs font-medium hover:bg-gray-200"
+        >
+          Insert
+        </button>
+      </div>
+
+      {/* Accordion detail panel */}
+      {expanded && (
+        <div className="px-4 pb-4">
+          <ProductPreview result={result} />
+        </div>
+      )}
+    </li>
+  );
+}
+
 function ProductPreview({ result }: { result: ProductSearchResult }) {
   return (
     <div className="overflow-hidden rounded-xl border border-neutral-200">
-      <div className="aspect-video w-full overflow-hidden bg-neutral-100">
-        {result.image ? (
-          // eslint-disable-next-line jsx-a11y/img-redundant-alt
+      {result.image && (
+        <div className="aspect-video w-full overflow-hidden bg-neutral-100">
+          {/* eslint-disable-next-line jsx-a11y/img-redundant-alt */}
           <img
             src={result.image}
             alt={result.imageAlt ?? result.name}
             className="h-full w-full object-contain"
           />
-        ) : (
-          <div className="grid h-full place-items-center text-xs text-neutral-400">
-            No image
-          </div>
-        )}
-      </div>
+        </div>
+      )}
       <div className="flex flex-col gap-2 p-4">
         <div className="text-sm font-semibold text-neutral-900">{result.name}</div>
 

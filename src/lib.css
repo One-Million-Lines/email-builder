@@ -8,11 +8,29 @@
  *
  * Unlike the standalone app stylesheet (src/index.css), this also omits the
  * app-only globals `html, body, #root { height: 100% }`.
+ *
+ * ── Layer ordering ──────────────────────────────────────────────────────────
+ * @layer base is declared BEFORE @import "tailwindcss/utilities" so that:
+ *   utilities > base   (within the builder's own CSS)
+ *
+ * This ensures Tailwind utility classes (bg-blue-600, bg-gray-300, text-white
+ * etc.) have HIGHER cascade priority than the scoped element resets in @layer
+ * base — which is essential for interactive components like toggles and
+ * buttons to render with their correct colours.
+ *
+ * When this file is imported into a host app via `layer(external-editors)`,
+ * the sub-layers become `external-editors.base` and `external-editors.utilities`.
+ * For the builder to work correctly when embedded, the host app must place
+ * `external-editors` BETWEEN its own `base` and `utilities` layers:
+ *
+ *   @layer base, external-editors, utilities;   ← correct host declaration
+ *
+ * See the consuming app's index.html for the @layer order declaration.
  */
 @import "tailwindcss/theme";
-@import "tailwindcss/utilities";
 
 /* ── Scoped reset ─────────────────────────────────────────────────────────── */
+/* Declared BEFORE utilities so that utility classes override these resets.    */
 /* Replaces the Tailwind Preflight rules, applied only inside the builder.     */
 @layer base {
   .oml-email-builder *,
@@ -71,3 +89,7 @@
     border-radius: 2px;
   }
 }
+
+/* ── Utilities ────────────────────────────────────────────────────────────── */
+/* Imported AFTER @layer base so utilities have higher cascade priority.       */
+@import "tailwindcss/utilities";
