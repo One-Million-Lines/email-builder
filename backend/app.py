@@ -74,6 +74,25 @@ def health():
     )
 
 
+@app.post("/ai/generate-style")
+def generate_style():
+    """Generate a fully-styled EmailDocument from a reference image and/or description.
+
+    Body: { description?, image_base64?, catalog, document? }
+    Response: { document: EmailDocument, text: str }
+    """
+    req = request.get_json(silent=True)
+    if not isinstance(req, dict):
+        return jsonify(error="Request body must be a JSON object."), 400
+    try:
+        return jsonify(ai_service.generate_style(req))
+    except ai_service.AIServiceError as exc:
+        return jsonify(error=str(exc)), 422
+    except Exception as exc:  # noqa: BLE001
+        app.logger.exception("AI style generation failed")
+        return jsonify(error=f"Internal error: {exc}"), 500
+
+
 @app.post("/ai/generate")
 def generate():
     req = request.get_json(silent=True)

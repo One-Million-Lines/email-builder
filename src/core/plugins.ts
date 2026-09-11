@@ -111,6 +111,12 @@ export interface BuilderHandle {
   /** Configure the list of merge tags available in the text element sidebar. */
   registerMergeTags: (tags: MergeTag[]) => void;
   /**
+   * Register an extra panel that appears as a new tab in the left sidebar.
+   * Use this for plugin-level UI that doesn't belong in the right sidebar
+   * (e.g. an AI Style generator panel).
+   */
+  registerLeftSidebarPanel: (slot: import("./pluginSlots").LeftSidebarPanelSlot) => void;
+  /**
    * Opt in to the recommendations engine. When called, the Recommendations
    * panel appears in the right sidebar for any module that contains a
    * `productGrid` element. Without this call the panel stays hidden.
@@ -124,7 +130,8 @@ export type PluginType =
   | "asset-provider"
   | "product-provider"
   | "voucher-provider"
-  | "ai-provider";
+  | "ai-provider"
+  | "ai-style";
 
 export interface Plugin {
   name: string;
@@ -168,6 +175,9 @@ export const builder: BuilderHandle = {
     setReactiveAIProvider(p);
   },
   registerMergeTags: (tags) => setMergeTagsGlobal(tags),
+  registerLeftSidebarPanel: (slot) => {
+    usePluginSlotStore.getState().registerLeftSidebarPanel(slot);
+  },
   registerRecommendationsPlugin: () => {
     enableRecommendations();
     // Register the recommendations module panel as a lazy slot.

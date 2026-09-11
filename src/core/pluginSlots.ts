@@ -43,16 +43,35 @@ export interface ProductSearchSlot {
   >;
 }
 
+/**
+ * A panel registered by a plugin that appears as a new tab in the left sidebar.
+ * The plugin supplies a stable lazy component; the sidebar renders it when the
+ * user activates the corresponding rail button.
+ */
+export interface LeftSidebarPanelSlot {
+  id: string;
+  /** Short label shown under the icon (max ~6 chars). */
+  label: string;
+  /** Lucide icon name passed as a string to avoid a static dep. The sidebar
+   *  maps known ids to icon components. Use one of: "wand2", "sparkles". */
+  icon: "wand2" | "sparkles";
+  Component: AnyLazy;
+}
+
 interface PluginSlotState {
   modulePanels: ModulePanelSlot[];
   productSearch: ProductSearchSlot | null;
+  /** Extra left-sidebar panels registered by plugins (e.g. AI Style). */
+  leftSidebarPanels: LeftSidebarPanelSlot[];
   registerModulePanel: (slot: ModulePanelSlot) => void;
   registerProductSearch: (slot: ProductSearchSlot) => void;
+  registerLeftSidebarPanel: (slot: LeftSidebarPanelSlot) => void;
 }
 
 export const usePluginSlotStore = create<PluginSlotState>((set) => ({
   modulePanels: [],
   productSearch: null,
+  leftSidebarPanels: [],
   registerModulePanel: (slot) =>
     set((s) => {
       const idx = s.modulePanels.findIndex((p) => p.id === slot.id);
@@ -69,5 +88,13 @@ export const usePluginSlotStore = create<PluginSlotState>((set) => ({
     set((s) => {
       if (s.productSearch?.Component === slot.Component) return s;
       return { productSearch: slot };
+    }),
+  registerLeftSidebarPanel: (slot) =>
+    set((s) => {
+      const idx = s.leftSidebarPanels.findIndex((p) => p.id === slot.id);
+      if (idx === -1) return { leftSidebarPanels: [...s.leftSidebarPanels, slot] };
+      const next = [...s.leftSidebarPanels];
+      next[idx] = slot;
+      return { leftSidebarPanels: next };
     }),
 }));

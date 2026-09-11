@@ -290,3 +290,164 @@ def _dedupe_keep_order(items: list[str]) -> list[str]:
             seen.add(i)
             out.append(i)
     return out
+
+
+# --------------------------------------------------------------------------- #
+# Style generation from image / description.
+# --------------------------------------------------------------------------- #
+
+import uuid as _uuid
+
+_STYLE_SYSTEM = """\
+You are an expert email designer. Analyze the provided design reference (image and/or description)
+and generate a complete, valid EmailDocument JSON that matches the visual style.
+
+Use ONLY module `type` values from the CATALOG provided by the user. Never invent new types.
+Choose 3-7 modules. Apply the design style to every element (colors, fonts, paddings, etc.).
+
+EmailDocument schema:
+{
+  "version": "1.0",
+  "meta": {"name": string, "previewText": string},
+  "theme": {
+    "id": string, "name": string,
+    "tokens": {
+      "colors": {"primary","secondary","text","textLight","background","surface","border"},
+      "fonts": {"heading": "CSS stack", "body": "CSS stack"},
+      "spacing": {"xs":4,"sm":8,"md":16,"lg":24,"xl":40},
+      "radius": {"sm":4,"md":8,"lg":16}
+    }
+  },
+  "settings": {"width":600,"backgroundColor":"#hex","contentBackgroundColor":"#hex"},
+  "modules": [{
+    "id":"<8-char alphanum>","type":"<from catalog>","name":"...",
+    "style":{"backgroundColor","paddingTop","paddingBottom","paddingLeft","paddingRight"},
+    "children":[
+      {"id":"...","type":"text","role":"headline|body|caption","content":"...",
+       "style":{"color","fontSize","fontFamily","fontWeight","lineHeight","backgroundColor"}},
+      {"id":"...","type":"image","src":"https://placehold.co/600x300","alt":"..."},
+      {"id":"...","type":"button","label":"CTA","link":"#",
+       "style":{"backgroundColor","color","borderRadius","paddingTop","paddingBottom","paddingLeft","paddingRight"}},
+      {"id":"...","type":"spacer","height":number},
+      {"id":"...","type":"divider","style":{"color","thickness":1}}
+    ],
+    "data":{}
+  }]
+}
+
+Output JSON only — no markdown fences. Schema:
+{"document":{...EmailDocument},"text":"1-2 sentence style summary"}
+"""
+
+
+def _fresh_id() -> str:
+    return _uuid.uuid4().hex[:8]
+
+
+def _apply_fresh_ids(obj: Any) -> Any:
+    if isinstance(obj, dict):
+        return {k: (_fresh_id() if k == "id" and isinstance(v, str) else _apply_fresh_ids(v))
+                for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [_apply_fresh_ids(i) for i in obj]
+    return obj
+
+
+def _chat_completion_vision(system: str, user_content: Any) -> str:
+    """OpenAI-compatible chat completion supporting multi-modal user content."""
+    payload = {
+        "model": os.environ.get("AI_VISION_MODEL", "gpt-4o"),
+        "messages": [
+            {"role": "system", "content": system},
+            {"role": "user", "content": user_content},
+        ],
+        "temperature": 0.6,
+        "max_tokens": 8000,
+    }
+    body = json.dumps(payload).encode("utf-8")
+    req = urllib.request.Request(
+        f"{BASE_URL.rstrip('/')}/chat/completions",
+        data=body,
+        headers={
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {API_KEY}",
+        },
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=REQUEST_TIMEOUT) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+    except urllib.error.HTTPError as exc:
+        detail = exc.read().decode("utf-8", "ignore")[:300]
+        raise AIServiceError(f"Model API error {exc.code}: {detail}") from exc
+    try:
+        return data["choices"][0]["message"]["content"] or ""
+    except (KeyError, IndexError) as exc:
+        raise AIServiceError("Unexpected model response shape.") from exc
+
+
+def generate_style(req: dict[str, Any]) -> dict[str, Any]:
+    """Handle a style generation request. Returns an AIResponse dict.
+
+    req shape:
+        { description?, image_base64?, catalog, document? }
+    """
+    description = (req.get("description") or "").strip()
+    image_b64 = (req.get("image_base64") or "").strip()
+    catalog: list[dict] = req.get("catalog") or []
+    if not catalog:
+        raise AIServiceError("No module catalog supplied by the client.")
+    if not description and not image_b64:
+        raise AIServiceError("Provide at least a description or image_base64.")
+
+    # Compact catalog menu for the prompt.
+    menu_lines = [
+        f'  type="{e["type"]}" name="{e.get("name","")}" cat={e.get("category","")}'
+        for e in catalog[:40]
+    ]
+    catalog_str = "\n".join(menu_lines)
+
+    user_text = (
+        f"CATALOG:\n{catalog_str}\n\n"
+        + (f"STYLE DESCRIPTION: {description}\n\n" if description else "")
+        + (
+            "Generate a complete email matching the visual style in the image."
+            if image_b64 else
+            "Generate a complete email matching the style description."
+        )
+    )
+
+    if not API_KEY:
+        # Offline stub — return a minimal teal-on-white document.
+        from _offline_style_stub import offline_style_doc
+        stub = offline_style_doc(catalog)
+        return {"document": stub, "text": "Offline mode: applied a generic style."}
+
+    if image_b64:
+        user_content: Any = [
+            {"type": "text", "text": user_text},
+            {"type": "image_url",
+             "image_url": {"url": f"data:image/jpeg;base64,{image_b64[:500000]}"}},
+        ]
+    else:
+        user_content = user_text
+
+    raw = _chat_completion_vision(_STYLE_SYSTEM, user_content)
+    parsed = _parse_json_object(raw)
+    document = parsed.get("document")
+    summary = parsed.get("text", "Style applied.")
+
+    if not document or not isinstance(document, dict):
+        raise AIServiceError("Model did not return a valid document.")
+
+    # Regenerate ids to avoid collisions.
+    document = _apply_fresh_ids(document)
+    document.setdefault("version", "1.0")
+    document.setdefault("meta", {"name": "AI-styled template", "previewText": ""})
+    document.setdefault("settings", {
+        "width": 600,
+        "backgroundColor": "#f4f4f4",
+        "contentBackgroundColor": "#ffffff",
+    })
+
+    return {"document": document, "text": summary}

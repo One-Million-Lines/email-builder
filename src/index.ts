@@ -218,6 +218,20 @@ export type {
 export { mockAIProvider, applyAIActions, validateAIDocument } from "./core/aiActions";
 export type { AIAction, AIRequest, AIResponse } from "./core/aiActions";
 
+// AI Style plugin — generate or restyle an email from an image/description.
+export {
+  aiStylePlugin,
+  createHttpAIStyleProvider,
+  getStyleProvider,
+  setStyleProvider,
+} from "./plugins/aiStyle";
+export type {
+  AIStylePluginOptions,
+  AIStyleRequest,
+  AIStyleProvider,
+  HttpAIStyleProviderOptions,
+} from "./plugins/aiStyle";
+
 export { templateRegistry, TEMPLATE_CATEGORY_LABELS } from "./templates";
 export type { TemplateDefinition, TemplateCategory } from "./templates";
 export {

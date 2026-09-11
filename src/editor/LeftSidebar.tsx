@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { useEmailStore } from "../store/emailStore";
 import { moduleRegistry, CATEGORY_LABELS, type ModuleCategory } from "../modules/registry";
 import { AIChatPanel, useAIAvailable } from "../ai/AIChatPanel";
+import { usePluginSlotStore } from "../core/pluginSlots";
 import {
   Square,
   Menu,
@@ -16,6 +17,7 @@ import {
   Palette,
   Layers,
   Sparkles,
+  Wand2,
   ArrowUp,
   ArrowDown,
   Trash2,
@@ -38,10 +40,11 @@ const CATEGORIES: { id: ModuleCategory; icon: React.ComponentType<{ size?: numbe
 ];
 
 export function LeftSidebar() {
-  const [active, setActive] = useState<ModuleCategory | "themes" | "layers" | "ai">("layers");
+  const [active, setActive] = useState<ModuleCategory | "themes" | "layers" | "ai" | string>("layers");
   const [panelOpen, setPanelOpen] = useState(true);
   const { addModule, themes, applyTheme, doc } = useEmailStore();
   const aiAvailable = useAIAvailable();
+  const leftSidebarPanels = usePluginSlotStore((s) => s.leftSidebarPanels);
 
   // Clicking a rail button while collapsed auto-expands the panel.
   const handleRailClick = (id: typeof active) => {
@@ -68,6 +71,25 @@ export function LeftSidebar() {
             <div className="h-px w-10 bg-gray-200 my-1" />
           </>
         )}
+        {/* Plugin-registered left sidebar panels (e.g. AI Style) */}
+        {leftSidebarPanels.map((p) => {
+          const Icon = p.icon === "wand2" ? Wand2 : Sparkles;
+          const isActive = active === `plugin:${p.id}` && panelOpen;
+          return (
+            <button
+              key={p.id}
+              onClick={() => handleRailClick(`plugin:${p.id}`)}
+              title={p.label}
+              className={`flex flex-col items-center gap-0.5 w-14 py-2 rounded text-[10px] transition-colors ${
+                isActive ? "bg-purple-50 text-purple-700" : "text-purple-600 hover:bg-purple-50"
+              }`}
+            >
+              <Icon size={20} />
+              <span>{p.label}</span>
+            </button>
+          );
+        })}
+        {leftSidebarPanels.length > 0 && <div className="h-px w-10 bg-gray-200 my-1" />}
         <button
           onClick={() => handleRailClick("layers")}
           title="Layout overview"
@@ -119,6 +141,7 @@ export function LeftSidebar() {
               {active === "layers" ? "Layout"
                 : active === "ai" ? "AI"
                 : active === "themes" ? "Themes"
+                : active.startsWith("plugin:") ? (leftSidebarPanels.find((p) => `plugin:${p.id}` === active)?.label ?? "Plugin")
                 : CATEGORY_LABELS[active as ModuleCategory]}
             </span>
             <button
@@ -167,6 +190,19 @@ export function LeftSidebar() {
                 );
               })}
             </div>
+          ) : active.startsWith("plugin:") ? (
+            // Render the registered plugin's lazy panel component
+            (() => {
+              const pluginId = active.slice("plugin:".length);
+              const slot = leftSidebarPanels.find((p) => p.id === pluginId);
+              if (!slot) return <p className="text-xs text-gray-400 italic">Panel not available.</p>;
+              const { Component } = slot;
+              return (
+                <Suspense fallback={<div className="text-xs text-gray-400">Loading…</div>}>
+                  <Component />
+                </Suspense>
+              );
+            })()
           ) : (
             <>
               <div className="grid grid-cols-1 gap-2">
