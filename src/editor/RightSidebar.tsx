@@ -25,6 +25,9 @@ const SPECIAL_LINK_LABELS: Record<SpecialLinkType, string> = {
   view_in_browser: "View in browser",
   manage_preferences: "Manage preferences",
   user_profile: "User profile",
+  shop_url: "Shop URL",
+  policy_page: "Policy page",
+  terms_page: "Terms page",
 };
 
 export function RightSidebar() {
@@ -383,6 +386,9 @@ function LinkRoleField({
         <option value="view_in_browser">View in browser</option>
         <option value="manage_preferences">Manage preferences</option>
         <option value="user_profile">User profile</option>
+        <option value="shop_url">Shop URL</option>
+        <option value="policy_page">Policy page</option>
+        <option value="terms_page">Terms page</option>
       </Select>
       {linkType && (
         <p className="text-[10px] text-blue-600 mt-1 flex items-center gap-1">

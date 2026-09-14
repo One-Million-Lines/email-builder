@@ -16,6 +16,21 @@ import type {
 import { resolveStyle, resolveToken } from "./theme";
 import { escapeHtml, safeUrl, starGlyphs, STAR_COLOR } from "./utils";
 
+const VT_LINK_CLASSES: Record<string, string> = {
+  unsubscribe: "vtunsubscribe",
+  view_in_browser: "vtpreview",
+  manage_preferences: "vtsubconfirm",
+  user_profile: "vtprofile",
+  shop_url: "vtw-url",
+  policy_page: "vtw-policy_page",
+  terms_page: "vtw-terms_page",
+};
+
+function classAttr(classes: Array<string | undefined | false | null>): string {
+  const value = classes.filter(Boolean).join(" ");
+  return value ? ` class="${value}"` : "";
+}
+
 function px(n: number | undefined, fallback = 0): string {
   return `${n ?? fallback}px`;
 }
@@ -121,11 +136,12 @@ function renderText(el: TextElement, ctx: RenderCtx): string {
   const link = s.link as string | undefined;
   const linkType = s.linkType as string | undefined;
   const linkTypeAttr = linkType ? ` data-link-type="${escapeHtml(linkType)}"` : "";
+  const linkClass = linkType ? VT_LINK_CLASSES[linkType] : undefined;
   const inner = link
-    ? `<a href="${safeUrl(link)}"${linkTypeAttr} style="color:inherit;text-decoration:underline">${el.content}</a>`
+    ? `<a${classAttr([linkClass])} href="${safeUrl(link)}"${linkTypeAttr} style="color:inherit;text-decoration:underline">${el.content}</a>`
     : el.content;
   const cls = collectMobile(ctx, el.style as Record<string, unknown>);
-  return `<div${cls ? ` class="${cls}"` : ""} style="${css}">${inner}</div>`;
+  return `<div${classAttr([cls, el.role === "voucherCode" ? "vtw-voucher" : undefined, el.vtMarker])} style="${css}">${inner}</div>`;
 }
 
 function renderImage(el: ImageElement, ctx: RenderCtx): string {
@@ -152,10 +168,10 @@ function renderImage(el: ImageElement, ctx: RenderCtx): string {
     margin: s.align === "center" || !s.align ? "0 auto" : undefined,
   });
   const widthAttr = s.width ? ` width="${s.width}"` : "";
-  const img = `<img src="${escapeHtml(el.src)}" alt="${escapeHtml(el.alt ?? "")}"${widthAttr} style="${imgCss}" />`;
+  const img = `<img${classAttr([el.vtMarker])} src="${escapeHtml(el.src)}" alt="${escapeHtml(el.alt ?? "")}"${widthAttr} style="${imgCss}" />`;
   const wrapped = el.link ? `<a href="${safeUrl(el.link)}"${el.linkType ? ` data-link-type="${escapeHtml(el.linkType)}"` : ""}>${img}</a>` : img;
   const cls = collectMobile(ctx, el.style as Record<string, unknown>);
-  return `<div${cls ? ` class="${cls}"` : ""} style="${wrapCss}">${wrapped}</div>`;
+  return `<div${classAttr([cls])} style="${wrapCss}">${wrapped}</div>`;
 }
 
 function renderButton(el: ButtonElement, ctx: RenderCtx): string {
@@ -199,9 +215,10 @@ function renderButton(el: ButtonElement, ctx: RenderCtx): string {
 <center style="color:${color};font-family:${fontFamily};font-size:${fontSize}px;font-weight:${fontWeight};">${label}</center>
 </v:roundrect>
 <![endif]-->`;
-  const html = `<!--[if !mso]><!-- --><a href="${href}"${linkTypeAttr} style="${btnCss}">${label}</a><!--<![endif]-->`;
+  const linkClass = el.linkType ? VT_LINK_CLASSES[el.linkType] : undefined;
+  const html = `<!--[if !mso]><!-- --><a${classAttr([linkClass])} href="${href}"${linkTypeAttr} style="${btnCss}">${label}</a><!--<![endif]-->`;
   const cls = collectMobile(ctx, el.style as Record<string, unknown>);
-  return `<div${cls ? ` class="${cls}"` : ""} style="${wrapCss}">${vml}${html}</div>`;
+  return `<div${classAttr([cls])} style="${wrapCss}">${vml}${html}</div>`;
 }
 
 function renderSpacer(el: SpacerElement): string {
@@ -255,16 +272,16 @@ function renderProductGrid(el: ProductGridElement, ctx: RenderCtx, vtproduct?: s
 
   // Build product card HTML.
   const card = (p: Product, last: boolean): string => {
-    const finalPrice = `<span class="final_price" style="color:${resolveTokenSafe(finalColor, ctx.theme)};font-weight:bold;font-size:18px;">${escapeHtml(
+    const finalPrice = `<span class="item-final_price final_price" style="color:${resolveTokenSafe(finalColor, ctx.theme)};font-weight:bold;font-size:18px;">${escapeHtml(
       p.finalPrice
     )}</span>`;
     const oldPrice = el.showOldPrice && p.oldPrice
-      ? `<span class="old_price" style="color:${resolveTokenSafe(oldColor, ctx.theme)};text-decoration:line-through;font-size:14px;margin-right:8px;">${escapeHtml(
+      ? `<span class="item-old_price old_price" style="color:${resolveTokenSafe(oldColor, ctx.theme)};text-decoration:line-through;font-size:14px;margin-right:8px;">${escapeHtml(
           p.oldPrice
         )}</span>`
       : "";
     const desc = el.showDescription && p.description
-      ? `<div style="font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:1.5;color:#6B7280;padding:0 0 12px 0;">${escapeHtml(p.description)}</div>`
+      ? `<div class="item-desc" style="font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:1.5;color:#6B7280;padding:0 0 12px 0;">${escapeHtml(p.description)}</div>`
       : "";
     const stars = el.showStars && p.stars != null
       ? `<div style="font-family:Arial,Helvetica,sans-serif;font-size:15px;letter-spacing:1px;color:${STAR_COLOR};">${starGlyphs(p.stars)}</div>`
@@ -277,11 +294,11 @@ function renderProductGrid(el: ProductGridElement, ctx: RenderCtx, vtproduct?: s
           ctx.theme
         )}" style="border-radius:6px;"><!--[if mso]>
 <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" href="${safeUrl(link)}" style="height:36px;v-text-anchor:middle;width:140px;" arcsize="15%" stroke="f" fillcolor="${resolveTokenSafe(btnBg, ctx.theme)}"><w:anchorlock/><center style="color:${resolveTokenSafe(btnColor, ctx.theme)};font-family:Arial,sans-serif;font-size:13px;font-weight:bold;">${escapeHtml(btnLabel)}</center></v:roundrect>
-<![endif]--><!--[if !mso]><!-- --><a href="${safeUrl(link)}" style="display:inline-block;padding:10px 18px;font-family:Arial,Helvetica,sans-serif;font-size:13px;font-weight:bold;color:${resolveTokenSafe(btnColor, ctx.theme)};background-color:${resolveTokenSafe(btnBg, ctx.theme)};border-radius:6px;text-decoration:none;">${escapeHtml(btnLabel)}</a><!--<![endif]--></td></tr></table>`
+<![endif]--><!--[if !mso]><!-- --><a class="item-url" href="${safeUrl(link)}" style="display:inline-block;padding:10px 18px;font-family:Arial,Helvetica,sans-serif;font-size:13px;font-weight:bold;color:${resolveTokenSafe(btnColor, ctx.theme)};background-color:${resolveTokenSafe(btnBg, ctx.theme)};border-radius:6px;text-decoration:none;">${escapeHtml(btnLabel)}</a><!--<![endif]--></td></tr></table>`
       : "";
-    const img = `<img src="${escapeHtml(p.image)}" alt="${escapeHtml(p.imageAlt ?? p.name)}" width="100%" style="display:block;width:100%;max-width:100%;height:auto;border:0;outline:none;text-decoration:none;border-radius:${radius}px;" />`;
+    const img = `<img class="item-image" src="${escapeHtml(p.image)}" alt="${escapeHtml(p.imageAlt ?? p.name)}" width="100%" style="display:block;width:100%;max-width:100%;height:auto;border:0;outline:none;text-decoration:none;border-radius:${radius}px;" />`;
     const imgWrapped = p.link
-      ? `<a href="${safeUrl(p.link)}" style="text-decoration:none;color:inherit;">${img}</a>`
+      ? `<a class="item-url" href="${safeUrl(p.link)}" style="text-decoration:none;color:inherit;">${img}</a>`
       : img;
 
     // Each cell: stack on mobile via class. Vertical-align top.
@@ -290,7 +307,7 @@ function renderProductGrid(el: ProductGridElement, ctx: RenderCtx, vtproduct?: s
     return `<td${recsItemAttr} class="stack" valign="top" style="padding:0 ${last ? 0 : 8}px 16px ${last ? 0 : 0}px;width:${colWidthPct};vertical-align:top;">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:${resolveTokenSafe(cardBg, ctx.theme)};border-radius:${radius}px;">
     <tr><td style="padding:0;font-size:0;line-height:0;">${imgWrapped}</td></tr>
-    <tr><td style="padding:12px 12px 4px 12px;font-family:Arial,Helvetica,sans-serif;font-size:15px;font-weight:bold;color:${resolveTokenSafe(nameColor, ctx.theme)};line-height:1.3;">${escapeHtml(p.name)}</td></tr>
+    <tr><td class="item-title" style="padding:12px 12px 4px 12px;font-family:Arial,Helvetica,sans-serif;font-size:15px;font-weight:bold;color:${resolveTokenSafe(nameColor, ctx.theme)};line-height:1.3;">${escapeHtml(p.name)}</td></tr>
     ${stars ? `<tr><td style="padding:0 12px 4px 12px;">${stars}</td></tr>` : ""}
     <tr><td style="padding:0 12px 8px 12px;font-family:Arial,Helvetica,sans-serif;">${oldPrice}${finalPrice}</td></tr>
     ${desc ? `<tr><td style="padding:0 12px 4px 12px;">${desc}</td></tr>` : ""}
@@ -317,7 +334,7 @@ function renderProductGrid(el: ProductGridElement, ctx: RenderCtx, vtproduct?: s
 
   // Mobile: each .stack td becomes block, full-width.
   const cls = collectMobile(ctx, el.style as Record<string, unknown>);
-  return `<div${cls ? ` class="${cls}"` : ""} style="padding:${padTop} ${padR} ${padBot} ${padL};">
+  return `<div vtproduct${classAttr([cls])} style="padding:${padTop} ${padR} ${padBot} ${padL};">
 <!--[if mso | IE]><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td><![endif]-->
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:separate;border-spacing:0;">
 ${rows.join("\n")}
@@ -340,6 +357,7 @@ function renderModule(m: EmailModule, ctx: RenderCtx): string {
     "padding-bottom": px(s.paddingBottom as number, 0),
     "padding-left": px(s.paddingLeft as number, 0),
     "padding-right": px(s.paddingRight as number, 0),
+    border: s.border,
     "border-radius": s.borderRadius ? `${s.borderRadius}px` : undefined,
   });
   // Emit reccs-editable + vtproduct when this module has recommendations configured.
@@ -402,7 +420,7 @@ ${mobileCss}
 </style>
 </head>
 <body id="body" style="margin:0;padding:0;background-color:${bg};">
-<div style="display:none;max-height:0;overflow:hidden;opacity:0;mso-hide:all;">${previewText}</div>
+<div id="vt-preheader" style="display:none;max-height:0;overflow:hidden;opacity:0;mso-hide:all;">${previewText}</div>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:${bg};">
   <tr><td align="center" style="padding:0;">
     <!--[if mso | IE]><table role="presentation" width="${width}" cellpadding="0" cellspacing="0" border="0" align="center"><tr><td><![endif]-->

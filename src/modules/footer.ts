@@ -1,5 +1,5 @@
 import type { ModuleDefinition } from "./registry";
-import { text, mod, divider, image, muted, footerLinks, PLACEHOLDER } from "./helpers";
+import { text, mod, divider, image, muted, footerLinks, logoImage, shopInfoText, PLACEHOLDER } from "./helpers";
 
 const baseFooterStyle = {
   backgroundColor: "{colors.background}",
@@ -74,8 +74,15 @@ export const footerModules: ModuleDefinition[] = [
               paddingTop: 24,
             }
           ),
+          shopInfoText("Your company · 123 Main St · City · Country", {
+            align: "center",
+            fontSize: 11,
+            paddingTop: 0,
+            paddingBottom: 12,
+          }),
           footerLinks([
-            { label: "Privacy Policy", type: "user_profile" },
+            { label: "Privacy Policy", type: "policy_page" },
+            { label: "Terms", type: "terms_page" },
             { label: "Unsubscribe", type: "unsubscribe" },
           ], { paddingBottom: 24 }),
         ],
@@ -93,7 +100,7 @@ export const footerModules: ModuleDefinition[] = [
         "footer.publisher",
         "Publisher Footer",
         [
-          image(PLACEHOLDER(120, 36, "LOGO"), "Logo", { width: 120, paddingTop: 24, paddingBottom: 8 }),
+          logoImage(PLACEHOLDER(120, 36, "LOGO"), { width: 120, paddingTop: 24, paddingBottom: 8 }),
           text("THE WEEKLY", {
             align: "center",
             fontFamily: "{fonts.heading}",
@@ -145,7 +152,7 @@ export const footerModules: ModuleDefinition[] = [
         "footer.address_only",
         "Address",
         [
-          muted("Your Company · 123 Main St · Brooklyn, NY 11201 · USA", {
+          shopInfoText("Your Company · 123 Main St · Brooklyn, NY 11201 · USA", {
             align: "center",
             fontSize: 11,
           }),

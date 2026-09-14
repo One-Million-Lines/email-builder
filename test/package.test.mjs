@@ -244,6 +244,24 @@ test("renderEmailHtml renders star glyphs when a grid shows stars", async () => 
   assert.match(html, /★/, "rendered HTML contains filled star glyphs");
 });
 
+test("new seasonal templates are registered and render VT markers", async () => {
+  const { renderEmailHtml, templateRegistry } = await import(distEsm);
+  const laborDay = templateRegistry.get("labor-day");
+  const kidsLand = templateRegistry.get("kids-land");
+  assert.ok(laborDay, "labor-day template registered");
+  assert.ok(kidsLand, "kids-land template registered");
+
+  const html = renderEmailHtml(laborDay.build());
+  assert.match(html, /id="vt-preheader"/, "preheader id is rendered");
+  assert.match(html, /vtw-info/, "shop info marker rendered");
+  assert.match(html, /class="vtw-url"/, "shop url VT class rendered");
+  assert.match(html, /<div vtproduct/, "product grid marker rendered");
+  assert.match(html, /class="item-image"/, "product image marker rendered");
+  assert.match(html, /class="item-title"/, "product title marker rendered");
+  assert.match(html, /class="item-final_price final_price"/, "final price markers rendered");
+  assert.match(html, /class="item-url"/, "product link marker rendered");
+});
+
 test("voucher provider maps a backend list to vouchers", async () => {
   const { createVoucherProvider } = await import(distEsm);
   const prevFetch = globalThis.fetch;

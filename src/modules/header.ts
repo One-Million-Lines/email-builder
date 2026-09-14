@@ -1,5 +1,6 @@
 import type { ModuleDefinition } from "./registry";
-import { text, image, mod, divider, PLACEHOLDER } from "./helpers";
+import { SPECIAL_LINK_PLACEHOLDERS } from "../core/types";
+import { text, image, logoImage, mod, divider, PLACEHOLDER } from "./helpers";
 
 export const headerModules: ModuleDefinition[] = [
   {
@@ -10,7 +11,7 @@ export const headerModules: ModuleDefinition[] = [
     tags: ["logo", "brand", "centered"],
     create: () =>
       mod("header.logo", "Logo Header", [
-        image(PLACEHOLDER(180, 56, "LOGO"), "Logo", { width: 180, paddingTop: 24, paddingBottom: 24 }),
+        logoImage(PLACEHOLDER(180, 56, "LOGO"), { width: 180, paddingTop: 24, paddingBottom: 24 }),
       ]),
   },
   {
@@ -21,7 +22,7 @@ export const headerModules: ModuleDefinition[] = [
     tags: ["logo", "date", "issue", "publication", "newsletter"],
     create: () =>
       mod("header.logo_left_date_right", "Logo + Date", [
-        image(PLACEHOLDER(140, 36, "LOGO"), "Logo", { width: 140, align: "left", paddingTop: 16, paddingBottom: 16 }),
+        logoImage(PLACEHOLDER(140, 36, "LOGO"), { width: 140, align: "left", paddingTop: 16, paddingBottom: 16 }),
         text("Issue #128 · April 29, 2026", {
           color: "{colors.muted}",
           fontSize: 13,
@@ -157,9 +158,10 @@ export const headerModules: ModuleDefinition[] = [
           align: "right",
           paddingTop: 8,
           paddingBottom: 0,
-          link: "#",
+          link: SPECIAL_LINK_PLACEHOLDERS.view_in_browser,
+          linkType: "view_in_browser",
         }),
-        image(PLACEHOLDER(160, 48, "LOGO"), "Logo", { width: 160, paddingTop: 8, paddingBottom: 16 }),
+        logoImage(PLACEHOLDER(160, 48, "LOGO"), { width: 160, paddingTop: 8, paddingBottom: 16 }),
       ]),
   },
   {
@@ -193,7 +195,7 @@ export const headerModules: ModuleDefinition[] = [
     tags: ["logo", "tagline", "brand"],
     create: () =>
       mod("header.logo_with_tagline", "Logo + Tagline", [
-        image(PLACEHOLDER(160, 48, "LOGO"), "Logo", { width: 160, paddingTop: 24, paddingBottom: 4 }),
+        logoImage(PLACEHOLDER(160, 48, "LOGO"), { width: 160, paddingTop: 24, paddingBottom: 4 }),
         text("Newsletters that respect your time.", {
           align: "center",
           color: "{colors.muted}",

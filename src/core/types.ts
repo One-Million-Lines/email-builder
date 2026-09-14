@@ -9,7 +9,14 @@ export type ElementType = "text" | "image" | "button" | "spacer" | "divider" | "
  * The rendered HTML also carries a `data-link-type` attribute so backends that
  * parse HTML can find and replace these links without inspecting the JSON.
  */
-export type SpecialLinkType = "unsubscribe" | "view_in_browser" | "manage_preferences" | "user_profile";
+export type SpecialLinkType =
+  | "unsubscribe"
+  | "view_in_browser"
+  | "manage_preferences"
+  | "user_profile"
+  | "shop_url"
+  | "policy_page"
+  | "terms_page";
 
 /** Placeholder href values automatically set when a SpecialLinkType is chosen. */
 export const SPECIAL_LINK_PLACEHOLDERS: Record<SpecialLinkType, string> = {
@@ -17,6 +24,9 @@ export const SPECIAL_LINK_PLACEHOLDERS: Record<SpecialLinkType, string> = {
   view_in_browser: "{{view_in_browser_url}}",
   manage_preferences: "{{manage_preferences_url}}",
   user_profile: "{{user_profile_url}}",
+  shop_url: "{{shop_url}}",
+  policy_page: "{{policy_page_url}}",
+  terms_page: "{{terms_page_url}}",
 };
 
 /**
@@ -53,6 +63,8 @@ export interface TextElement {
   type: "text";
   role?: "headline" | "subheadline" | "body" | "caption" | "voucherCode";
   content: string; // may contain limited HTML (b, i, a)
+  /** Optional VT backend marker class applied by the renderer. */
+  vtMarker?: string;
   style?: BaseStyle & {
     fontFamily?: string;
     fontSize?: number;
@@ -74,6 +86,8 @@ export interface ImageElement {
   link?: string;
   /** Marks the image link as a well-known system link. */
   linkType?: SpecialLinkType;
+  /** Optional VT backend marker class applied by the renderer. */
+  vtMarker?: string;
   style?: BaseStyle & { width?: number; height?: number };
 }
 

@@ -51,6 +51,9 @@ const SPECIAL_LINK_LABELS: Record<SpecialLinkType, string> = {
   view_in_browser: "View in browser",
   manage_preferences: "Manage preferences",
   user_profile: "User profile",
+  shop_url: "Shop URL",
+  policy_page: "Policy page",
+  terms_page: "Terms page",
 };
 
 // ─── Helpers ────────────────────────────────────────────────────────────────

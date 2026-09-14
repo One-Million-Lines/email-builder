@@ -15,6 +15,8 @@ import "./replenishmentReminder";
 import "./vipEarlyAccess";
 import "./birthdayReward";
 import "./winBackCampaign";
+import "./laborDay";
+import "./kidsLand";
 
 export {
   templateRegistry,

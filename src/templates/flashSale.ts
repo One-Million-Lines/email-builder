@@ -10,6 +10,8 @@ import {
   product,
   PLACEHOLDER,
   muted,
+  footerLinks,
+  shopInfoText,
 } from "../modules/helpers";
 
 const def: TemplateDefinition = {
@@ -108,12 +110,16 @@ const def: TemplateDefinition = {
         "footer.simple",
         "Footer",
         [
-          muted("© 2026 Acme Co · Unsubscribe · Manage preferences", {
+          shopInfoText("Acme Co · 123 Main St · City · Country", {
             align: "center",
+            fontSize: 12,
             paddingTop: 16,
-            paddingBottom: 24,
-            link: "#",
+            paddingBottom: 4,
           }),
+          footerLinks([
+            { label: "Manage preferences", type: "manage_preferences" },
+            { label: "Unsubscribe", type: "unsubscribe" },
+          ], { paddingBottom: 24 }),
         ],
         { backgroundColor: "{colors.background}", paddingTop: 0, paddingBottom: 0 }
       ),

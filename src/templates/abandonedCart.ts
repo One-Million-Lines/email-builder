@@ -12,6 +12,8 @@ import {
   heading,
   muted,
   divider,
+  footerLinks,
+  shopInfoText,
 } from "../modules/helpers";
 
 const def: TemplateDefinition = {
@@ -107,12 +109,13 @@ const def: TemplateDefinition = {
             align: "center",
             paddingTop: 16,
           }),
-          muted("© 2026 Acme · Unsubscribe", {
+          shopInfoText("Acme · 123 Main St · City · Country", {
             align: "center",
+            fontSize: 12,
             paddingTop: 4,
-            paddingBottom: 24,
-            link: "#",
+            paddingBottom: 4,
           }),
+          footerLinks([{ label: "Unsubscribe", type: "unsubscribe" }], { paddingBottom: 24 }),
         ],
         { backgroundColor: "{colors.background}", paddingTop: 0, paddingBottom: 0 }
       ),

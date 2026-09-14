@@ -12,6 +12,8 @@ import {
   muted,
   eyebrow,
   PLACEHOLDER,
+  footerLinks,
+  shopInfoText,
 } from "../modules/helpers";
 
 const def: TemplateDefinition = {
@@ -112,16 +114,16 @@ const def: TemplateDefinition = {
         "footer.simple",
         "Footer",
         [
-          muted("© 2026 The Weekly · 350 Madison Ave · NY 10017", {
+          shopInfoText("The Weekly · 350 Madison Ave · NY 10017", {
             align: "center",
+            fontSize: 12,
             paddingTop: 16,
+            paddingBottom: 4,
           }),
-          muted("Manage preferences · Unsubscribe", {
-            align: "center",
-            paddingTop: 4,
-            paddingBottom: 24,
-            link: "#",
-          }),
+          footerLinks([
+            { label: "Manage preferences", type: "manage_preferences" },
+            { label: "Unsubscribe", type: "unsubscribe" },
+          ], { paddingBottom: 24 }),
         ],
         { backgroundColor: "{colors.background}", paddingTop: 0, paddingBottom: 0 }
       ),

@@ -5,6 +5,16 @@ import type { SpecialLinkType } from "../core/types";
 import { SPECIAL_LINK_PLACEHOLDERS } from "../core/types";
 import { uid } from "../core/utils";
 
+const VT_LINK_CLASSES: Record<SpecialLinkType, string> = {
+  unsubscribe: "vtunsubscribe",
+  view_in_browser: "vtpreview",
+  manage_preferences: "vtsubconfirm",
+  user_profile: "vtprofile",
+  shop_url: "vtw-url",
+  policy_page: "vtw-policy_page",
+  terms_page: "vtw-terms_page",
+};
+
 export const text = (
   content: string,
   opts: Partial<{
@@ -338,7 +348,7 @@ export const footerLinks = (
   const content = links
     .map(
       (l) =>
-        `<a href="${SPECIAL_LINK_PLACEHOLDERS[l.type]}" data-link-type="${l.type}" style="color:inherit;text-decoration:underline">${l.label}</a>`
+        `<a class="${VT_LINK_CLASSES[l.type]}" href="${SPECIAL_LINK_PLACEHOLDERS[l.type]}" data-link-type="${l.type}" style="color:inherit;text-decoration:underline">${l.label}</a>`
     )
     .join(sep);
   return text(content, {
@@ -349,3 +359,57 @@ export const footerLinks = (
     paddingBottom: opts.paddingBottom ?? 24,
   });
 };
+
+// Creates an img element marked as the shop logo (vtw-logo).
+// The Python backend will replace src with the configured shop logo URL.
+export const logoImage = (
+  src: string,
+  opts: Partial<{
+    width: number;
+    height: number;
+    align: "left" | "center" | "right";
+    link: string;
+    paddingTop: number;
+    paddingBottom: number;
+  }> = {}
+): EmailElement => ({
+  ...image(src, "Logo", opts),
+  vtMarker: "vtw-logo",
+} as EmailElement);
+
+// Creates a text element marked as shop info (vtw-info).
+// The Python backend replaces its contents with the shop's address/info text.
+export const shopInfoText = (
+  placeholder = "Your company · 123 Main St · City · Country",
+  opts: {
+    align?: "left" | "center" | "right";
+    fontSize?: number;
+    paddingTop?: number;
+    paddingBottom?: number;
+  } = {}
+): EmailElement => ({
+  ...muted(placeholder, opts),
+  vtMarker: "vtw-info",
+} as EmailElement);
+
+// Creates a text element marked as shop domain (vtw-domain).
+// The Python backend replaces its contents with the account domain (e.g. "vibetrace.com").
+export const shopDomainText = (
+  placeholder = "yourdomain.com",
+  opts: {
+    align?: "left" | "center" | "right";
+    fontSize?: number;
+    paddingTop?: number;
+    paddingBottom?: number;
+    color?: string;
+  } = {}
+): EmailElement => ({
+  ...text(placeholder, {
+    color: opts.color ?? "{colors.muted}",
+    fontSize: opts.fontSize ?? 12,
+    align: opts.align,
+    paddingTop: opts.paddingTop,
+    paddingBottom: opts.paddingBottom,
+  }),
+  vtMarker: "vtw-domain",
+} as EmailElement);
