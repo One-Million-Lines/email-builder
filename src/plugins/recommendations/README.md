@@ -50,14 +50,13 @@ receives a new ID the next time its recommendations panel is opened.
 ### Backend HTML attributes
 
 When a module has both `data.vtproduct` and `data.recommendations` set, the
-renderer emits the following attributes on the module's `<td>` wrapper:
+renderer emits the following attributes on each product grid `<tr>`:
 
 ```html
-<td reccs-editable vtproduct="pos01" ...>
-  <!-- product grid rows -->
+<tr reccs-editable vtproduct="pos01">
   <td reccs-item class="stack" ...>...</td>
   <td reccs-item class="stack" ...>...</td>
-</td>
+</tr>
 ```
 
 The backend can then:

@@ -4,6 +4,12 @@ All notable changes to this package are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/) and the
 [Keep a Changelog](https://keepachangelog.com/) format.
 
+## [0.9.5] — 2026-10-01
+
+### Fixed
+
+- Recommendation grid layout in rendered emails.
+
 ## [0.9.3] — 2026-10-01
 
 ### Changed

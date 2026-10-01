@@ -251,8 +251,14 @@ function renderElement(el: EmailElement, ctx: RenderCtx, vtproduct?: string): st
   }
 }
 
-function renderProductGrid(el: ProductGridElement, ctx: RenderCtx, vtproduct?: string): string {
+function renderProductGrid(
+  el: ProductGridElement,
+  ctx: RenderCtx,
+  vtproduct?: string,
+  direct?: { attrs: string; css: string; className: string | null; moduleStyle: Record<string, unknown> }
+): string {
   const s = resolveStyle((el.style ?? {}) as Record<string, unknown>, ctx.theme);
+  const moduleStyle = direct?.moduleStyle;
   const cols = el.columns;
   const products = el.products.slice(0, cols * 6); // sane upper bound
   const cardBg =
@@ -271,7 +277,7 @@ function renderProductGrid(el: ProductGridElement, ctx: RenderCtx, vtproduct?: s
   const colWidthPct = `${Math.floor(100 / cols)}%`;
 
   // Build product card HTML.
-  const card = (p: Product, last: boolean): string => {
+  const card = (p: Product, last: boolean, first: boolean, rowIndex: number): string => {
     const finalPrice = `<span class="item-final_price final_price" style="color:${resolveTokenSafe(finalColor, ctx.theme)};font-weight:bold;font-size:18px;">${escapeHtml(
       p.finalPrice
     )}</span>`;
@@ -304,7 +310,22 @@ function renderProductGrid(el: ProductGridElement, ctx: RenderCtx, vtproduct?: s
     // Each cell: stack on mobile via class. Vertical-align top.
     // reccs-item marks this as a product slot for backend recommendation processing.
     const recsItemAttr = vtproduct ? " reccs-item" : "";
-    return `<td${recsItemAttr} class="stack" valign="top" style="padding:0 ${last ? 0 : 8}px 16px ${last ? 0 : 0}px;width:${colWidthPct};vertical-align:top;">
+    const top = rowIndex === 0
+      ? ((s.paddingTop as number) ?? 16) + ((moduleStyle?.paddingTop as number) ?? 0)
+      : 0;
+    const right = last
+      ? ((s.paddingRight as number) ?? 16) + ((moduleStyle?.paddingRight as number) ?? 0)
+      : 8;
+    const bottom = 16 + (rowIndex === Math.ceil(products.length / cols) - 1
+      ? ((s.paddingBottom as number) ?? 16) + ((moduleStyle?.paddingBottom as number) ?? 0)
+      : 0);
+    const left = first
+      ? ((s.paddingLeft as number) ?? 16) + ((moduleStyle?.paddingLeft as number) ?? 0)
+      : 0;
+    const cellPadding = direct
+      ? `${top}px ${right}px ${bottom}px ${left}px`
+      : `0 ${last ? 0 : 8}px 16px 0`;
+    return `<td${recsItemAttr} class="stack" valign="top" style="padding:${cellPadding};width:${colWidthPct};vertical-align:top;">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:${resolveTokenSafe(cardBg, ctx.theme)};border-radius:${radius}px;">
     <tr><td style="padding:0;font-size:0;line-height:0;">${imgWrapped}</td></tr>
     <tr><td class="item-title" style="padding:12px 12px 4px 12px;font-family:Arial,Helvetica,sans-serif;font-size:15px;font-weight:bold;color:${resolveTokenSafe(nameColor, ctx.theme)};line-height:1.3;">${escapeHtml(p.name)}</td></tr>
@@ -318,22 +339,27 @@ function renderProductGrid(el: ProductGridElement, ctx: RenderCtx, vtproduct?: s
 
   // Group products into rows of `cols`.
   const rows: string[] = [];
+  const cls = collectMobile(ctx, el.style as Record<string, unknown>);
+  const directRowAttrs = direct
+    ? `${direct.attrs}${classAttr([direct.className, cls])} style="${direct.css}"`
+    : "";
   for (let i = 0; i < products.length; i += cols) {
     const slice = products.slice(i, i + cols);
     const tds = slice
-      .map((p, idx) => card(p, idx === slice.length - 1))
+      .map((p, idx) => card(p, idx === slice.length - 1, idx === 0, i / cols))
       .join("\n");
     // Pad with empty cells if last row is short to keep widths even on desktop.
-    const pads = cols - slice.length;
+    const pads = direct ? 0 : cols - slice.length;
     let padTds = "";
     for (let j = 0; j < pads; j++) {
       padTds += `<td class="stack" style="width:${colWidthPct};">&nbsp;</td>`;
     }
-    rows.push(`<tr>${tds}${padTds}</tr>`);
+    rows.push(`<tr${directRowAttrs}>${tds}${padTds}</tr>`);
   }
 
+  if (direct) return rows.join("\n");
+
   // Mobile: each .stack td becomes block, full-width.
-  const cls = collectMobile(ctx, el.style as Record<string, unknown>);
   return `<div vtproduct${classAttr([cls])} style="padding:${padTop} ${padR} ${padBot} ${padL};">
 <!--[if mso | IE]><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td><![endif]-->
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:separate;border-spacing:0;">
@@ -370,9 +396,19 @@ function renderModule(m: EmailModule, ctx: RenderCtx): string {
   const recsAttrs = vtproduct
     ? ` reccs-editable vtproduct="${escapeHtml(vtproduct)}"`
     : "";
-  const inner = m.children.map((c) => renderElement(c, ctx, vtproduct)).join("\n");
   const cls = collectMobile(ctx, m.style as Record<string, unknown>);
-  return `<tr><td${cls ? ` class="${cls}"` : ""}${recsAttrs} style="${css}">${inner}</td></tr>`;
+  if (vtproduct && m.children.some((c) => c.type === "productGrid")) {
+    return m.children.map((c) => c.type === "productGrid"
+      ? `<tr><td style="padding:0;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;">
+${renderProductGrid(c, ctx, vtproduct, { attrs: recsAttrs, css, className: cls, moduleStyle: s })}
+</table>
+</td></tr>`
+      : `<tr><td${cls ? ` class="${cls}"` : ""} style="${css}">${renderElement(c, ctx)}</td></tr>`
+    ).join("\n");
+  }
+  const inner = m.children.map((c) => renderElement(c, ctx)).join("\n");
+  return `<tr><td${cls ? ` class="${cls}"` : ""} style="${css}">${inner}</td></tr>`;
 }
 
 export function renderEmailHtml(doc: EmailDocument): string {

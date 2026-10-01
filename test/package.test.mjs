@@ -244,6 +244,35 @@ test("renderEmailHtml renders star glyphs when a grid shows stars", async () => 
   assert.match(html, /★/, "rendered HTML contains filled star glyphs");
 });
 
+test("recommendation markers wrap the product grid on a table row", async () => {
+  const { renderEmailHtml, templateRegistry } = await import(distEsm);
+  const doc = templateRegistry.list().map((tpl) => tpl.build()).find((candidate) =>
+    candidate.modules.some((m) => m.children.some((c) => c.type === "productGrid"))
+  );
+  assert.ok(doc, "found a product grid template");
+  const module = doc.modules.find((m) => m.children.some((c) => c.type === "productGrid"));
+  const grid = module.children.find((c) => c.type === "productGrid");
+  grid.columns = 2;
+  grid.products = [grid.products[0], grid.products[0], grid.products[0]];
+  module.data = { ...module.data, recommendations: { mode: "recommender" }, vtproduct: "vtpos01" };
+
+  const dom = new JSDOM(renderEmailHtml(doc));
+  const rows = dom.window.document.querySelectorAll("tr[reccs-editable]");
+  assert.equal(rows.length, 2, "each product row carries the recommendation position");
+  for (const row of rows) {
+    assert.equal(row.getAttribute("vtproduct"), "vtpos01");
+    assert.ok(row.children.length > 0);
+    assert.ok([...row.children].every((cell) => cell.tagName === "TD" && cell.hasAttribute("reccs-item")));
+  }
+  assert.equal(dom.window.document.querySelectorAll("td[reccs-item]").length, 3);
+  assert.equal(dom.window.document.querySelectorAll("td[reccs-editable]").length, 0);
+  const emailTable = dom.window.document.querySelector("table.email-container");
+  assert.ok(emailTable);
+  assert.ok([...emailTable.tBodies[0].rows].every((row) => row.cells.length === 1),
+    "product columns stay inside their own table, leaving other modules full width");
+  assert.ok([...rows].every((row) => row.closest("table") !== emailTable));
+});
+
 test("new seasonal templates are registered and render VT markers", async () => {
   const { renderEmailHtml, templateRegistry } = await import(distEsm);
   const laborDay = templateRegistry.get("labor-day");

@@ -123,7 +123,7 @@ export const FALLBACK_OPTIONS: Array<{ value: FallbackId; label: string; descrip
   { value: "smart-reccs", label: "Smart Recommendations", description: "Best generic algorithm — recommended default." },
   { value: "random", label: "Random items (strict filters)", description: "Random items that still pass include/exclude filters." },
   { value: "ignore", label: "Ignore position", description: "Skip the slot if no items found." },
-  { value: "stop", label: "Don't display", description: "Don't render the email if the slot can't be filled." },
+  { value: "stop", label: "Don't proceed further", description: "Don't send the email if the slot can't be filled." },
 ];
 
 export const MAX_STACK = 3;
