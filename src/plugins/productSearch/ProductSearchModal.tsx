@@ -1,16 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import { Search, X, Loader2, ChevronDown, ChevronUp, Star, ExternalLink, PackageSearch } from "lucide-react";
-import { getProductProvider } from "./state";
-import type { ProductSearchResult } from "../../core/plugins";
+import { getSuggesterProvider } from "./state";
+import type { SuggesterResult } from "../../core/plugins";
 
 interface Props {
   open: boolean;
   onClose: () => void;
-  /** Called with the chosen product when the user clicks Insert. */
-  onSave: (result: ProductSearchResult) => void;
-  /** Prefill the search box (e.g. the current product name). */
+  onSave: (result: SuggesterResult) => void;
   initialQuery?: string;
-  /** Copy shown in the header — "Add product" vs "Replace product". */
   title?: string;
 }
 
@@ -18,12 +15,11 @@ export function ProductSearchModal({ open, onClose, onSave, initialQuery, title 
   const [query, setQuery] = useState(initialQuery ?? "");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [results, setResults] = useState<ProductSearchResult[]>([]);
+  const [results, setResults] = useState<SuggesterResult[]>([]);
   const [searched, setSearched] = useState(false);
   const [expandedIdx, setExpandedIdx] = useState<number | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
-  // Reset + focus whenever the modal opens.
   useEffect(() => {
     if (!open) return;
     setQuery(initialQuery ?? "");
@@ -45,9 +41,8 @@ export function ProductSearchModal({ open, onClose, onSave, initialQuery, title 
   if (!open) return null;
 
   const runSearch = async () => {
-    const provider = getProductProvider();
+    const provider = getSuggesterProvider();
     const q = query.trim();
-    // console.log("Running search for query:", q, provider);
     if (!provider || !q || busy) return;
     setBusy(true);
     setError(null);
@@ -55,24 +50,16 @@ export function ProductSearchModal({ open, onClose, onSave, initialQuery, title 
     setSearched(true);
     setExpandedIdx(null);
     try {
-      const found = await provider.search(q);
-      // provider.search may return an array (multiple results) or a single result.
-      if (Array.isArray(found)) {
-        setResults(found.filter(Boolean));
-      } else if (found) {
-        setResults([found]);
-      } else {
-        setResults([]);
-      }
+      const found = await provider.search(q, "item");
+      setResults(Array.isArray(found) ? found.filter(Boolean) : found ? [found] : []);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
-      // console.log("Error during search for query:", q, e);
     } finally {
       setBusy(false);
     }
   };
 
-  const handleInsert = (r: ProductSearchResult) => {
+  const handleInsert = (r: SuggesterResult) => {
     onSave(r);
     onClose();
   };
@@ -195,7 +182,7 @@ function ResultRow({
   onToggle,
   onInsert,
 }: {
-  result: ProductSearchResult;
+  result: SuggesterResult;
   expanded: boolean;
   onToggle: () => void;
   onInsert: () => void;
@@ -243,7 +230,7 @@ function ResultRow({
   );
 }
 
-function ProductPreview({ result }: { result: ProductSearchResult }) {
+function ProductPreview({ result }: { result: SuggesterResult }) {
   return (
     <div className="overflow-hidden rounded-xl border border-neutral-200">
       {result.image && (

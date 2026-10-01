@@ -16,11 +16,11 @@ import {
   builder,
   registerPlugin,
   type Plugin,
-  type ProductProvider,
+  type SuggesterProvider,
   type VoucherProvider,
 } from "./core/plugins";
 import { createHttpAIProvider, type HttpAIProviderOptions } from "./ai";
-import { createProductSearchProvider, type ProductSearchOptions } from "./plugins/productSearch";
+import { createSuggesterProvider, type SuggesterOptions } from "./plugins/productSearch";
 import { createVoucherProvider, loadVouchers, type VoucherOptions } from "./plugins/voucherSelect";
 
 export interface EmailBuilderProps {
@@ -34,12 +34,12 @@ export interface EmailBuilderProps {
    */
   aiEndpoint?: string | HttpAIProviderOptions;
   /** Product search provider (enables the "Find product" modal on product cards). */
-  productProvider?: ProductProvider;
+  productProvider?: SuggesterProvider;
   /**
-   * Convenience: wire the built-in HTTP product-search provider by URL.
+   * Convenience: wire the built-in HTTP suggester provider by URL.
    * Ignored when `productProvider` is provided.
    */
-  productEndpoint?: string | ProductSearchOptions;
+  productEndpoint?: string | SuggesterOptions;
   /** Voucher provider (enables the "Select voucher" dropdown on voucher blocks). */
   voucherProvider?: VoucherProvider;
   /**
@@ -85,13 +85,13 @@ export function EmailBuilder(props: EmailBuilderProps) {
         typeof props.aiEndpoint === "string" ? { endpoint: props.aiEndpoint } : props.aiEndpoint;
       builder.setAIProvider(createHttpAIProvider(opts));
     }
-    if (props.productProvider) builder.registerProductProvider(props.productProvider);
+    if (props.productProvider) builder.registerSuggesterProvider(props.productProvider);
     else if (props.productEndpoint) {
       const opts =
         typeof props.productEndpoint === "string"
           ? { endpoint: props.productEndpoint }
           : props.productEndpoint;
-      builder.registerProductProvider(createProductSearchProvider(opts));
+      builder.registerSuggesterProvider(createSuggesterProvider(opts));
     }
     if (props.voucherProvider) builder.registerVoucherProvider(props.voucherProvider);
     else if (props.voucherEndpoint) {
@@ -179,24 +179,17 @@ export { registerPlugin, renderEmailHtml, documentSchema };
 export { imageUploaderPlugin } from "./plugins/imageUploader";
 export type { ImageUploaderOptions } from "./plugins/imageUploader";
 
-// Product search — modal-driven catalog lookup backed by a configurable endpoint.
+// Suggester plugin — single provider for both product and category search.
 export {
-  productSearchPlugin,
-  categorySearchPlugin,
-  createProductSearchProvider,
-  createCategoryProvider,
-  getActiveProductProvider,
-  setActiveProductProvider,
-  getCategoryProvider,
-  setCategoryProvider,
+  suggesterPlugin,
+  createSuggesterProvider,
+  getSuggesterProvider,
+  setSuggesterProvider,
 } from "./plugins/productSearch";
 export type {
-  ProductSearchOptions,
-  CategorySearchOptions,
-  ProductProvider,
-  ProductSearchResult,
-  CategoryProvider,
-  CategoryResult,
+  SuggesterOptions,
+  SuggesterProvider,
+  SuggesterResult,
 } from "./plugins/productSearch";
 
 // Voucher select — pick discount codes from a backend list on voucher blocks.

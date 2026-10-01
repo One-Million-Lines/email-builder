@@ -9,7 +9,7 @@
 import { create } from "zustand";
 import type { LazyExoticComponent, ComponentType } from "react";
 import type { EmailModule } from "./types";
-import type { ProductSearchResult } from "./plugins";
+import type { SuggesterResult } from "./plugins";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyLazy = LazyExoticComponent<ComponentType<any>>;
@@ -36,7 +36,7 @@ export interface ProductSearchSlot {
     ComponentType<{
       open: boolean;
       onClose: () => void;
-      onSave: (result: ProductSearchResult) => void;
+      onSave: (result: SuggesterResult) => void;
       initialQuery?: string;
       title?: string;
     }>

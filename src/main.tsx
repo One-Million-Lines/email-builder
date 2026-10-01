@@ -4,7 +4,7 @@ import "./index.css";
 import { App } from "./App";
 import { builder } from "./core/plugins";
 import { createHttpAIProvider } from "./ai/provider";
-import { createProductSearchProvider } from "./plugins/productSearch";
+import { createSuggesterProvider } from "./plugins/productSearch";
 import { createVoucherProvider, loadVouchers } from "./plugins/voucherSelect";
 
 // --- Standalone demo wiring (not part of the embeddable library) ---
@@ -20,7 +20,7 @@ if (aiEndpoint) {
 // Set VITE_PRODUCT_ENDPOINT to the Python service's /products/search route.
 const productEndpoint = import.meta.env.VITE_PRODUCT_ENDPOINT as string | undefined;
 if (productEndpoint) {
-  builder.registerProductProvider(createProductSearchProvider({ endpoint: productEndpoint }));
+  builder.registerSuggesterProvider(createSuggesterProvider({ endpoint: productEndpoint }));
 }
 
 // Optionally enable voucher select (the "Select voucher" dropdown on voucher blocks).

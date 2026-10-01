@@ -1,16 +1,16 @@
 import { useSyncExternalStore } from "react";
 import {
-  getProductProvider,
-  subscribeProductProvider,
-  getProductProviderVersion,
+  getSuggesterProvider,
+  subscribeSuggesterProvider,
+  getSuggesterProviderVersion,
 } from "./state";
 
-/** Hook: is a product-search provider currently configured? Reactive. */
-export function useProductSearchAvailable(): boolean {
+/** Hook: is a suggester provider currently configured? Reactive. */
+export function useSuggesterAvailable(): boolean {
   useSyncExternalStore(
-    subscribeProductProvider,
-    getProductProviderVersion,
-    getProductProviderVersion
+    subscribeSuggesterProvider,
+    getSuggesterProviderVersion,
+    getSuggesterProviderVersion
   );
-  return getProductProvider() !== null;
+  return getSuggesterProvider() !== null;
 }

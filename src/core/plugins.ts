@@ -6,7 +6,7 @@ import { moduleRegistry } from "../modules/registry";
 import type { Theme, MergeTag } from "./types";
 import type { AIProvider } from "./aiActions";
 import { setAIProvider as setReactiveAIProvider } from "../ai/state";
-import { setProductProvider as setReactiveProductProvider, setCategoryProvider as setReactiveCategoryProvider } from "../plugins/productSearch/state";
+import { setSuggesterProvider as setReactiveSuggesterProvider } from "../plugins/productSearch/state";
 import { setVoucherProvider as setReactiveVoucherProvider } from "../plugins/voucherSelect/state";
 import { setMergeTagsGlobal } from "../plugins/mergeTags/state";
 import { enableRecommendations } from "../plugins/recommendations/state";
@@ -63,25 +63,30 @@ export interface AssetProvider {
 }
 
 /**
- * A single product returned by a {@link ProductProvider} search. Field names
- * match the builder's `Product` model so results drop straight into a card.
+ * A single result returned by a {@link SuggesterProvider} search.
+ * For `itemType === "item"` the price/image/link fields are populated.
+ * For `itemType === "category"` only `id` and `name` are guaranteed.
  */
-export interface ProductSearchResult {
+export interface SuggesterResult {
+  /** Stable identifier — SKU or `_id` depending on item type. */
+  id: string;
   name: string;
-  finalPrice: string;
+  finalPrice?: string;
   oldPrice?: string;
   description?: string;
   link?: string;
   image?: string;
   imageAlt?: string;
   stars?: number;
-  /** Optional external identifier echoed back from the backend. */
-  sku?: string;
 }
 
-export interface ProductProvider {
-  /** Look up a single product for a free-text query. Resolves null if none. */
-  search: (query: string) => Promise<ProductSearchResult | null>;
+export interface SuggesterProvider {
+  /**
+   * Search for items or categories.
+   * @param query   Free-text search term.
+   * @param itemType  `"item"` for products/SKUs, `"category"` for categories.
+   */
+  search(query: string, itemType: "item" | "category"): Promise<SuggesterResult[]>;
 }
 
 /** A discount/voucher entry returned by a {@link VoucherProvider}. */
@@ -105,8 +110,7 @@ export interface BuilderHandle {
   registerModule: (def: ModuleDefinition) => void;
   registerTheme: (theme: Theme) => void;
   registerAssetProvider: (provider: AssetProvider) => void;
-  registerProductProvider: (provider: ProductProvider) => void;
-  registerCategoryProvider: (provider: import("../plugins/productSearch/state").CategoryProvider) => void;
+  registerSuggesterProvider: (provider: SuggesterProvider) => void;
   registerVoucherProvider: (provider: VoucherProvider) => void;
   setAIProvider: (provider: AIProvider) => void;
   registerMergeTags: (tags: MergeTag[]) => void;
@@ -118,8 +122,7 @@ export type PluginType =
   | "modules"
   | "themes"
   | "asset-provider"
-  | "product-provider"
-  | "category-provider"
+  | "suggester-provider"
   | "voucher-provider"
   | "ai-provider"
   | "ai-style";
@@ -132,7 +135,6 @@ export interface Plugin {
 
 const themes: Theme[] = [];
 let assetProvider: AssetProvider | null = null;
-let productProvider: ProductProvider | null = null;
 let voucherProvider: VoucherProvider | null = null;
 let aiProvider: AIProvider | null = null;
 
@@ -142,17 +144,13 @@ export const builder: BuilderHandle = {
   registerAssetProvider: (p) => {
     assetProvider = p;
   },
-  registerProductProvider: (p) => {
-    productProvider = p;
-    setReactiveProductProvider(p);
+  registerSuggesterProvider: (p) => {
+    setReactiveSuggesterProvider(p);
     // Register the product-search modal as a lazy slot so RightSidebar
     // never statically imports the plugin file.
     usePluginSlotStore.getState().registerProductSearch({
       Component: ProductSearchModalSlot,
     });
-  },
-  registerCategoryProvider: (p) => {
-    setReactiveCategoryProvider(p);
   },
   registerVoucherProvider: (p) => {
     voucherProvider = p;
@@ -193,10 +191,6 @@ export function getRegisteredThemes(): Theme[] {
 
 export function getAssetProvider(): AssetProvider | null {
   return assetProvider;
-}
-
-export function getProductProvider(): ProductProvider | null {
-  return productProvider;
 }
 
 export function getVoucherProvider(): VoucherProvider | null {

@@ -2,7 +2,7 @@ import { Suspense, useEffect, useRef, useState } from "react";
 import { useEmailStore } from "../store/emailStore";
 import { resolveToken } from "../core/theme";
 import { getAssetProvider } from "../core/plugins";
-import type { ProductSearchResult } from "../core/plugins";
+import type { SuggesterResult } from "../core/plugins";
 import { usePluginSlotStore } from "../core/pluginSlots";
 import { product as makeProduct } from "../modules/helpers";
 import type {
@@ -969,10 +969,10 @@ function ProductGridElementPanel({ mod, el }: { mod: EmailModule; el: ProductGri
 
   // Apply a searched product. Auto-enables the matching visibility toggles so
   // the new data shows up immediately; every field stays editable afterwards.
-  const applySearchResult = (r: ProductSearchResult) => {
+  const applySearchResult = (r: SuggesterResult) => {
     const built = makeProduct({
       name: r.name,
-      finalPrice: r.finalPrice,
+      finalPrice: r.finalPrice ?? "",
       oldPrice: r.oldPrice,
       description: r.description,
       link: r.link,

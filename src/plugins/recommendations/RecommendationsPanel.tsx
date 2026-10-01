@@ -17,9 +17,8 @@ import {
 } from "./logic";
 import { useRecommendationsStore } from "./state";
 import type { SuggesterFn } from "./state";
-import { getProductProvider } from "../productSearch/state";
-import { getCategoryProvider } from "../productSearch/state";
-import type { ProductSearchResult } from "../../core/plugins";
+import { getSuggesterProvider } from "../productSearch/state";
+import type { SuggesterResult } from "../../core/plugins";
 
 interface Props {
   mod: EmailModule;
@@ -783,12 +782,11 @@ function SuggestListModal({
   onClose: () => void;
 }) {
   // Use module-level getters — more reliable than Zustand hooks across Vite
-  // chunk boundaries. The getter returns whatever was last registered via
-  // setRecommendationItemSuggester / setRecommendationCategorySuggester.
+  // chunk boundaries. The getter returns whatever was last registered.
   const entityLabel = entityType === "category" ? "category" : "product";
 
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<{ id: string; name: string }[]>([]);
+  const [results, setResults] = useState<SuggesterResult[]>([]);
   const [busy, setBusy] = useState(false);
   const [searched, setSearched] = useState(false);
   const [manualInput, setManualInput] = useState("");
@@ -811,39 +809,22 @@ function SuggestListModal({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Debounced live search — reads suggester at call time from the module singleton
+  // Debounced live search — single SuggesterProvider handles both item types
   useEffect(() => {
     const q = query.trim();
-    console.log("Search query:", q);
     if (!q) { setResults([]); setSearched(false); return; }
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(async () => {
       setBusy(true);
       setSearched(true);
       try {
-        let found: { id: string; name: string }[] = [];
-        if (entityType === "item") {
-          // Reuse the same ProductProvider already registered by productSearchPlugin.
-          const provider = getProductProvider();
-          if (provider) {
-            const raw = await provider.search(q);
-            console.log("Product search raw results:", q, raw);
-            const items: ProductSearchResult[] = Array.isArray(raw) ? raw : raw ? [raw] : [];
-            found = items
-              .filter((r) => r && r.name)
-              .map((r) => ({ id: r.sku || r.name, name: r.name }));
-          }
-        } else if (entityType === "category") {
-          // Use the CategoryProvider registered alongside the product provider.
-          const catProvider = getCategoryProvider();
-          if (catProvider) {
-            found = await catProvider.search(q);
-            console.log("Category search raw results:", q, found);
-          } else {
-            console.log("No category provider available for search query:", q);
-          }
+        const provider = getSuggesterProvider();
+        if (provider) {
+          const found = await provider.search(q, entityType);
+          setResults(found.filter((x) => !localIds.includes(x.id)));
+        } else {
+          setResults([]);
         }
-        setResults(found.filter((x) => !localIds.includes(x.id)));
       } catch {
         setResults([]);
       } finally {
