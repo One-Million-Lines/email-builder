@@ -41,7 +41,11 @@ const CATEGORIES: { id: ModuleCategory; icon: React.ComponentType<{ size?: numbe
 
 export function LeftSidebar() {
   const [active, setActive] = useState<ModuleCategory | "themes" | "layers" | "ai" | string>("layers");
-  const [panelOpen, setPanelOpen] = useState(true);
+  // Start collapsed when the viewport is narrower than 1280 px so the canvas
+  // isn't squashed when the editor is embedded in a panel at ~1280 px or less.
+  const [panelOpen, setPanelOpen] = useState(
+    () => typeof window !== "undefined" ? window.innerWidth >= 1280 : true
+  );
   const { addModule, themes, applyTheme, doc } = useEmailStore();
   const aiAvailable = useAIAvailable();
   const leftSidebarPanels = usePluginSlotStore((s) => s.leftSidebarPanels);
@@ -234,7 +238,7 @@ export function LeftSidebar() {
         <button
           onClick={() => setPanelOpen(true)}
           title="Show panel"
-          className="flex items-center justify-center w-5 h-full text-gray-400 hover:text-gray-600 hover:bg-gray-50 transition-colors border-r border-gray-200"
+          className="flex items-center justify-center w-5 h-full text-blue-400 hover:text-blue-600 hover:bg-gray-50 transition-colors border-r border-gray-200"
         >
           <PanelLeftOpen size={14} />
         </button>

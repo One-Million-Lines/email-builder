@@ -47,6 +47,7 @@ export function ProductSearchModal({ open, onClose, onSave, initialQuery, title 
   const runSearch = async () => {
     const provider = getProductProvider();
     const q = query.trim();
+    // console.log("Running search for query:", q, provider);
     if (!provider || !q || busy) return;
     setBusy(true);
     setError(null);
@@ -65,6 +66,7 @@ export function ProductSearchModal({ open, onClose, onSave, initialQuery, title 
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
+      // console.log("Error during search for query:", q, e);
     } finally {
       setBusy(false);
     }

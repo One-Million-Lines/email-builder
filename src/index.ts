@@ -254,7 +254,12 @@ export type {
 } from "./plugins/recommendations/logic";
 
 // Recommendations plugin — opt-in activation and helper exports.
-export { useRecommendationsStore } from "./plugins/recommendations/state";
+export {
+  useRecommendationsStore,
+  setRecommendationFeeds,
+  setRecommendationCategorySuggester,
+} from "./plugins/recommendations/state";
+export type { RecommendationFeed, ItemSuggestion, SuggesterFn } from "./plugins/recommendations/state";
 
 /**
  * Convenience plugin object.  Pass to `registerPlugin()` or use

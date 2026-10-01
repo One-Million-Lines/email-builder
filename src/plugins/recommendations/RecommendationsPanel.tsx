@@ -1,5 +1,6 @@
+import { createPortal } from "react-dom";
 import { useEffect, useRef, useState } from "react";
-import { ChevronUp, ChevronDown, Trash2, Plus, X, Sparkles, Hash } from "lucide-react";
+import { ChevronUp, ChevronDown, Loader2, Pencil, Search, Trash2, Plus, X, Sparkles, Hash } from "lucide-react";
 import { useEmailStore } from "../../store/emailStore";
 import type { EmailModule } from "../../core/types";
 import {
@@ -14,6 +15,13 @@ import {
   type RecommendationsLogic,
   type StackEntry,
 } from "./logic";
+import { useRecommendationsStore } from "./state";
+import type { SuggesterFn } from "./state";
+import {
+  getRecommendationCategorySuggester,
+} from "./state";
+import { getProductProvider } from "../productSearch/state";
+import type { ProductSearchResult } from "../../core/plugins";
 
 interface Props {
   mod: EmailModule;
@@ -136,22 +144,37 @@ function ManualSection({
   logic: RecommendationsLogic;
   update: (p: Partial<RecommendationsLogic>) => void;
 }) {
+  const feeds = useRecommendationsStore((s) => s.feeds);
+
   return (
     <>
-      <Field label="Source feed">
-        <DeferredInput
-          type="text"
-          placeholder="e.g. main-catalog"
-          value={logic.sourceFeed ?? ""}
-          onCommit={(v) => update({ sourceFeed: v })}
-          className={inputCls}
-        />
-      </Field>
+      {/* Source feed — only show when multiple feeds are available */}
+      {feeds.length > 1 && (
+        <Field label="Source feed">
+          <select
+            value={logic.sourceFeed ?? ""}
+            onChange={(e) => update({ sourceFeed: e.target.value })}
+            className={inputCls}
+          >
+            <option value="">main</option>
+            {feeds.map((f) => (
+              <option key={f.id} value={f.id}>
+                {f.title}
+              </option>
+            ))}
+          </select>
+        </Field>
+      )}
       <Field label="Items to include (product IDs / SKUs)">
-        <TokenInput
-          value={logic.manualProducts}
-          onChange={(v) => update({ manualProducts: v })}
-          placeholder="Add product id"
+        <SuggestListField
+          title="Select items to include"
+          entityType="item"
+          ids={logic.manualProducts}
+          labels={logic.manualProductLabels ?? {}}
+          onChange={(newIds, newLabels) =>
+            update({ manualProducts: newIds, manualProductLabels: newLabels })
+          }
+          placeholder="No items selected — click to add"
         />
       </Field>
       <div className="text-[11px] text-gray-500">
@@ -171,6 +194,10 @@ function RecommenderSection({
   updateFilters: (p: Partial<RecommendationsLogic["filters"]>) => void;
 }) {
   const [advanced, setAdvanced] = useState(false);
+
+  const filterLabelsProduct = logic.filterProductLabels ?? {};
+  const filterLabelsCategory = logic.filterCategoryLabels ?? {};
+
   return (
     <>
       <div>
@@ -221,31 +248,55 @@ function RecommenderSection({
       />
 
       <Field label="Exclude products">
-        <TokenInput
-          value={logic.filters.excludeProducts}
-          onChange={(v) => updateFilters({ excludeProducts: v })}
-          placeholder="Add product id"
+        <SuggestListField
+          title="Exclude products"
+          entityType="item"
+          ids={logic.filters.excludeProducts}
+          labels={filterLabelsProduct}
+          onChange={(newIds, newLabels) => update({
+            filters: { ...logic.filters, excludeProducts: newIds },
+            filterProductLabels: newLabels,
+          })}
+          placeholder="None — click to add"
         />
       </Field>
       <Field label="Include products">
-        <TokenInput
-          value={logic.filters.includeProducts}
-          onChange={(v) => updateFilters({ includeProducts: v })}
-          placeholder="Add product id"
+        <SuggestListField
+          title="Include products"
+          entityType="item"
+          ids={logic.filters.includeProducts}
+          labels={filterLabelsProduct}
+          onChange={(newIds, newLabels) => update({
+            filters: { ...logic.filters, includeProducts: newIds },
+            filterProductLabels: newLabels,
+          })}
+          placeholder="None — click to add"
         />
       </Field>
       <Field label="Exclude categories">
-        <TokenInput
-          value={logic.filters.excludeCategories}
-          onChange={(v) => updateFilters({ excludeCategories: v })}
-          placeholder="Add category"
+        <SuggestListField
+          title="Exclude categories"
+          entityType="category"
+          ids={logic.filters.excludeCategories}
+          labels={filterLabelsCategory}
+          onChange={(newIds, newLabels) => update({
+            filters: { ...logic.filters, excludeCategories: newIds },
+            filterCategoryLabels: newLabels,
+          })}
+          placeholder="None — click to add"
         />
       </Field>
       <Field label="Include categories">
-        <TokenInput
-          value={logic.filters.includeCategories}
-          onChange={(v) => updateFilters({ includeCategories: v })}
-          placeholder="Add category"
+        <SuggestListField
+          title="Include categories"
+          entityType="category"
+          ids={logic.filters.includeCategories}
+          labels={filterLabelsCategory}
+          onChange={(newIds, newLabels) => update({
+            filters: { ...logic.filters, includeCategories: newIds },
+            filterCategoryLabels: newLabels,
+          })}
+          placeholder="None — click to add"
         />
       </Field>
 
@@ -523,11 +574,28 @@ function AddAlgorithmDropdown({
   onPick: (id: string) => void;
 }) {
   const [open, setOpen] = useState(false);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const [dropPos, setDropPos] = useState<{ top: number; right: number } | null>(null);
+
+  // Calculate portal position when opening
+  const handleOpen = () => {
+    if (disabled) return;
+    if (!open && buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      setDropPos({
+        top: rect.bottom + 4,
+        right: window.innerWidth - rect.right,
+      });
+    }
+    setOpen((o) => !o);
+  };
+
   return (
     <div className="relative">
       <button
+        ref={buttonRef}
         disabled={disabled}
-        onClick={() => setOpen((o) => !o)}
+        onClick={handleOpen}
         className={
           "flex items-center gap-1 px-2 py-1 rounded text-[11px] font-semibold uppercase " +
           (disabled
@@ -537,35 +605,40 @@ function AddAlgorithmDropdown({
       >
         <Plus size={12} /> Add
       </button>
-      {open && !disabled && (
-        <>
-          <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 top-full mt-1 w-64 max-h-80 overflow-auto bg-white border border-gray-200 rounded shadow-lg z-20">
-            {ALGORITHMS.map((a) => {
-              const used = existing.includes(a.id);
-              return (
-                <button
-                  key={a.id}
-                  disabled={used}
-                  onClick={() => {
-                    onPick(a.id);
-                    setOpen(false);
-                  }}
-                  className={
-                    "block w-full text-left px-2.5 py-1.5 text-xs " +
-                    (used
-                      ? "text-gray-400 cursor-not-allowed"
-                      : "text-gray-700 hover:bg-teal-50 hover:text-teal-700")
-                  }
-                >
-                  {a.label}
-                  {used && <span className="ml-1 text-[10px]">· added</span>}
-                </button>
-              );
-            })}
-          </div>
-        </>
-      )}
+      {open && !disabled && dropPos &&
+        createPortal(
+          <>
+            <div className="fixed inset-0 z-[9998]" onClick={() => setOpen(false)} />
+            <div
+              style={{ top: dropPos.top, right: dropPos.right }}
+              className="fixed w-64 max-h-80 overflow-auto bg-white border border-gray-200 rounded shadow-lg z-[9999]"
+            >
+              {ALGORITHMS.map((a) => {
+                const used = existing.includes(a.id);
+                return (
+                  <button
+                    key={a.id}
+                    disabled={used}
+                    onClick={() => {
+                      onPick(a.id);
+                      setOpen(false);
+                    }}
+                    className={
+                      "block w-full text-left px-2.5 py-1.5 text-xs " +
+                      (used
+                        ? "text-gray-400 cursor-not-allowed"
+                        : "text-gray-700 hover:bg-teal-50 hover:text-teal-700")
+                    }
+                  >
+                    {a.label}
+                    {used && <span className="ml-1 text-[10px]">· added</span>}
+                  </button>
+                );
+              })}
+            </div>
+          </>,
+          document.body
+        )}
     </div>
   );
 }
@@ -587,14 +660,18 @@ function TokenInput({
     onChange([...value, v]);
     setDraft("");
   };
+
+  const truncate = (s: string) => s.length > 30 ? s.slice(0, 30) + "…" : s;
+
   return (
     <div className="border border-gray-200 rounded bg-white p-1 flex flex-wrap items-center gap-1 focus-within:border-blue-500">
       {value.map((tok) => (
         <span
           key={tok}
           className="inline-flex items-center gap-1 bg-gray-100 text-gray-800 text-[11px] rounded px-1.5 py-0.5"
+          title={tok}
         >
-          {tok}
+          {truncate(tok)}
           <button
             onClick={() => onChange(value.filter((x) => x !== tok))}
             className="text-gray-500 hover:text-red-600"
@@ -618,6 +695,324 @@ function TokenInput({
         placeholder={value.length === 0 ? placeholder : ""}
         className="flex-1 min-w-20 outline-none text-xs bg-transparent px-1 py-0.5"
       />
+    </div>
+  );
+}
+
+/** Token input that shows a live suggestion dropdown when a suggester is registered. */
+/** Compact inline field — shows a pill preview, opens a management modal on click. */
+function SuggestListField({
+  ids,
+  labels,
+  onChange,
+  placeholder,
+  entityType,
+  title,
+}: {
+  ids: string[];
+  labels: Record<string, string>;
+  /** Single atomic callback receiving the new (ids, labels) pair. */
+  onChange: (newIds: string[], newLabels: Record<string, string>) => void;
+  placeholder?: string;
+  entityType: "item" | "category";
+  title: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const MAX_PREVIEW = 4;
+  const truncate = (s: string) => s.length > 30 ? s.slice(0, 30) + "…" : s;
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="w-full border border-gray-200 rounded bg-white px-2 py-1.5 min-h-[34px] flex items-start gap-1 flex-wrap text-left hover:border-teal-400 focus:outline-none focus:border-teal-500 transition"
+      >
+        {ids.length === 0 ? (
+          <span className="text-xs text-gray-400 leading-5">{placeholder ?? "Click to add…"}</span>
+        ) : (
+          <>
+            {ids.slice(0, MAX_PREVIEW).map((id) => (
+              <span
+                key={id}
+                className="inline-flex items-center gap-0.5 bg-teal-50 border border-teal-200 text-teal-800 text-[11px] rounded px-1.5 py-0.5 leading-none"
+                title={labels[id] ?? id}
+              >
+                {truncate(labels[id] ?? id)}
+              </span>
+            ))}
+            {ids.length > MAX_PREVIEW && (
+              <span className="text-[11px] text-gray-500 leading-5 px-0.5">
+                +{ids.length - MAX_PREVIEW} more
+              </span>
+            )}
+          </>
+        )}
+        <span className="ml-auto shrink-0 text-gray-400 mt-0.5">
+          <Pencil size={11} />
+        </span>
+      </button>
+
+      {open && createPortal(
+        <SuggestListModal
+          title={title}
+          entityType={entityType}
+          ids={ids}
+          labels={labels}
+          onChange={onChange}
+          onClose={() => setOpen(false)}
+        />,
+        document.body
+      )}
+    </>
+  );
+}
+
+/** Full-screen portal modal for searching and managing a list of items/categories. */
+function SuggestListModal({
+  title,
+  entityType,
+  ids,
+  labels,
+  onChange,
+  onClose,
+}: {
+  title: string;
+  entityType: "item" | "category";
+  ids: string[];
+  labels: Record<string, string>;
+  onChange: (newIds: string[], newLabels: Record<string, string>) => void;
+  onClose: () => void;
+}) {
+  // Use module-level getters — more reliable than Zustand hooks across Vite
+  // chunk boundaries. The getter returns whatever was last registered via
+  // setRecommendationItemSuggester / setRecommendationCategorySuggester.
+  const entityLabel = entityType === "category" ? "category" : "product";
+
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState<{ id: string; name: string }[]>([]);
+  const [busy, setBusy] = useState(false);
+  const [searched, setSearched] = useState(false);
+  const [manualInput, setManualInput] = useState("");
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Keep a local copy so removes are immediate without waiting for parent re-render
+  const [localIds, setLocalIds] = useState<string[]>(ids);
+  const [localLabels, setLocalLabels] = useState<Record<string, string>>(labels);
+
+  // Sync in when parent re-renders (e.g. undo/redo from outside)
+  useEffect(() => { setLocalIds(ids); }, [ids]);
+  useEffect(() => { setLocalLabels(labels); }, [labels]);
+
+  useEffect(() => {
+    const t = setTimeout(() => inputRef.current?.focus(), 50);
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", onKey);
+    return () => { clearTimeout(t); window.removeEventListener("keydown", onKey); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Debounced live search — reads suggester at call time from the module singleton
+  useEffect(() => {
+    const q = query.trim();
+    if (!q) { setResults([]); setSearched(false); return; }
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(async () => {
+      setBusy(true);
+      setSearched(true);
+      try {
+        let found: { id: string; name: string }[] = [];
+        if (entityType === "item") {
+          // Reuse the same ProductProvider already registered by productSearchPlugin.
+          const provider = getProductProvider();
+          if (provider) {
+            const raw = await provider.search(q);
+            const items: ProductSearchResult[] = Array.isArray(raw) ? raw : raw ? [raw] : [];
+            found = items
+              .filter((r) => r && r.name)
+              .map((r) => ({ id: r.sku || r.name, name: r.name }));
+          }
+        } else {
+          const suggester = getRecommendationCategorySuggester();
+          if (suggester) {
+            found = await suggester(q);
+          }
+        }
+        setResults(found.filter((x) => !localIds.includes(x.id)));
+      } catch {
+        setResults([]);
+      } finally {
+        setBusy(false);
+      }
+    }, 300);
+    return () => { if (timerRef.current) clearTimeout(timerRef.current); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [query, entityType]);
+
+  const add = (id: string, name?: string) => {
+    if (localIds.includes(id)) return;
+    const newIds = [...localIds, id];
+    const newLabels = name ? { ...localLabels, [id]: name } : localLabels;
+    setLocalIds(newIds);
+    setLocalLabels(newLabels);
+    onChange(newIds, newLabels);
+    setResults((r) => r.filter((x) => x.id !== id));
+  };
+
+  const remove = (id: string) => {
+    const newIds = localIds.filter((x) => x !== id);
+    const newLabels = { ...localLabels };
+    delete newLabels[id];
+    setLocalIds(newIds);
+    setLocalLabels(newLabels);
+    onChange(newIds, newLabels);
+  };
+
+  const truncate = (s: string) => s.length > 30 ? s.slice(0, 30) + "…" : s;
+
+  return (
+    <div
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+      onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div className="flex max-h-[80vh] w-full max-w-md flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
+        {/* Header */}
+        <div className="flex items-center justify-between border-b border-neutral-200 px-5 py-4 shrink-0">
+          <h2 className="text-sm font-semibold text-neutral-900">{title}</h2>
+          <button
+            onClick={onClose}
+            className="rounded-lg p-1.5 text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900"
+          >
+            <X size={16} />
+          </button>
+        </div>
+
+        {/* Search input */}
+        <div className="border-b border-neutral-100 px-4 py-3 shrink-0">
+          <div className="relative flex items-center gap-2">
+            <Search
+              size={14}
+              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400"
+            />
+            <input
+              ref={inputRef}
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder={`Search ${entityLabel}s by name or ID…`}
+              className="w-full rounded-lg border border-neutral-200 bg-white py-2 pl-8 pr-3 text-sm outline-none focus:border-teal-500"
+            />
+            {busy && <Loader2 size={14} className="shrink-0 animate-spin text-neutral-400" />}
+          </div>
+
+          {/* Live results */}
+          {query.trim() && (
+            <div className="mt-2 max-h-44 overflow-y-auto rounded-lg border border-neutral-200 bg-white">
+              {busy && results.length === 0 && (
+                <div className="px-4 py-3 text-xs text-neutral-400">Searching…</div>
+              )}
+              {!busy && searched && results.length === 0 && (
+                <div className="px-4 py-3 text-xs text-neutral-400">
+                  No {entityLabel}s matched &ldquo;{query.trim()}&rdquo;.
+                </div>
+              )}
+              {results.map((r) => (
+                <div
+                  key={r.id}
+                  className="flex items-center justify-between gap-3 px-4 py-2.5 hover:bg-teal-50 border-b border-neutral-100 last:border-0"
+                >
+                  <div className="min-w-0">
+                    <div className="truncate text-sm font-medium text-neutral-800">{r.name}</div>
+                    {r.id !== r.name && (
+                      <div className="truncate text-[10px] text-neutral-400">{r.id}</div>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => add(r.id, r.name)}
+                    className="shrink-0 flex items-center gap-1 rounded-lg bg-gray-100 px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-200"
+                  >
+                    <Plus size={12} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Manual entry — always available as fallback */}
+          <div className="mt-2 flex gap-2">
+            <input
+              value={manualInput}
+              onChange={(e) => setManualInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  const v = manualInput.trim();
+                  if (v) { add(v); setManualInput(""); }
+                }
+              }}
+              placeholder={`Or enter ${entityLabel} ID directly`}
+              className="flex-1 rounded-lg border border-neutral-200 py-1.5 px-3 text-sm outline-none focus:border-teal-500"
+            />
+            <button
+              type="button"
+              onClick={() => { const v = manualInput.trim(); if (v) { add(v); setManualInput(""); } }}
+              className="shrink-0 rounded-lg bg-gray-100 px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-200"
+            >
+              Add
+            </button>
+          </div>
+        </div>
+
+        {/* Selected items — scrollable */}
+        <div className="overflow-y-auto px-4 py-3" style={{ maxHeight: "280px" }}>
+          <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-gray-500">
+            Selected ({localIds.length})
+          </div>
+          {localIds.length === 0 ? (
+            <div className="text-xs text-gray-400 italic py-2">
+              No {entityLabel}s selected yet.
+            </div>
+          ) : (
+            <div className="space-y-1">
+              {localIds.map((id) => (
+                <div
+                  key={id}
+                  className="flex items-center justify-between gap-2 rounded-lg border border-neutral-100 bg-neutral-50 px-3 py-2"
+                >
+                  <div className="min-w-0">
+                    <div className="truncate text-sm font-medium text-neutral-800" title={localLabels[id] ?? id}>
+                      {truncate(localLabels[id] ?? id)}
+                    </div>
+                    {localLabels[id] && localLabels[id] !== id && (
+                      <div className="text-[10px] text-neutral-400 truncate">{id}</div>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onMouseDown={(e) => e.stopPropagation()}
+                    onClick={(e) => { e.stopPropagation(); remove(id); }}
+                    className="shrink-0 rounded p-1 text-neutral-400 hover:bg-red-50 hover:text-red-600"
+                    aria-label={`Remove ${localLabels[id] ?? id}`}
+                  >
+                    <X size={13} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="shrink-0 flex justify-end border-t border-neutral-200 px-5 py-3">
+          <button
+            onClick={onClose}
+            className="rounded-lg bg-teal-600 px-5 py-2 text-sm font-semibold text-white hover:bg-teal-700"
+          >
+            Done
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

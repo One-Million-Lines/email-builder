@@ -1,7 +1,14 @@
 // Recommendations plugin — complete self-contained entry point.
 // Import from here instead of the individual sub-modules.
 
-export { enableRecommendations, useRecommendationsStore } from "./state";
+export {
+  enableRecommendations,
+  setRecommendationFeeds,
+  setRecommendationCategorySuggester,
+  getRecommendationCategorySuggester,
+  useRecommendationsStore,
+} from "./state";
+export type { RecommendationFeed, ItemSuggestion, SuggesterFn } from "./state";
 export { RecommendationsPanel } from "./RecommendationsPanel";
 export {
   ALGORITHMS,

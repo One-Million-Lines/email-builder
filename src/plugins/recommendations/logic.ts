@@ -58,6 +58,21 @@ export interface RecommendationsLogic {
   sourceFeed?: string;
   /** Manually-picked product ids (manual mode). */
   manualProducts: string[];
+  /**
+   * Display names for manually-picked products, keyed by product id.
+   * Not sent to the backend — used only for pill labels in the editor.
+   */
+  manualProductLabels?: Record<string, string>;
+  /**
+   * Display names for include/exclude product filter ids, keyed by product id.
+   * Not sent to the backend — used only for pill labels in the editor.
+   */
+  filterProductLabels?: Record<string, string>;
+  /**
+   * Display names for include/exclude category filter values, keyed by category id/name.
+   * Not sent to the backend — used only for pill labels in the editor.
+   */
+  filterCategoryLabels?: Record<string, string>;
   /** Algorithm stack — tried in order. Max 3. */
   stack: StackEntry[];
   /** Last-resort algorithm. */
