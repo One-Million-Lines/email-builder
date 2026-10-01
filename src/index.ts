@@ -182,14 +182,21 @@ export type { ImageUploaderOptions } from "./plugins/imageUploader";
 // Product search — modal-driven catalog lookup backed by a configurable endpoint.
 export {
   productSearchPlugin,
+  categorySearchPlugin,
   createProductSearchProvider,
+  createCategoryProvider,
   getActiveProductProvider,
   setActiveProductProvider,
+  getCategoryProvider,
+  setCategoryProvider,
 } from "./plugins/productSearch";
 export type {
   ProductSearchOptions,
+  CategorySearchOptions,
   ProductProvider,
   ProductSearchResult,
+  CategoryProvider,
+  CategoryResult,
 } from "./plugins/productSearch";
 
 // Voucher select — pick discount codes from a backend list on voucher blocks.
@@ -257,7 +264,6 @@ export type {
 export {
   useRecommendationsStore,
   setRecommendationFeeds,
-  setRecommendationCategorySuggester,
 } from "./plugins/recommendations/state";
 export type { RecommendationFeed, ItemSuggestion, SuggesterFn } from "./plugins/recommendations/state";
 

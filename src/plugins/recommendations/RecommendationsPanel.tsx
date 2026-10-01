@@ -17,10 +17,8 @@ import {
 } from "./logic";
 import { useRecommendationsStore } from "./state";
 import type { SuggesterFn } from "./state";
-import {
-  getRecommendationCategorySuggester,
-} from "./state";
 import { getProductProvider } from "../productSearch/state";
+import { getCategoryProvider } from "../productSearch/state";
 import type { ProductSearchResult } from "../../core/plugins";
 
 interface Props {
@@ -122,7 +120,7 @@ export function RecommendationsPanel({ mod }: Props) {
           />
         )}
 
-        <details className="border border-gray-200 rounded">
+        <details className="border border-gray-200 rounded hidden">
           <summary className="px-2 py-1.5 text-[11px] font-medium text-gray-600 cursor-pointer select-none">
             View saved JSON
           </summary>
@@ -234,7 +232,7 @@ function RecommenderSection({
       </Field>
 
       <SectionHeader
-        title="Include & Exclude filters"
+        title="Filters"
         right={
           <div className="flex items-center gap-1">
             <Pill active={!advanced} onClick={() => setAdvanced(false)}>
@@ -816,6 +814,7 @@ function SuggestListModal({
   // Debounced live search — reads suggester at call time from the module singleton
   useEffect(() => {
     const q = query.trim();
+    console.log("Search query:", q);
     if (!q) { setResults([]); setSearched(false); return; }
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(async () => {
@@ -828,15 +827,20 @@ function SuggestListModal({
           const provider = getProductProvider();
           if (provider) {
             const raw = await provider.search(q);
+            console.log("Product search raw results:", q, raw);
             const items: ProductSearchResult[] = Array.isArray(raw) ? raw : raw ? [raw] : [];
             found = items
               .filter((r) => r && r.name)
               .map((r) => ({ id: r.sku || r.name, name: r.name }));
           }
-        } else {
-          const suggester = getRecommendationCategorySuggester();
-          if (suggester) {
-            found = await suggester(q);
+        } else if (entityType === "category") {
+          // Use the CategoryProvider registered alongside the product provider.
+          const catProvider = getCategoryProvider();
+          if (catProvider) {
+            found = await catProvider.search(q);
+            console.log("Category search raw results:", q, found);
+          } else {
+            console.log("No category provider available for search query:", q);
           }
         }
         setResults(found.filter((x) => !localIds.includes(x.id)));

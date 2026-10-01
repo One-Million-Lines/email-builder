@@ -4,6 +4,27 @@ All notable changes to this package are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/) and the
 [Keep a Changelog](https://keepachangelog.com/) format.
 
+## [0.9.3] — 2026-10-01
+
+### Changed
+
+- Recommendations panel `SuggestListModal` — live product/category search,
+  pill preview, working X remove, manual ID fallback.
+
+- Left sidebar defaults to **collapsed** on viewports < 1280 px.
+
+- Algorithm dropdown rendered via `createPortal` (fixes `overflow-hidden` clipping).
+
+- Source feed rendered as `<select>` when >1 feed registered via `setRecommendationFeeds`.
+
+### Fixed
+
+- **Invalid hook call** (dual React via `npm link`) — host Vite config aliases
+  `react` / `react-dom` to force a single instance.
+
+- **Currency symbols** — `transformResponse` wraps prices with `currencyBefore`
+  / `currencyAfter` read from account settings via `useRef`.
+
 ## [0.9.1] — 2026-09-14
 - ** Using markers to detect various elements.
 

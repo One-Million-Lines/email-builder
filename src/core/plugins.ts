@@ -6,7 +6,7 @@ import { moduleRegistry } from "../modules/registry";
 import type { Theme, MergeTag } from "./types";
 import type { AIProvider } from "./aiActions";
 import { setAIProvider as setReactiveAIProvider } from "../ai/state";
-import { setProductProvider as setReactiveProductProvider } from "../plugins/productSearch/state";
+import { setProductProvider as setReactiveProductProvider, setCategoryProvider as setReactiveCategoryProvider } from "../plugins/productSearch/state";
 import { setVoucherProvider as setReactiveVoucherProvider } from "../plugins/voucherSelect/state";
 import { setMergeTagsGlobal } from "../plugins/mergeTags/state";
 import { enableRecommendations } from "../plugins/recommendations/state";
@@ -106,21 +106,11 @@ export interface BuilderHandle {
   registerTheme: (theme: Theme) => void;
   registerAssetProvider: (provider: AssetProvider) => void;
   registerProductProvider: (provider: ProductProvider) => void;
+  registerCategoryProvider: (provider: import("../plugins/productSearch/state").CategoryProvider) => void;
   registerVoucherProvider: (provider: VoucherProvider) => void;
   setAIProvider: (provider: AIProvider) => void;
-  /** Configure the list of merge tags available in the text element sidebar. */
   registerMergeTags: (tags: MergeTag[]) => void;
-  /**
-   * Register an extra panel that appears as a new tab in the left sidebar.
-   * Use this for plugin-level UI that doesn't belong in the right sidebar
-   * (e.g. an AI Style generator panel).
-   */
   registerLeftSidebarPanel: (slot: import("./pluginSlots").LeftSidebarPanelSlot) => void;
-  /**
-   * Opt in to the recommendations engine. When called, the Recommendations
-   * panel appears in the right sidebar for any module that contains a
-   * `productGrid` element. Without this call the panel stays hidden.
-   */
   registerRecommendationsPlugin: () => void;
 }
 
@@ -129,6 +119,7 @@ export type PluginType =
   | "themes"
   | "asset-provider"
   | "product-provider"
+  | "category-provider"
   | "voucher-provider"
   | "ai-provider"
   | "ai-style";
@@ -159,6 +150,9 @@ export const builder: BuilderHandle = {
     usePluginSlotStore.getState().registerProductSearch({
       Component: ProductSearchModalSlot,
     });
+  },
+  registerCategoryProvider: (p) => {
+    setReactiveCategoryProvider(p);
   },
   registerVoucherProvider: (p) => {
     voucherProvider = p;

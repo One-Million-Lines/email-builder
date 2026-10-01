@@ -8,18 +8,6 @@ export interface RecommendationFeed {
 export type ItemSuggestion = { id: string; name: string };
 export type SuggesterFn = (query: string) => Promise<ItemSuggestion[]>;
 
-// ---------------------------------------------------------------------------
-// Module-level singleton for category suggester.
-// Using a plain variable (not Zustand) avoids the dual-instance issue that
-// can occur when npm-linked packages are bundled into separate chunks by Vite.
-// ---------------------------------------------------------------------------
-
-let _categorySuggester: SuggesterFn | null = null;
-
-export function getRecommendationCategorySuggester(): SuggesterFn | null {
-  return _categorySuggester;
-}
-
 interface RecommendationsPluginState {
   /** True when the host app has explicitly registered the recommendations plugin. */
   enabled: boolean;
@@ -46,12 +34,4 @@ export function enableRecommendations(): void {
  */
 export function setRecommendationFeeds(feeds: RecommendationFeed[]): void {
   useRecommendationsStore.getState().setFeeds(feeds);
-}
-
-/**
- * Register an async function that returns category suggestions for a search query.
- * Uses a module-level singleton so it works reliably across Vite chunk boundaries.
- */
-export function setRecommendationCategorySuggester(fn: SuggesterFn | null): void {
-  _categorySuggester = fn;
 }

@@ -13,12 +13,16 @@ import type {
   ProductProvider,
   ProductSearchResult,
 } from "../../core/plugins";
+import type { CategoryProvider, CategoryResult } from "./state";
 
 export type { ProductProvider, ProductSearchResult } from "../../core/plugins";
 export {
   getProductProvider as getActiveProductProvider,
   setProductProvider as setActiveProductProvider,
+  getCategoryProvider,
+  setCategoryProvider,
 } from "./state";
+export type { CategoryProvider, CategoryResult } from "./state";
 
 export interface ProductSearchOptions {
   /** Absolute or same-origin URL that implements the search. Required. */
@@ -45,8 +49,32 @@ export interface ProductSearchOptions {
   transformResponse?: (body: unknown) => ProductSearchResult | null;
 }
 
+/** Options for {@link categorySearchPlugin} and {@link createCategoryProvider}. */
+export interface CategorySearchOptions {
+  /** Absolute or same-origin URL that returns category results. Required. */
+  endpoint: string;
+  /** HTTP method. Default: "GET". */
+  method?: "GET" | "POST";
+  /** Query-string parameter name. Default: "q". */
+  queryParam?: string;
+  /** JSON body field for POST. Default: "query". */
+  bodyParam?: string;
+  /** Extra headers (e.g. Authorization). */
+  headers?: Record<string, string>;
+  /** Send cookies. Default: false. */
+  withCredentials?: boolean;
+  /** Timeout in ms. Default: 15000. */
+  timeoutMs?: number;
+  /**
+   * Map the raw JSON response to {@link CategoryResult}[].
+   * Default handles `{ data: [...] }`, `{ results: [...] }`, and bare arrays;
+   * each item needs `title` or `name` and optionally `_id`.
+   */
+  transformResponse?: (body: unknown) => CategoryResult[];
+}
+
 // ---------------------------------------------------------------------------
-// Default response mapping
+// Default response mapping — products
 // ---------------------------------------------------------------------------
 
 function firstRecord(body: unknown): Record<string, unknown> | null {
@@ -118,15 +146,38 @@ const defaultTransform = (body: unknown): ProductSearchResult | null => {
 };
 
 // ---------------------------------------------------------------------------
-// HTTP provider
+// Default response mapping — categories
+// ---------------------------------------------------------------------------
+
+const defaultCategoryTransform = (body: unknown): CategoryResult[] => {
+  const items: unknown[] = Array.isArray(body)
+    ? body
+    : Array.isArray((body as Record<string, unknown>)?.data)
+      ? (body as Record<string, unknown>).data as unknown[]
+      : Array.isArray((body as Record<string, unknown>)?.results)
+        ? (body as Record<string, unknown>).results as unknown[]
+        : Array.isArray((body as Record<string, unknown>)?.response)
+          ? (body as Record<string, unknown>).response as unknown[]
+          : [];
+
+  return items
+    .filter((c) => c && typeof c === "object")
+    .map((c) => {
+      const cat = c as Record<string, unknown>;
+      return {
+        id: String(cat._id ?? cat.id ?? cat.name ?? cat.title ?? ""),
+        name: String(cat.title ?? cat.name ?? cat._id ?? ""),
+      };
+    })
+    .filter((c) => c.id && c.name);
+};
+
+// ---------------------------------------------------------------------------
+// HTTP provider — products
 // ---------------------------------------------------------------------------
 
 /**
  * Create a {@link ProductProvider} backed by an HTTP endpoint.
- *
- * @example
- *   const provider = createProductSearchProvider({ endpoint: "/api/products/search" });
- *   const product = await provider.search("linen tote");
  */
 export function createProductSearchProvider(opts: ProductSearchOptions): ProductProvider {
   const method = opts.method ?? "GET";
@@ -191,12 +242,71 @@ export function createProductSearchProvider(opts: ProductSearchOptions): Product
   };
 }
 
+// ---------------------------------------------------------------------------
+// HTTP provider — categories
+// ---------------------------------------------------------------------------
+
 /**
- * Plugin factory. Pass to `registerPlugin()` exported by the builder.
+ * Create a {@link CategoryProvider} backed by an HTTP endpoint.
+ * Used by the recommendations panel's include/exclude category filters.
+ */
+export function createCategoryProvider(opts: CategorySearchOptions): CategoryProvider {
+  const method = opts.method ?? "GET";
+  const queryParam = opts.queryParam ?? "q";
+  const bodyParam = opts.bodyParam ?? "query";
+  const timeoutMs = opts.timeoutMs ?? 15000;
+  const transform = opts.transformResponse ?? defaultCategoryTransform;
+
+  return {
+    async search(query: string): Promise<CategoryResult[]> {
+      const q = query.trim();
+      if (!q) return [];
+
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), timeoutMs);
+      try {
+        let url = opts.endpoint;
+        const init: RequestInit = {
+          method,
+          headers: { ...(opts.headers ?? {}) },
+          credentials: opts.withCredentials ? "include" : "same-origin",
+          signal: controller.signal,
+        };
+        if (method === "GET") {
+          const base = typeof location !== "undefined" ? location.href : undefined;
+          const u = new URL(opts.endpoint, base);
+          u.searchParams.set(queryParam, q);
+          url = u.toString();
+        } else {
+          (init.headers as Record<string, string>)["Content-Type"] = "application/json";
+          init.body = JSON.stringify({ [bodyParam]: q });
+        }
+
+        const res = await fetch(url, init);
+        let parsed: unknown = null;
+        const raw = await res.text();
+        try { parsed = raw ? JSON.parse(raw) : null; } catch { /* ignore */ }
+        if (!res.ok) return [];
+        return transform(parsed);
+      } catch (err) {
+        if (err instanceof DOMException && err.name === "AbortError") return [];
+        return [];
+      } finally {
+        clearTimeout(timer);
+      }
+    },
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Plugin factories
+// ---------------------------------------------------------------------------
+
+/**
+ * Plugin factory for product search. Pass to `registerPlugin()`.
  *
  * @example
- *   import { registerPlugin, productSearchPlugin } from "@one-million-lines/email-builder";
- *   registerPlugin(productSearchPlugin({ endpoint: "http://localhost:3001/products/search" }));
+ *   registerPlugin(productSearchPlugin({ endpoint: "/api/products/search" }));
  */
 export function productSearchPlugin(opts: ProductSearchOptions): Plugin {
   const provider = createProductSearchProvider(opts);
@@ -205,6 +315,27 @@ export function productSearchPlugin(opts: ProductSearchOptions): Plugin {
     type: "product-provider",
     setup(b: BuilderHandle) {
       b.registerProductProvider(provider);
+    },
+  };
+}
+
+/**
+ * Plugin factory for category search (used in recommendations include/exclude filters).
+ * Pass to `registerPlugin()` alongside `productSearchPlugin`.
+ *
+ * @example
+ *   registerPlugin(categorySearchPlugin({
+ *     endpoint: "/api/categories/search",
+ *     headers: { Authorization: "Bearer ..." },
+ *   }));
+ */
+export function categorySearchPlugin(opts: CategorySearchOptions): Plugin {
+  const provider = createCategoryProvider(opts);
+  return {
+    name: "category-search",
+    type: "category-provider",
+    setup(b: BuilderHandle) {
+      b.registerCategoryProvider(provider);
     },
   };
 }

@@ -4,8 +4,6 @@
 export {
   enableRecommendations,
   setRecommendationFeeds,
-  setRecommendationCategorySuggester,
-  getRecommendationCategorySuggester,
   useRecommendationsStore,
 } from "./state";
 export type { RecommendationFeed, ItemSuggestion, SuggesterFn } from "./state";
