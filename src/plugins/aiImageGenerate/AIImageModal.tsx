@@ -16,9 +16,19 @@ const MODEL_OPTIONS = [
 ] as const;
 
 const SIZE_OPTIONS = [
-  { value: "1024x1024",  label: "Square" },
-  { value: "1792x1024",  label: "Landscape" },
-  { value: "1024x1792",  label: "Portrait" },
+  // Standard & Universal Ratios
+  { value: "1024x1024", label: "Square (1:1)", aspectRatio: "1:1" },
+  { value: "1792x1024", label: "Landscape Widescreen (16:9)", aspectRatio: "16:9" },
+  { value: "1024x1792", label: "Portrait Story (9:16)", aspectRatio: "9:16" },
+
+  // Classic Photography & Social Media Ratios
+  { value: "1536x1024", label: "Classic Landscape (3:2)", aspectRatio: "3:2" },
+  { value: "1024x1536", label: "Classic Portrait (2:3)", aspectRatio: "2:3" },
+  { value: "1365x1024", label: "Standard Display (4:3)", aspectRatio: "4:3" },
+  { value: "1024x1365", label: "Standard Document (3:4)", aspectRatio: "3:4" },
+
+  // Ultrawide Banner
+  { value: "1792x768", label: "Cinematic Banner (21:9)", aspectRatio: "21:9" },
 ] as const;
 
 const QUALITY_OPTIONS = [
