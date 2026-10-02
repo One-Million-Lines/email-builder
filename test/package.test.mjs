@@ -92,6 +92,25 @@ test("renderEmailHtml turns a template document into HTML (pure, no DOM)", async
   assert.match(html, /<table|<html|<!doctype/i);
 });
 
+test("renderEmailHtml handles legacy page fields and rejects malformed documents", async () => {
+  const { renderEmailHtml, templateRegistry } = await import(distEsm);
+  const doc = templateRegistry.list()[0].build();
+  delete doc.version;
+  delete doc.meta;
+  delete doc.settings;
+
+  const html = renderEmailHtml(doc);
+  assert.match(html, /<title>Untitled email<\/title>/);
+  assert.match(html, /class="email-container" width="600"/);
+  assert.equal(doc.settings, undefined, "rendering does not mutate the source document");
+
+  assert.match(renderEmailHtml(null), /^Invalid email template: expected a document object/);
+  assert.match(renderEmailHtml({ modules: [] }), /^Invalid email template: theme/);
+  assert.match(renderEmailHtml({ ...doc, settings: { width: -10 } }), /^Invalid email template: settings\.width/);
+  doc.modules[0].children[0].style.link = { invalid: true };
+  assert.match(renderEmailHtml(doc), /^Invalid email template: document contains unsupported field values/);
+});
+
 test("createEmailBuilder mounts a React editor and unmounts cleanly", async () => {
   installDom();
   const { createEmailBuilder, templateRegistry } = await import(distEsm);

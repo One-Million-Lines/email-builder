@@ -15,6 +15,7 @@ import type {
 } from "./types";
 import { resolveStyle, resolveToken } from "./theme";
 import { escapeHtml, safeUrl, starGlyphs, STAR_COLOR } from "./utils";
+import { documentSchema } from "./validation";
 
 const VT_LINK_CLASSES: Record<string, string> = {
   unsubscribe: "vtunsubscribe",
@@ -411,13 +412,71 @@ ${renderProductGrid(c, ctx, vtproduct, { attrs: recsAttrs, css, className: cls, 
   return `<tr><td${cls ? ` class="${cls}"` : ""} style="${css}">${inner}</td></tr>`;
 }
 
-export function renderEmailHtml(doc: EmailDocument): string {
-  const bg = resolveToken(doc.settings.backgroundColor, doc.theme) as string;
-  const cbg = resolveToken(doc.settings.contentBackgroundColor, doc.theme) as string;
-  const width = doc.settings.width;
-  const ctx: RenderCtx = { theme: doc.theme, mobileRules: [], classCounter: { n: 0 } };
-  const body = doc.modules.map((m) => renderModule(m, ctx)).join("\n");
-  const previewText = escapeHtml(doc.meta.previewText ?? "");
+export function renderEmailHtml(doc: unknown): string {
+  if (!doc || typeof doc !== "object" || Array.isArray(doc)) {
+    return "Invalid email template: expected a document object.";
+  }
+
+  const input = doc as Record<string, unknown>;
+  if (input.settings != null && (typeof input.settings !== "object" || Array.isArray(input.settings))) {
+    return "Invalid email template: settings must be an object.";
+  }
+  if (input.meta != null && (typeof input.meta !== "object" || Array.isArray(input.meta))) {
+    return "Invalid email template: meta must be an object.";
+  }
+
+  // Older documents may omit page settings or display metadata. Keep the
+  // original document's extra marker fields when rendering; Zod strips them.
+  const meta = input.meta as Record<string, unknown> | undefined;
+  const settings = input.settings as Record<string, unknown> | undefined;
+  const normalized = {
+    ...input,
+    version: input.version ?? "legacy",
+    meta: {
+      ...meta,
+      name: meta?.name ?? "Untitled email",
+      previewText: meta?.previewText ?? "",
+    },
+    settings: {
+      ...settings,
+      width: settings?.width ?? 600,
+      backgroundColor: settings?.backgroundColor ?? "#F4F5F7",
+      contentBackgroundColor: settings?.contentBackgroundColor ?? "#FFFFFF",
+    },
+  };
+  let jsonDocument: unknown;
+  try {
+    jsonDocument = JSON.parse(JSON.stringify(normalized));
+  } catch {
+    return "Invalid email template: document must be JSON serializable.";
+  }
+  const validation = documentSchema.safeParse(jsonDocument);
+  if (!validation.success) {
+    const issue = validation.error.issues[0];
+    const field = issue.path.join(".") || "document";
+    return `Invalid email template: ${field} — ${issue.message}.`;
+  }
+  const safeDoc = jsonDocument as EmailDocument;
+  if (!Number.isFinite(safeDoc.settings.width) || safeDoc.settings.width <= 0) {
+    return "Invalid email template: settings.width must be a positive number.";
+  }
+  if (safeDoc.modules.some((module) =>
+    module.data?.vtproduct != null && typeof module.data.vtproduct !== "string"
+  )) {
+    return "Invalid email template: module vtproduct must be a string.";
+  }
+
+  const bg = resolveToken(safeDoc.settings.backgroundColor, safeDoc.theme) as string;
+  const cbg = resolveToken(safeDoc.settings.contentBackgroundColor, safeDoc.theme) as string;
+  const width = safeDoc.settings.width;
+  const ctx: RenderCtx = { theme: safeDoc.theme, mobileRules: [], classCounter: { n: 0 } };
+  let body: string;
+  try {
+    body = safeDoc.modules.map((m) => renderModule(m, ctx)).join("\n");
+  } catch {
+    return "Invalid email template: document contains unsupported field values.";
+  }
+  const previewText = escapeHtml(safeDoc.meta.previewText);
   const mobileCss = ctx.mobileRules.join("\n");
 
   return `<!doctype html>
@@ -430,7 +489,7 @@ export function renderEmailHtml(doc: EmailDocument): string {
 <meta name="format-detection" content="telephone=no,address=no,email=no,date=no" />
 <meta name="color-scheme" content="light dark" />
 <meta name="supported-color-schemes" content="light dark" />
-<title>${escapeHtml(doc.meta.name)}</title>
+<title>${escapeHtml(safeDoc.meta.name)}</title>
 <!--[if gte mso 9]><xml><o:OfficeDocumentSettings><o:AllowPNG/><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml><![endif]-->
 <style>
   html,body{margin:0 !important;padding:0 !important;height:100% !important;width:100% !important;}
