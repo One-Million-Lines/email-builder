@@ -4,6 +4,16 @@ All notable changes to this package are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/) and the
 [Keep a Changelog](https://keepachangelog.com/) format.
 
+## [0.9.7] — 2026-10-02
+
+### Added
+
+- **AI Image Generate plugin** (`aiImagePlugin`) — adds a ✨ button next to
+  the Image URL field in the right sidebar. Clicking it opens a conversational
+  image-generation modal where users describe an image, see the AI result,
+  iterate with follow-up prompts, and insert the final image (saved to S3)
+  directly into their email.
+
 ## [0.9.5] — 2026-10-01
 
 ### Fixed

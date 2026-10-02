@@ -10,6 +10,7 @@ import { setSuggesterProvider as setReactiveSuggesterProvider } from "../plugins
 import { setVoucherProvider as setReactiveVoucherProvider } from "../plugins/voucherSelect/state";
 import { setMergeTagsGlobal } from "../plugins/mergeTags/state";
 import { enableRecommendations } from "../plugins/recommendations/state";
+import { setAIImageProvider as setReactiveAIImageProvider } from "../plugins/aiImageGenerate/state";
 import { usePluginSlotStore } from "./pluginSlots";
 
 // Gate helpers — inlined so `plugins.ts` doesn't need to import from plugin
@@ -57,6 +58,14 @@ const RecommendationsPanelSlot = safeLazy(() =>
     default: m.RecommendationsPanel,
   }))
 );
+
+const AIImageModalSlot =
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  safeLazy(() =>
+    import("../plugins/aiImageGenerate/AIImageModal").then((m) => ({
+      default: m.AIImageModal,
+    }))
+  ) as any;
 
 export interface AssetProvider {
   upload: (file: File) => Promise<{ url: string; alt?: string }>;
@@ -106,6 +115,13 @@ export interface VoucherProvider {
   list: () => Promise<Voucher[]>;
 }
 
+/** Provider that powers the AI image generation modal in the right sidebar. */
+export interface AIImageProvider {
+  generate(prompt: string, options?: Record<string, unknown>): Promise<{ image_b64: string; revised_prompt?: string; model?: string }>;
+  chat(req: { messages: Array<{ role: string; content: string }>; model?: string; size?: string; quality?: string }): Promise<{ image_b64: string; revised_prompt?: string; model?: string }>;
+  save(image_b64: string, ext?: string): Promise<{ url: string }>;
+}
+
 export interface BuilderHandle {
   registerModule: (def: ModuleDefinition) => void;
   registerTheme: (theme: Theme) => void;
@@ -116,6 +132,7 @@ export interface BuilderHandle {
   registerMergeTags: (tags: MergeTag[]) => void;
   registerLeftSidebarPanel: (slot: import("./pluginSlots").LeftSidebarPanelSlot) => void;
   registerRecommendationsPlugin: () => void;
+  registerAIImageProvider: (provider: AIImageProvider) => void;
 }
 
 export type PluginType =
@@ -125,7 +142,8 @@ export type PluginType =
   | "suggester-provider"
   | "voucher-provider"
   | "ai-provider"
-  | "ai-style";
+  | "ai-style"
+  | "ai-image-provider";
 
 export interface Plugin {
   name: string;
@@ -177,6 +195,14 @@ export const builder: BuilderHandle = {
       id: "recommendations",
       shouldShow: isProductGridModule,
       Component: RecommendationsPanelSlot,
+    });
+  },
+  registerAIImageProvider: (p) => {
+    setReactiveAIImageProvider(p);
+    // Register the AI image modal as a lazy slot so the sidebar
+    // never imports the plugin code unless activated.
+    usePluginSlotStore.getState().registerAIImageModal({
+      Component: AIImageModalSlot,
     });
   },
 };

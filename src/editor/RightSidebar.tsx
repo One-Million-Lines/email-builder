@@ -4,6 +4,8 @@ import { resolveToken } from "../core/theme";
 import { getAssetProvider } from "../core/plugins";
 import type { SuggesterResult } from "../core/plugins";
 import { usePluginSlotStore } from "../core/pluginSlots";
+import { getAIImageProvider, subscribeAIImageProvider } from "../plugins/aiImageGenerate/state";
+import { useSyncExternalStore } from "react";
 import { product as makeProduct } from "../modules/helpers";
 import type {
   EmailElement,
@@ -18,7 +20,7 @@ import type {
   SpecialLinkType,
 } from "../core/types";
 import { SPECIAL_LINK_PLACEHOLDERS } from "../core/types";
-import { Smartphone, Monitor, Trash2, Plus, RotateCcw, Upload, Loader2, Check, Search, PanelRightClose, PanelRightOpen, Tag, ChevronsLeft, ChevronsRight } from "lucide-react";
+import { Smartphone, Monitor, Trash2, Plus, RotateCcw, Upload, Loader2, Check, Search, PanelRightClose, PanelRightOpen, Tag, ChevronsLeft, ChevronsRight, Sparkles } from "lucide-react";
 
 const SPECIAL_LINK_LABELS: Record<SpecialLinkType, string> = {
   unsubscribe: "Unsubscribe",
@@ -192,9 +194,12 @@ function ImageUrlInput({
   onAlt?: (alt: string) => void;
 }) {
   const provider = getAssetProvider();
+  const aiImageProvider = useSyncExternalStore(subscribeAIImageProvider, getAIImageProvider);
+  const aiImageModalSlot = usePluginSlotStore((s) => s.aiImageModal);
   const fileRef = useRef<HTMLInputElement | null>(null);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [aiModalOpen, setAiModalOpen] = useState(false);
 
   const handleFile = async (file: File) => {
     if (!provider) return;
@@ -211,6 +216,8 @@ function ImageUrlInput({
       if (fileRef.current) fileRef.current.value = "";
     }
   };
+
+  const AIImageModal = aiImageModalSlot?.Component;
 
   return (
     <div>
@@ -237,6 +244,25 @@ function ImageUrlInput({
             >
               {busy ? <Loader2 size={12} className="animate-spin" /> : <Upload size={12} />}
             </button>
+          </>
+        )}
+        {aiImageProvider && AIImageModal && (
+          <>
+            <button
+              type="button"
+              onClick={() => setAiModalOpen(true)}
+              className="shrink-0 px-2 py-1.5 text-xs border border-violet-200 rounded hover:bg-violet-50 text-violet-600 flex items-center gap-1"
+              title="Generate image with AI"
+            >
+              <Sparkles size={12} />
+            </button>
+            <Suspense>
+              <AIImageModal
+                open={aiModalOpen}
+                onClose={() => setAiModalOpen(false)}
+                onSave={(url) => { onChange(url); setAiModalOpen(false); }}
+              />
+            </Suspense>
           </>
         )}
       </div>

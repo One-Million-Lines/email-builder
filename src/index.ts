@@ -232,6 +232,23 @@ export type {
   HttpAIStyleProviderOptions,
 } from "./plugins/aiStyle";
 
+// AI Image Generate plugin — generate images from text prompts inside the editor.
+export {
+  aiImagePlugin,
+  createHttpAIImageProvider,
+  getAIImageProvider,
+  setAIImageProvider,
+} from "./plugins/aiImageGenerate";
+export type {
+  AIImagePluginOptions,
+  AIImageProvider,
+  AIImageRequest,
+  AIImageResult,
+  AIImageSaveResult,
+  AIImageMessage,
+  HttpAIImageProviderOptions,
+} from "./plugins/aiImageGenerate";
+
 export { templateRegistry, TEMPLATE_CATEGORY_LABELS } from "./templates";
 export type { TemplateDefinition, TemplateCategory } from "./templates";
 export {

@@ -43,6 +43,17 @@ export interface ProductSearchSlot {
   >;
 }
 
+/** Slot for the AI image generation modal (triggered from the image URL field). */
+export interface AIImageModalSlot {
+  Component: LazyExoticComponent<
+    ComponentType<{
+      open: boolean;
+      onClose: () => void;
+      onSave: (url: string) => void;
+    }>
+  >;
+}
+
 /**
  * A panel registered by a plugin that appears as a new tab in the left sidebar.
  * The plugin supplies a stable lazy component; the sidebar renders it when the
@@ -61,16 +72,19 @@ export interface LeftSidebarPanelSlot {
 interface PluginSlotState {
   modulePanels: ModulePanelSlot[];
   productSearch: ProductSearchSlot | null;
+  aiImageModal: AIImageModalSlot | null;
   /** Extra left-sidebar panels registered by plugins (e.g. AI Style). */
   leftSidebarPanels: LeftSidebarPanelSlot[];
   registerModulePanel: (slot: ModulePanelSlot) => void;
   registerProductSearch: (slot: ProductSearchSlot) => void;
+  registerAIImageModal: (slot: AIImageModalSlot) => void;
   registerLeftSidebarPanel: (slot: LeftSidebarPanelSlot) => void;
 }
 
 export const usePluginSlotStore = create<PluginSlotState>((set) => ({
   modulePanels: [],
   productSearch: null,
+  aiImageModal: null,
   leftSidebarPanels: [],
   registerModulePanel: (slot) =>
     set((s) => {
@@ -88,6 +102,11 @@ export const usePluginSlotStore = create<PluginSlotState>((set) => ({
     set((s) => {
       if (s.productSearch?.Component === slot.Component) return s;
       return { productSearch: slot };
+    }),
+  registerAIImageModal: (slot) =>
+    set((s) => {
+      if (s.aiImageModal?.Component === slot.Component) return s;
+      return { aiImageModal: slot };
     }),
   registerLeftSidebarPanel: (slot) =>
     set((s) => {
