@@ -58,8 +58,8 @@ test("ESM build exposes the public API", async () => {
     "aiAssistantPlugin",
     "buildCatalog",
     "applyAIResponse",
-    "productSearchPlugin",
-    "createProductSearchProvider",
+    "suggesterPlugin",
+    "createSuggesterProvider",
     "voucherPlugin",
     "createVoucherProvider",
     "isVoucherAware",
@@ -198,8 +198,8 @@ test("applyAIResponse rejects an invalid document", async () => {
   assert.equal(bad.ok, false, "invalid document is rejected");
 });
 
-test("product search provider maps a backend response to a product", async () => {
-  const { createProductSearchProvider } = await import(distEsm);
+test("suggester provider maps a backend response to products", async () => {
+  const { createSuggesterProvider } = await import(distEsm);
 
   const captured = {};
   const prevFetch = globalThis.fetch;
@@ -209,22 +209,25 @@ test("product search provider maps a backend response to a product", async () =>
       ok: true,
       status: 200,
       text: async () =>
-        JSON.stringify({
-          name: "Linen Tote Bag",
+        // Wrap in array — the default transform handles bare arrays and {data:[]}
+        JSON.stringify([{
+          title: "Linen Tote Bag",
           final_price: "$39.00",
           old_price: "$59.00",
           description: "Heavyweight natural linen.",
-          image_url: "https://img.test/tote.png",
-          link: "https://shop.test/tote",
+          image: "https://img.test/tote.png",
+          url: "https://shop.test/tote",
           rating: 4.5,
-          sku: "TOTE-01",
-        }),
+          idInShop: "TOTE-01",
+        }]),
     };
   };
 
   try {
-    const provider = createProductSearchProvider({ endpoint: "https://api.test/products/search" });
-    const result = await provider.search("linen tote");
+    const provider = createSuggesterProvider({ endpoint: "https://api.test/products/search" });
+    const results = await provider.search("linen tote", "item");
+    assert.ok(Array.isArray(results) && results.length === 1, "returns an array of results");
+    const result = results[0];
     assert.equal(result.name, "Linen Tote Bag");
     assert.equal(result.finalPrice, "$39.00");
     assert.equal(result.oldPrice, "$59.00");
@@ -234,7 +237,8 @@ test("product search provider maps a backend response to a product", async () =>
     assert.match(captured.url, /[?&]q=linen(\+|%20)tote/, "query sent as ?q=");
 
     // Empty query short-circuits without a request.
-    assert.equal(await provider.search("   "), null);
+    const empty = await provider.search("   ", "item");
+    assert.ok(Array.isArray(empty) && empty.length === 0, "empty query returns empty array");
   } finally {
     globalThis.fetch = prevFetch;
   }

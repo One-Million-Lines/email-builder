@@ -102,10 +102,13 @@ function summarizeActions(actions: AIAction[]): string {
     insert_module: "added block",
     delete_module: "removed block",
     update_module: "updated block",
+    move_module: "moved block",
+    duplicate_module: "duplicated block",
     update_element: "edited content",
     update_meta: "updated meta",
     update_settings: "updated settings",
     apply_theme: "applied theme",
+    set_recommendations: "set product recommendations",
   };
   const parts = Object.entries(counts).map(([type, n]) => {
     const base = label[type] ?? type;

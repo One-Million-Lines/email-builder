@@ -8,6 +8,6 @@ export default defineConfig(({ mode }) => ({
   base: mode === "production" ? "/demo/email-builder/" : "/",
   server: { port: 5315 },
   resolve: {
-    alias: { "@": path.resolve(__dirname, "./src") },
+    alias: { "@": path.resolve(import.meta.dirname, "./src") },
   },
 }));

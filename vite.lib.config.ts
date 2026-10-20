@@ -29,7 +29,7 @@ export default defineConfig({
     }),
   ],
   resolve: {
-    alias: { "@": resolve(__dirname, "./src") },
+    alias: { "@": resolve(import.meta.dirname, "./src") },
   },
   build: {
     target: "es2022",
@@ -38,7 +38,7 @@ export default defineConfig({
     sourcemap: true,
     cssCodeSplit: false,
     lib: {
-      entry: resolve(__dirname, "src/index.ts"),
+      entry: resolve(import.meta.dirname, "src/index.ts"),
       formats: ["es", "cjs"],
       fileName: (format) => (format === "es" ? "email-builder.js" : "email-builder.cjs"),
     },

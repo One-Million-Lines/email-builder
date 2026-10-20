@@ -20,17 +20,47 @@ import {
   type VoucherProvider,
 } from "./core/plugins";
 import { createHttpAIProvider, type HttpAIProviderOptions } from "./ai";
+import { DEFAULT_PRODUCT_FEEDS, type ProductFeed } from "./ai/productFeeds";
 import { createSuggesterProvider, type SuggesterOptions } from "./plugins/productSearch";
 import { createVoucherProvider, loadVouchers, type VoucherOptions } from "./plugins/voucherSelect";
+
+export interface EmailBuilderAIConfig {
+  /**
+   * Master switch for the AI assistant. Defaults to `false` — the AI tab and all
+   * AI wiring stay off unless this is explicitly set to `true`.
+   */
+  enabled?: boolean;
+  /**
+   * Backend endpoint implementing `POST /ai/email/generate` (the AIRequest →
+   * AIResponse protocol). A string URL or full {@link HttpAIProviderOptions}.
+   */
+  endpoint?: string | HttpAIProviderOptions;
+  /** Bring-your-own provider. Takes precedence over `endpoint`. */
+  provider?: AIProvider;
+  /**
+   * Named product feeds (e.g. top purchased, most viewed) advertised to the AI.
+   * When omitted, the built-in defaults are used once AI is enabled.
+   */
+  productFeeds?: ProductFeed[];
+}
 
 export interface EmailBuilderProps {
   initialDocument?: EmailDocument;
   modules?: ModuleDefinition[];
   themes?: Theme[];
+  /**
+   * AI assistant configuration. The AI chat assistant is part of the **core**
+   * builder but **disabled by default** — provide `ai={{ enabled: true, endpoint }}`
+   * (or a custom `provider`) to turn it on. When enabled, an **AI** tab appears in
+   * the left sidebar and the full editor capability surface (blocks, elements,
+   * themes, colours, width, merge tags, recommendation algorithms, product feeds)
+   * is shared with the backend so the assistant can build and edit the email.
+   */
+  ai?: EmailBuilderAIConfig;
   aiProvider?: AIProvider;
   /**
-   * Convenience: wire the built-in HTTP AI provider (the Python backend) by URL.
-   * Ignored when `aiProvider` is provided.
+   * Convenience: wire the built-in HTTP AI provider (the backend) by URL.
+   * Ignored when `ai` or `aiProvider` is provided.
    */
   aiEndpoint?: string | HttpAIProviderOptions;
   /** Product search provider (enables the "Find product" modal on product cards). */
@@ -79,7 +109,19 @@ export function EmailBuilder(props: EmailBuilderProps) {
     registerDefaultModules();
     if (props.modules) for (const m of props.modules) moduleRegistry.register(m);
     if (props.themes) useEmailStore.setState({ themes: props.themes });
-    if (props.aiProvider) builder.setAIProvider(props.aiProvider);
+    // AI assistant — part of core, disabled by default. Enabled either via the
+    // first-class `ai` config, or the legacy `aiProvider` / `aiEndpoint` props.
+    if (props.ai?.enabled) {
+      if (props.ai.provider) builder.setAIProvider(props.ai.provider);
+      else if (props.ai.endpoint) {
+        const opts =
+          typeof props.ai.endpoint === "string"
+            ? { endpoint: props.ai.endpoint }
+            : props.ai.endpoint;
+        builder.setAIProvider(createHttpAIProvider(opts));
+      }
+      builder.setProductFeeds(props.ai.productFeeds ?? DEFAULT_PRODUCT_FEEDS);
+    } else if (props.aiProvider) builder.setAIProvider(props.aiProvider);
     else if (props.aiEndpoint) {
       const opts =
         typeof props.aiEndpoint === "string" ? { endpoint: props.aiEndpoint } : props.aiEndpoint;
@@ -202,21 +244,36 @@ export {
 } from "./plugins/voucherSelect";
 export type { VoucherOptions, Voucher, VoucherProvider } from "./plugins/voucherSelect";
 
-// AI assistant module — chat-driven editing backed by the Python service.
+// AI assistant module — chat-driven editing backed by the panel AI backend.
 export {
   aiAssistantPlugin,
   createHttpAIProvider,
   buildCatalog,
+  buildCapabilities,
   applyAIResponse,
+  AI_MCP_TOOLS,
+  buildMcpManifest,
+  DEFAULT_PRODUCT_FEEDS,
+  getProductFeeds,
+  setProductFeeds,
 } from "./ai";
 export type {
   AIAssistantOptions,
   HttpAIProviderOptions,
   CatalogEntry,
+  Capabilities,
+  CapabilitiesContext,
+  ElementCapability,
+  ActionCapability,
+  ThemeCapability,
+  ProductFeed,
+  McpTool,
+  McpManifest,
+  McpJsonSchema,
   ApplyResult,
 } from "./ai";
 export { mockAIProvider, applyAIActions, validateAIDocument } from "./core/aiActions";
-export type { AIAction, AIRequest, AIResponse } from "./core/aiActions";
+export type { AIAction, AITask, AIRequest, AIResponse } from "./core/aiActions";
 
 // AI Style plugin — generate or restyle an email from an image/description.
 export {

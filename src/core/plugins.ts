@@ -6,6 +6,8 @@ import { moduleRegistry } from "../modules/registry";
 import type { Theme, MergeTag } from "./types";
 import type { AIProvider } from "./aiActions";
 import { setAIProvider as setReactiveAIProvider } from "../ai/state";
+import { setProductFeeds as setReactiveProductFeeds } from "../ai/productFeeds";
+import type { ProductFeed } from "../ai/productFeeds";
 import { setSuggesterProvider as setReactiveSuggesterProvider } from "../plugins/productSearch/state";
 import { setVoucherProvider as setReactiveVoucherProvider } from "../plugins/voucherSelect/state";
 import { setMergeTagsGlobal } from "../plugins/mergeTags/state";
@@ -129,6 +131,8 @@ export interface BuilderHandle {
   registerSuggesterProvider: (provider: SuggesterProvider) => void;
   registerVoucherProvider: (provider: VoucherProvider) => void;
   setAIProvider: (provider: AIProvider) => void;
+  /** Advertise named product feeds (top purchased, most viewed…) to the AI assistant. */
+  setProductFeeds: (feeds: ProductFeed[]) => void;
   registerMergeTags: (tags: MergeTag[]) => void;
   registerLeftSidebarPanel: (slot: import("./pluginSlots").LeftSidebarPanelSlot) => void;
   registerRecommendationsPlugin: () => void;
@@ -184,6 +188,7 @@ export const builder: BuilderHandle = {
     aiProvider = p;
     setReactiveAIProvider(p);
   },
+  setProductFeeds: (feeds) => setReactiveProductFeeds(feeds),
   registerMergeTags: (tags) => setMergeTagsGlobal(tags),
   registerLeftSidebarPanel: (slot) => {
     usePluginSlotStore.getState().registerLeftSidebarPanel(slot);

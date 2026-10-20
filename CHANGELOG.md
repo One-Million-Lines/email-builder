@@ -4,6 +4,42 @@ All notable changes to this package are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/) and the
 [Keep a Changelog](https://keepachangelog.com/) format.
 
+## [0.10.0] — 2026-10-20
+
+### Added
+
+- **Core AI assistant** — the chat-driven assistant is now part of the **core**
+  builder (no longer only a plugin), **disabled by default**. Enable it with a
+  first-class config:
+
+  ```tsx
+  <EmailBuilder ai={{ enabled: true, endpoint: `${API}/ai/email/generate` }} />
+  ```
+
+  When enabled, an **AI** tab appears in the left sidebar and the assistant can
+  build and edit the email change-by-change via structured actions. The legacy
+  `aiProvider` / `aiEndpoint` props and `aiAssistantPlugin` still work.
+
+- **Full capability sharing** (`buildCapabilities`) — every request now carries
+  the complete editor surface so the AI can act like a human editor: all module
+  blocks (with samples), element types and their editable fields, available
+  themes, email settings (width, background colours), merge tags, special links,
+  recommendation algorithms/fallbacks, and product feeds.
+
+- **Product feeds** (`DEFAULT_PRODUCT_FEEDS`, `setProductFeeds`, `ai.productFeeds`)
+  — named, backend-resolved product sources (top purchased, most viewed,
+  bestsellers, new arrivals, best discounts, abandoned cart). The AI inserts a
+  `productGrid` filled with **real** products — exactly like inserting products
+  from the editor — instead of inventing placeholders.
+
+- **New AI actions** — `move_module`, `duplicate_module`, and
+  `set_recommendations` join the existing insert/delete/update actions, plus the
+  `edit_email` / `insert_products` tasks.
+
+- **MCP-ready contract** (`AI_MCP_TOOLS`, `buildMcpManifest`) — the same backend
+  can be driven by other AI agents over the Model Context Protocol. The manifest
+  embeds the live capability surface alongside the tool list.
+
 ## [0.9.7] — 2026-10-02
 
 ### Added
