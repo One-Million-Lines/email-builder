@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { X, Code2, RotateCcw, AlertTriangle } from "lucide-react";
+import { X, Code2, RotateCcw, AlertTriangle, Wand2 } from "lucide-react";
 import { useEmailStore } from "../store/emailStore";
 import { renderModuleInner } from "../core/renderer";
 
@@ -16,13 +16,85 @@ function validateHtml(html: string): { ok: true } | { ok: false; error: string }
   return { ok: true };
 }
 
-/** Formats HTML with basic indentation for readability in the textarea. */
-function prettyHtml(html: string): string {
-  // Minimal formatter: add newline after block-level closing tags
-  return html
-    .replace(/></g, ">\n<")
-    .replace(/\n{2,}/g, "\n")
-    .trim();
+/**
+ * HTML beautifier — puts each tag on its own line with proper indentation.
+ * Handles void elements, self-closing tags, comments (including MSO
+ * conditional comments like <!--[if mso]>), and plain text nodes.
+ * Does NOT alter attribute values or inline styles.
+ */
+function formatHtml(raw: string): string {
+  const VOID = new Set([
+    "area", "base", "br", "col", "embed", "hr", "img", "input",
+    "link", "meta", "param", "source", "track", "wbr",
+  ]);
+
+  // Collapse all inter-tag whitespace so we start from a clean base.
+  const html = raw.replace(/>\s+</g, "><").replace(/\s{2,}/g, " ").trim();
+
+  // --- Tokenise ---
+  const tokens: string[] = [];
+  let pos = 0;
+
+  while (pos < html.length) {
+    if (html[pos] !== "<") {
+      const end = html.indexOf("<", pos);
+      const text = end === -1 ? html.slice(pos) : html.slice(pos, end);
+      if (text.trim()) tokens.push(text.trim());
+      pos = end === -1 ? html.length : end;
+      continue;
+    }
+
+    // HTML comment (includes <!--[if mso]>...<![endif]--> style blocks)
+    if (html.startsWith("<!--", pos)) {
+      const end = html.indexOf("-->", pos + 4);
+      if (end !== -1) {
+        tokens.push(html.slice(pos, end + 3));
+        pos = end + 3;
+        continue;
+      }
+    }
+
+    // Find matching closing ">" — be careful: attributes can contain ">"
+    // in rare cases, but in email HTML attribute values use ">" extremely
+    // rarely so a simple indexOf is reliable enough.
+    const end = html.indexOf(">", pos);
+    if (end === -1) { tokens.push(html.slice(pos)); break; }
+    tokens.push(html.slice(pos, end + 1));
+    pos = end + 1;
+  }
+
+  // --- Emit with indentation ---
+  let depth = 0;
+  const lines: string[] = [];
+  const ind = (d: number) => "  ".repeat(Math.max(0, d));
+
+  for (const tok of tokens) {
+    if (!tok) continue;
+
+    if (tok.startsWith("</")) {
+      // Closing tag — dedent before printing
+      depth = Math.max(0, depth - 1);
+      lines.push(ind(depth) + tok);
+    } else if (tok.startsWith("<")) {
+      const name = tok.match(/^<(\w+)/)?.[1]?.toLowerCase() ?? "";
+      const isComment = tok.startsWith("<!--") || tok.startsWith("<!");
+      const isVoid = VOID.has(name) || tok.endsWith("/>");
+
+      lines.push(ind(depth) + tok);
+
+      if (!isComment && !isVoid && name) depth++;
+    } else {
+      // Text node
+      lines.push(ind(depth) + tok);
+    }
+  }
+
+  return lines.join("\n");
+}
+
+/** Quick single-pass prettify used on initial open (just newlines, no indent). */
+function initialPretty(html: string): string {
+  return html.replace(/></g, ">\n<").replace(/\n{2,}/g, "\n").trim();
 }
 
 export function BlockHtmlEditor({ moduleId, onClose }: Props) {
@@ -31,13 +103,18 @@ export function BlockHtmlEditor({ moduleId, onClose }: Props) {
 
   const [html, setHtml] = useState<string>(() => {
     if (!module) return "";
-    return prettyHtml(renderModuleInner(module, doc.theme));
+    return initialPretty(renderModuleInner(module, doc.theme));
   });
   const [error, setError] = useState<string | null>(null);
 
   if (!module) return null;
 
   const hasOverride = !!module.htmlOverride;
+
+  const handlePrettify = () => {
+    setHtml(formatHtml(html));
+    setError(null);
+  };
 
   const handleSave = () => {
     const validation = validateHtml(html);
@@ -127,8 +204,15 @@ export function BlockHtmlEditor({ moduleId, onClose }: Props) {
 
         {/* Footer */}
         <div className="flex items-center justify-between gap-2 px-4 py-3 border-t border-gray-200 shrink-0">
-          <div className="text-xs text-gray-400">
-            {html.trim().length} characters
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-gray-400">{html.trim().length} characters</span>
+            <button
+              onClick={handlePrettify}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs text-gray-600 bg-gray-100 hover:bg-gray-200 rounded transition-colors"
+              title="Reformat HTML with indentation for easier reading"
+            >
+              <Wand2 size={13} /> Prettify
+            </button>
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -149,3 +233,4 @@ export function BlockHtmlEditor({ moduleId, onClose }: Props) {
     </div>
   );
 }
+

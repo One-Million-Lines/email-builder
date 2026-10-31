@@ -55,6 +55,7 @@
   ],
   "scripts": {
     "dev": "vite",
+    "dev:lib": "vite build --config vite.lib.config.ts --watch",
     "dev:mock": "node dev/mock-server.mjs",
     "build": "vite build --config vite.lib.config.ts",
     "build:demo": "tsc -b && vite build",

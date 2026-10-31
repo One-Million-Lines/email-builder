@@ -121,7 +121,7 @@ export function TopBar() {
           }`}
         >
           <Code2 size={16} />
-          {htmlEditMode ? "Exit HTML" : "Edit HTML"}
+          {htmlEditMode ? "HTML" : "HTML"}
         </button>
       </div>
 
