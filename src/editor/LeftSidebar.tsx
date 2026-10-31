@@ -59,20 +59,20 @@ export function LeftSidebar() {
   return (
     <div className="flex h-full bg-white border-r border-gray-200 shrink-0">
       {/* Category rail */}
-      <div className="w-16 border-r border-gray-200 flex flex-col items-center py-2 gap-1">
+      <div className="w-16 border-r border-gray-200 flex flex-col items-center py-2 gap-0.5 overflow-y-auto">
         {aiAvailable && (
           <>
             <button
               onClick={() => handleRailClick("ai")}
               title="AI Assistant"
-              className={`flex flex-col items-center gap-0.5 w-14 py-2 rounded text-[10px] transition-colors ${
+              className={`flex flex-col items-center gap-0.5 w-14 py-1.5 rounded text-[10px] transition-colors ${
                 active === "ai" && panelOpen ? "bg-blue-50 text-blue-700" : "text-blue-600 hover:bg-blue-50"
               }`}
             >
-              <Sparkles size={20} />
+              <Sparkles size={18} />
               <span>AI</span>
             </button>
-            <div className="h-px w-10 bg-gray-200 my-1" />
+            <div className="h-px w-10 bg-gray-200 my-0.5" />
           </>
         )}
         {/* Plugin-registered left sidebar panels (e.g. AI Style) */}
@@ -84,27 +84,27 @@ export function LeftSidebar() {
               key={p.id}
               onClick={() => handleRailClick(`plugin:${p.id}`)}
               title={p.label}
-              className={`flex flex-col items-center gap-0.5 w-14 py-2 rounded text-[10px] transition-colors ${
+              className={`flex flex-col items-center gap-0.5 w-14 py-1.5 rounded text-[10px] transition-colors ${
                 isActive ? "bg-purple-50 text-purple-700" : "text-purple-600 hover:bg-purple-50"
               }`}
             >
-              <Icon size={20} />
+              <Icon size={18} />
               <span>{p.label}</span>
             </button>
           );
         })}
-        {leftSidebarPanels.length > 0 && <div className="h-px w-10 bg-gray-200 my-1" />}
+        {leftSidebarPanels.length > 0 && <div className="h-px w-10 bg-gray-200 my-0.5" />}
         <button
           onClick={() => handleRailClick("layers")}
           title="Layout overview"
-          className={`flex flex-col items-center gap-0.5 w-14 py-2 rounded text-[10px] transition-colors ${
+          className={`flex flex-col items-center gap-0.5 w-14 py-1.5 rounded text-[10px] transition-colors ${
             active === "layers" && panelOpen ? "bg-blue-50 text-blue-700" : "text-gray-600 hover:bg-gray-50"
           }`}
         >
-          <Layers size={20} />
+          <Layers size={18} />
           <span>Layers</span>
         </button>
-        <div className="h-px w-10 bg-gray-200 my-1" />
+        <div className="h-px w-10 bg-gray-200 my-0.5" />
         {CATEGORIES.map((c) => {
           const Icon = c.icon;
           const isActive = active === c.id && panelOpen;
@@ -113,24 +113,24 @@ export function LeftSidebar() {
               key={c.id}
               onClick={() => handleRailClick(c.id)}
               title={CATEGORY_LABELS[c.id]}
-              className={`flex flex-col items-center gap-0.5 w-14 py-2 rounded text-[10px] transition-colors ${
+              className={`flex flex-col items-center gap-0.5 w-14 py-1.5 rounded text-[10px] transition-colors ${
                 isActive ? "bg-blue-50 text-blue-700" : "text-gray-600 hover:bg-gray-50"
               }`}
             >
-              <Icon size={20} />
+              <Icon size={18} />
               <span className="leading-tight text-center">{CATEGORY_LABELS[c.id]}</span>
             </button>
           );
         })}
-        <div className="mt-auto">
+        <div className="mt-auto pt-1">
           <button
             onClick={() => handleRailClick("themes")}
             title="Themes"
-            className={`flex flex-col items-center gap-0.5 w-14 py-2 rounded text-[10px] transition-colors ${
+            className={`flex flex-col items-center gap-0.5 w-14 py-1.5 rounded text-[10px] transition-colors ${
               active === "themes" && panelOpen ? "bg-blue-50 text-blue-700" : "text-gray-600 hover:bg-gray-50"
             }`}
           >
-            <Palette size={20} />
+            <Palette size={18} />
             <span>Themes</span>
           </button>
         </div>

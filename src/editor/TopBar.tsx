@@ -1,10 +1,10 @@
 import { useEmailStore } from "../store/emailStore";
-import { Undo2, Redo2, Save, Download, Upload, Eye, FileCode, Monitor, Smartphone, LayoutTemplate, RotateCcw, ChevronDown } from "lucide-react";
+import { Undo2, Redo2, Save, Download, Upload, Eye, FileCode, Monitor, Smartphone, LayoutTemplate, RotateCcw, ChevronDown, Code2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { TemplatesModal } from "./TemplatesModal";
 
 export function TopBar() {
-  const { doc, updateMeta, undo, redo, past, future, exportJson, importJson, exportHtml, saveToLocalStorage, viewMode, setViewMode, resetDocument } =
+  const { doc, updateMeta, undo, redo, past, future, exportJson, importJson, exportHtml, saveToLocalStorage, viewMode, setViewMode, resetDocument, htmlEditMode, setHtmlEditMode } =
     useEmailStore();
   const fileRef = useRef<HTMLInputElement>(null);
   const [previewing, setPreviewing] = useState(false);
@@ -110,6 +110,19 @@ export function TopBar() {
         <ToolButton title="Preview" onClick={handlePreview}>
           <Eye size={16} /> {previewing ? "Opened" : "Preview"}
         </ToolButton>
+        <Divider />
+        <button
+          title={htmlEditMode ? "Exit HTML editing mode" : "Edit HTML — click to enable per-block HTML editing"}
+          onClick={() => setHtmlEditMode(!htmlEditMode)}
+          className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded text-sm transition-colors ${
+            htmlEditMode
+              ? "bg-orange-100 text-orange-700 hover:bg-orange-200 ring-1 ring-orange-300"
+              : "text-gray-700 hover:bg-gray-100"
+          }`}
+        >
+          <Code2 size={16} />
+          {htmlEditMode ? "Exit HTML" : "Edit HTML"}
+        </button>
       </div>
 
       {/* Right: Export dropdown */}

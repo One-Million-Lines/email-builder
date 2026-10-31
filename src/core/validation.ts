@@ -72,6 +72,7 @@ export const moduleSchema = z.object({
   style: styleSchema,
   children: z.array(elementSchema),
   data: z.record(z.string(), z.any()).optional(),
+  htmlOverride: z.string().optional(),
 });
 
 export const themeSchema = z.object({

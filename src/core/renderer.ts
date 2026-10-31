@@ -398,6 +398,12 @@ function renderModule(m: EmailModule, ctx: RenderCtx): string {
     ? ` reccs-editable vtproduct="${escapeHtml(vtproduct)}"`
     : "";
   const cls = collectMobile(ctx, m.style as Record<string, unknown>);
+
+  // When the module has an HTML override, use it directly as the inner content.
+  if (m.htmlOverride) {
+    return `<tr><td${cls ? ` class="${cls}"` : ""} style="${css}">${m.htmlOverride}</td></tr>`;
+  }
+
   if (vtproduct && m.children.some((c) => c.type === "productGrid")) {
     return m.children.map((c) => c.type === "productGrid"
       ? `<tr><td style="padding:0;">
@@ -527,4 +533,15 @@ ${body}
 </table>
 </body>
 </html>`;
+}
+
+/**
+ * Renders the inner HTML content of a single module (its elements only,
+ * without the outer <tr><td> wrapper). Used by the block HTML editor to
+ * pre-populate the textarea with the current rendered content.
+ */
+export function renderModuleInner(m: EmailModule, theme: Theme): string {
+  const ctx: RenderCtx = { theme, mobileRules: [], classCounter: { n: 0 } };
+  if (m.htmlOverride) return m.htmlOverride;
+  return m.children.map((c) => renderElement(c, ctx)).join("\n");
 }

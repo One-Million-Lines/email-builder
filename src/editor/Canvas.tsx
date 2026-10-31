@@ -12,7 +12,7 @@ import type {
 } from "../core/types";
 import { resolveStyle, resolveToken } from "../core/theme";
 import { STAR_COLOR, starGlyphs } from "../core/utils";
-import { Copy, Trash2, GripVertical, ArrowUp, ArrowDown, MousePointer2 } from "lucide-react";
+import { Copy, Trash2, GripVertical, ArrowUp, ArrowDown, MousePointer2, Code2 } from "lucide-react";
 import {
   DndContext,
   closestCenter,
@@ -33,6 +33,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { useEffect, useRef, useState } from "react";
 import { RichTextToolbar } from "./RichTextToolbar";
 import { useRichTextStore } from "./richTextState";
+import { BlockHtmlEditor } from "./BlockHtmlEditor";
 
 const MOBILE_WIDTH = 375;
 
@@ -78,7 +79,10 @@ export function Canvas() {
     deleteElement,
     moveElement,
     viewMode,
+    htmlEditMode,
   } = useEmailStore();
+
+  const [htmlEditingModuleId, setHtmlEditingModuleId] = useState<string | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -142,6 +146,7 @@ export function Canvas() {
                     mod={m}
                     index={i}
                     viewMode={viewMode}
+                    htmlEditMode={htmlEditMode}
                     selected={selection?.kind === "module" && selection.moduleId === m.id}
                     selectionEl={
                       selection?.kind === "element" && selection.moduleId === m.id
@@ -155,6 +160,7 @@ export function Canvas() {
                     }
                     onDuplicate={() => duplicateModule(m.id)}
                     onDelete={() => deleteModule(m.id)}
+                    onEditHtml={() => setHtmlEditingModuleId(m.id)}
                   />
                 ))}
               </SortableContext>
@@ -162,6 +168,14 @@ export function Canvas() {
           </div>
         </div>
       </div>
+
+      {/* Block HTML editor modal */}
+      {htmlEditingModuleId && (
+        <BlockHtmlEditor
+          moduleId={htmlEditingModuleId}
+          onClose={() => setHtmlEditingModuleId(null)}
+        />
+      )}
     </>
   );
 }
@@ -170,6 +184,7 @@ function SortableModule(props: {
   mod: EmailModule;
   index: number;
   viewMode: "desktop" | "mobile";
+  htmlEditMode: boolean;
   selected: boolean;
   selectionEl: string | null;
   theme: Theme;
@@ -177,6 +192,7 @@ function SortableModule(props: {
   onSelectElement: (id: string) => void;
   onDuplicate: () => void;
   onDelete: () => void;
+  onEditHtml: () => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: props.mod.id,
@@ -195,6 +211,7 @@ function SortableModule(props: {
       <ModuleView
         mod={props.mod}
         viewMode={props.viewMode}
+        htmlEditMode={props.htmlEditMode}
         selected={props.selected}
         selectionEl={props.selectionEl}
         theme={props.theme}
@@ -202,6 +219,7 @@ function SortableModule(props: {
         onSelectElement={props.onSelectElement}
         onDuplicate={props.onDuplicate}
         onDelete={props.onDelete}
+        onEditHtml={props.onEditHtml}
         dragHandle={
           <button
             {...attributes}
@@ -221,6 +239,7 @@ function SortableModule(props: {
 function ModuleView({
   mod,
   viewMode,
+  htmlEditMode,
   selected,
   selectionEl,
   theme,
@@ -228,10 +247,12 @@ function ModuleView({
   onSelectElement,
   onDuplicate,
   onDelete,
+  onEditHtml,
   dragHandle,
 }: {
   mod: EmailModule;
   viewMode: "desktop" | "mobile";
+  htmlEditMode: boolean;
   selected: boolean;
   selectionEl: string | null;
   theme: Theme;
@@ -239,6 +260,7 @@ function ModuleView({
   onSelectElement: (id: string) => void;
   onDuplicate: () => void;
   onDelete: () => void;
+  onEditHtml: () => void;
   dragHandle: React.ReactNode;
 }) {
   const rawStyle = (mod.style ?? {}) as Record<string, unknown>;
@@ -274,8 +296,8 @@ function ModuleView({
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
-      {/* Hover label (when not selected) makes it obvious what block you're targeting */}
-      {!selected && hovered && (
+      {/* Hover label (when not selected and not in html edit mode) */}
+      {!selected && !htmlEditMode && hovered && (
         <div className="absolute top-0 right-0 z-10 bg-blue-600 text-white text-[10px] px-1.5 py-0.5 rounded-bl pointer-events-none">
           Click to select: {mod.name}
         </div>
@@ -308,26 +330,75 @@ function ModuleView({
           >
             <Trash2 size={14} />
           </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onEditHtml();
+            }}
+            className={`text-white p-1 rounded hover:bg-blue-800 ${mod.htmlOverride ? "bg-orange-500 hover:bg-orange-600" : ""}`}
+            title="Edit HTML for this block"
+          >
+            <Code2 size={14} />
+          </button>
           <span className="text-white text-[10px] font-medium px-1.5 py-0.5">
             {mod.name}
           </span>
+          {mod.htmlOverride && (
+            <span className="text-[10px] font-medium px-1 py-0.5 bg-orange-500 text-white rounded ml-0.5">
+              HTML
+            </span>
+          )}
         </div>
       )}
-      {mod.children.map((c, i) => (
-        <ElementView
-          key={c.id}
-          el={c}
-          index={i}
-          totalElements={mod.children.length}
-          viewMode={viewMode}
-          theme={theme}
-          moduleId={mod.id}
-          moduleSelected={selected}
-          selected={selectionEl === c.id}
-          onSelect={() => onSelectElement(c.id)}
-          onSelectModule={onSelectModule}
+
+      {/* HTML edit mode: show edit-code button on unselected blocks too */}
+      {htmlEditMode && !selected && (hovered || mod.htmlOverride) && (
+        <div
+          className="absolute top-0 right-0 z-20 flex items-center gap-1 p-1"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {mod.htmlOverride && (
+            <span className="text-[10px] font-medium px-1.5 py-0.5 bg-orange-500 text-white rounded">
+              HTML
+            </span>
+          )}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onEditHtml();
+            }}
+            className="bg-blue-600 text-white p-1 rounded hover:bg-blue-700 shadow"
+            title="Edit HTML for this block"
+          >
+            <Code2 size={13} />
+          </button>
+        </div>
+      )}
+
+      {/* Render block content */}
+      {mod.htmlOverride ? (
+        // HTML override mode: render raw HTML preview
+        <div
+          className="pointer-events-none select-none"
+          dangerouslySetInnerHTML={{ __html: mod.htmlOverride }}
         />
-      ))}
+      ) : (
+        mod.children.map((c, i) => (
+          <ElementView
+            key={c.id}
+            el={c}
+            index={i}
+            totalElements={mod.children.length}
+            viewMode={viewMode}
+            theme={theme}
+            moduleId={mod.id}
+            moduleSelected={selected}
+            selected={selectionEl === c.id}
+            onSelect={() => onSelectElement(c.id)}
+            onSelectModule={onSelectModule}
+          />
+        ))
+      )}
     </div>
   );
 }

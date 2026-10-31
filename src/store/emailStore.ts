@@ -23,10 +23,12 @@ interface State {
   future: EmailDocument[];
   themes: Theme[];
   viewMode: ViewMode;
+  htmlEditMode: boolean;
 
   // Mutations
   setSelection: (sel: Selection) => void;
   setViewMode: (mode: ViewMode) => void;
+  setHtmlEditMode: (v: boolean) => void;
   applyDoc: (next: EmailDocument, push?: boolean) => void;
   undo: () => void;
   redo: () => void;
@@ -85,9 +87,11 @@ export const useEmailStore = create<State>((set, get) => ({
   future: [],
   themes: defaultThemes,
   viewMode: "desktop",
+  htmlEditMode: false,
 
   setSelection: (sel) => set({ selection: sel }),
   setViewMode: (mode) => set({ viewMode: mode }),
+  setHtmlEditMode: (v) => set({ htmlEditMode: v }),
 
   applyDoc: (next, push = true) =>
     set((s) => {

@@ -173,6 +173,12 @@ export interface EmailModule {
   children: EmailElement[];
   /** Free-form per-module data used by plugins (e.g. `recommendations` logic). */
   data?: Record<string, unknown>;
+  /**
+   * When set, replaces the rendered children HTML for this block.
+   * The outer module wrapper (background, padding) is still applied from `style`.
+   * Use the HTML editor in the canvas toolbar to set/clear this override.
+   */
+  htmlOverride?: string;
 }
 
 export interface ThemeTokens {
