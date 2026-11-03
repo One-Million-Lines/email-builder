@@ -10,7 +10,14 @@ export type ModuleCategory =
   | "ecommerce"
   | "transactional"
   | "social"
-  | "footer";
+  | "footer"
+  /**
+   * Tenant-specific custom blocks. These are registered at runtime by the host
+   * application via the `modules` prop or the standalone `registerModule()`
+   * export. A "Custom" tab appears in the left sidebar automatically once at
+   * least one module with this category is registered.
+   */
+  | "custom";
 
 export interface ModuleDefinition {
   type: string;
@@ -58,4 +65,5 @@ export const CATEGORY_LABELS: Record<ModuleCategory, string> = {
   transactional: "Transactional",
   social: "Social",
   footer: "Footer",
+  custom: "Custom",
 };

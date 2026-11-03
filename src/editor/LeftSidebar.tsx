@@ -1,4 +1,4 @@
-import { useState, Suspense } from "react";
+import { useState, Suspense, useMemo } from "react";
 import { useEmailStore } from "../store/emailStore";
 import { moduleRegistry, CATEGORY_LABELS, type ModuleCategory } from "../modules/registry";
 import { AIChatPanel, useAIAvailable } from "../ai/AIChatPanel";
@@ -18,6 +18,7 @@ import {
   Layers,
   Sparkles,
   Wand2,
+  Puzzle,
   ArrowUp,
   ArrowDown,
   Trash2,
@@ -26,7 +27,7 @@ import {
   PanelLeftOpen,
 } from "lucide-react";
 
-const CATEGORIES: { id: ModuleCategory; icon: React.ComponentType<{ size?: number }> }[] = [
+const BASE_CATEGORIES: { id: ModuleCategory; icon: React.ComponentType<{ size?: number }> }[] = [
   { id: "basic", icon: Square },
   { id: "menu", icon: Menu },
   { id: "header", icon: LayoutTemplate },
@@ -46,9 +47,20 @@ export function LeftSidebar() {
   const [panelOpen, setPanelOpen] = useState(
     () => typeof window !== "undefined" ? window.innerWidth >= 1280 : true
   );
-  const { addModule, themes, applyTheme, doc } = useEmailStore();
+  const { addModule, themes, applyTheme, doc, customModulesRevision } = useEmailStore();
   const aiAvailable = useAIAvailable();
   const leftSidebarPanels = usePluginSlotStore((s) => s.leftSidebarPanels);
+
+  // Build category list dynamically: append "Custom" only when custom modules
+  // have been registered. Recomputes whenever customModulesRevision changes.
+  const categories = useMemo(() => {
+    const cats = [...BASE_CATEGORIES];
+    if (moduleRegistry.byCategory("custom").length > 0) {
+      cats.push({ id: "custom" as ModuleCategory, icon: Puzzle });
+    }
+    return cats;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [customModulesRevision]);
 
   // Clicking a rail button while collapsed auto-expands the panel.
   const handleRailClick = (id: typeof active) => {
@@ -105,16 +117,20 @@ export function LeftSidebar() {
           <span>Layers</span>
         </button>
         <div className="h-px w-10 bg-gray-200 my-0.5" />
-        {CATEGORIES.map((c) => {
+        {categories.map((c) => {
           const Icon = c.icon;
           const isActive = active === c.id && panelOpen;
+          // Custom blocks use a purple accent to visually distinguish them.
+          const isCustom = c.id === "custom";
           return (
             <button
               key={c.id}
               onClick={() => handleRailClick(c.id)}
               title={CATEGORY_LABELS[c.id]}
               className={`flex flex-col items-center gap-0.5 w-14 py-1.5 rounded text-[10px] transition-colors ${
-                isActive ? "bg-blue-50 text-blue-700" : "text-gray-600 hover:bg-gray-50"
+                isActive
+                  ? isCustom ? "bg-purple-50 text-purple-700" : "bg-blue-50 text-blue-700"
+                  : isCustom ? "text-purple-600 hover:bg-purple-50" : "text-gray-600 hover:bg-gray-50"
               }`}
             >
               <Icon size={18} />

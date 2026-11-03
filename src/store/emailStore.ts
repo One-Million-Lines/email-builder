@@ -24,6 +24,13 @@ interface State {
   themes: Theme[];
   viewMode: ViewMode;
   htmlEditMode: boolean;
+  /**
+   * Incremented whenever a module with category "custom" is registered via
+   * `registerModule()` or the `modules` prop. Components that render the
+   * custom-block category subscribe to this to stay reactive without needing
+   * to expose the global moduleRegistry as a reactive store.
+   */
+  customModulesRevision: number;
 
   // Mutations
   setSelection: (sel: Selection) => void;
@@ -88,6 +95,7 @@ export const useEmailStore = create<State>((set, get) => ({
   themes: defaultThemes,
   viewMode: "desktop",
   htmlEditMode: false,
+  customModulesRevision: 0,
 
   setSelection: (sel) => set({ selection: sel }),
   setViewMode: (mode) => set({ viewMode: mode }),

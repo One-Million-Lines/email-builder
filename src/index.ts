@@ -107,7 +107,20 @@ export interface EmailBuilderProps {
 export function EmailBuilder(props: EmailBuilderProps) {
   useEffect(() => {
     registerDefaultModules();
-    if (props.modules) for (const m of props.modules) moduleRegistry.register(m);
+    if (props.modules) {
+      let hasCustom = false;
+      for (const m of props.modules) {
+        moduleRegistry.register(m);
+        if (m.category === "custom") hasCustom = true;
+      }
+      // Signal the sidebar to show the Custom tab for any newly registered
+      // custom blocks supplied via the modules prop.
+      if (hasCustom) {
+        useEmailStore.setState((s) => ({
+          customModulesRevision: s.customModulesRevision + 1,
+        }));
+      }
+    }
     if (props.themes) useEmailStore.setState({ themes: props.themes });
     // AI assistant — part of core, disabled by default. Enabled either via the
     // first-class `ai` config, or the legacy `aiProvider` / `aiEndpoint` props.
@@ -350,3 +363,94 @@ export const recommendationsPlugin = {
   type: "recommendations" as const,
   setup: (b: import("./core/plugins").BuilderHandle) => b.registerRecommendationsPlugin(),
 };
+
+// ─── Theme utilities ─────────────────────────────────────────────────────────
+// Exported so that external consumers can compose theme lists, e.g.:
+//   themes={[myTenantTheme, ...defaultThemes]}
+export {
+  defaultThemes,
+  minimalSaaS,
+  ecommercePromo,
+  luxuryBlack,
+  greenEco,
+  newsletterEditorial,
+} from "./themes/defaultThemes";
+
+// ─── Document-building helpers ───────────────────────────────────────────────
+// The same helpers used by every built-in template. Export them so that
+// external consumers can write custom templates and starter documents without
+// reaching into internal package paths.
+export { uid } from "./core/utils";
+export {
+  mod,
+  text,
+  heading,
+  eyebrow,
+  muted,
+  voucherCode,
+  image,
+  button,
+  spacer,
+  divider,
+  product,
+  productGrid,
+  footerLinks,
+  logoImage,
+  shopInfoText,
+  shopDomainText,
+  PLACEHOLDER,
+} from "./modules/helpers";
+export type { Product } from "./core/types";
+
+/**
+ * Dynamically register a custom theme so it appears in the Themes panel of
+ * every currently-mounted builder instance. Safe to call at any time, including
+ * after the builder has mounted (unlike the static `themes` prop which is only
+ * read once). Re-registering an existing theme id is a no-op.
+ *
+ * Primary use-case: loading tenant/gallery themes from the backend and surfacing
+ * them in the Themes panel without remounting the editor.
+ *
+ * @example
+ *   // After fetching a theme from the gallery API:
+ *   import { registerTheme } from "@one-million-lines/email-builder";
+ *   registerTheme(galleryItem.params.theme);
+ */
+export function registerTheme(theme: Theme): void {
+  const current = useEmailStore.getState().themes;
+  if (current.find((t) => t.id === theme.id)) return;
+  useEmailStore.setState({ themes: [...current, theme] });
+}
+
+/**
+ * Dynamically register a custom block module at runtime. The module appears in
+ * the sidebar immediately after registration. Modules with `category: "custom"`
+ * trigger the "Custom" tab to appear (purple accent, Puzzle icon).
+ *
+ * Primary use-case: loading tenant-specific custom blocks from the gallery API
+ * (via `useGalleryTemplates`) without needing to pass them as a static
+ * `modules` prop or remount the editor.
+ *
+ * Re-registering an existing `type` silently overwrites the previous definition
+ * (idempotent for the same type).
+ *
+ * @example
+ *   import { registerModule } from "@one-million-lines/email-builder";
+ *   registerModule({
+ *     type: "acme.promo.strip",
+ *     category: "custom",
+ *     name: "Acme Promo Strip",
+ *     description: "Dark promo banner with discount headline.",
+ *     create: () => ({ id: uid("module"), type: "acme.promo.strip", name: "Acme Promo Strip",
+ *       style: { backgroundColor: "#1C1C1C" }, children: [], htmlOverride: "<p>...</p>" }),
+ *   });
+ */
+export function registerModule(def: ModuleDefinition): void {
+  moduleRegistry.register(def);
+  // Notify the sidebar to re-evaluate the custom-modules list.
+  if (def.category === "custom") {
+    useEmailStore.setState((s) => ({
+      customModulesRevision: s.customModulesRevision + 1,
+    }));
+  }
+}

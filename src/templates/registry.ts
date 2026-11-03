@@ -18,7 +18,9 @@ export type TemplateCategory =
   | "onboarding"
   | "event"
   | "transactional"
-  | "publishing";
+  | "publishing"
+  /** Account-scoped templates loaded from the tenant's content gallery. */
+  | "account";
 
 export interface TemplateDefinition {
   id: string;
@@ -65,4 +67,5 @@ export const TEMPLATE_CATEGORY_LABELS: Record<TemplateCategory, string> = {
   event: "Event",
   transactional: "Transactional",
   publishing: "Publishing",
+  account: "My Templates",
 };
