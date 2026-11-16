@@ -7,7 +7,7 @@ import type { EmailDocument, Theme, MergeTag } from "./core/types";
 import { documentSchema } from "./core/validation";
 import { renderEmailHtml } from "./core/renderer";
 import { useEmailStore } from "./store/emailStore";
-import type { BlockPreset, CurrencySettings } from "./store/emailStore";
+import type { BlockPreset, CurrencySettings, UIConfig } from "./store/emailStore";
 import { App } from "./App";
 import { registerDefaultModules } from "./modules/defaultModules";
 import { moduleRegistry, type ModuleDefinition } from "./modules/registry";
@@ -110,13 +110,27 @@ export interface EmailBuilderProps {
    */
   blockPresets?: BlockPreset[];
   /**
-   * Currency formatting applied around all product prices in the canvas preview
-   * and HTML output. `before` is prepended, `after` is appended.
-   * Example: `{ before: "€ " }` renders "€ 29.99".
+   * Currency formatting applied around all product prices in the canvas preview.
    * Defaults to empty strings (no prefix/suffix).
    * Can also be set at any time via the standalone `setCurrencySettings()` export.
    */
   currency?: Partial<CurrencySettings>;
+  /**
+   * Show or hide the "Save draft (local)" button in the top toolbar.
+   * Default: true (visible).
+   */
+  showSaveDraft?: boolean;
+  /**
+   * Show or hide the HTML mode button in the top toolbar. When shown, clicking it
+   * replaces the entire visual builder with a raw HTML editor (irreversible until Reset).
+   * Default: true (visible).
+   */
+  showHtml?: boolean;
+  /**
+   * Pre-load the editor in full HTML mode with this HTML string. Use when
+   * loading content that was previously saved in HTML mode (no builder document).
+   */
+  initialHtml?: string;
   onChange?: (doc: EmailDocument) => void;
   onExportHtml?: (html: string) => void;
 }
@@ -181,7 +195,15 @@ export function EmailBuilder(props: EmailBuilderProps) {
     if (props.enableRecommendations) builder.registerRecommendationsPlugin();
     if (props.blockPresets) useEmailStore.getState().setBlockPresets(props.blockPresets);
     if (props.currency) useEmailStore.getState().setCurrency(props.currency);
-    if (props.initialDocument) {
+    if (props.showSaveDraft !== undefined || props.showHtml !== undefined) {
+      useEmailStore.getState().setUIConfig({
+        ...(props.showSaveDraft !== undefined && { showSaveDraft: props.showSaveDraft }),
+        ...(props.showHtml !== undefined && { showHtml: props.showHtml }),
+      });
+    }
+    if (props.initialHtml) {
+      useEmailStore.getState().enterFullHtmlMode(props.initialHtml);
+    } else if (props.initialDocument) {
       const r = documentSchema.safeParse(props.initialDocument);
       if (r.success) useEmailStore.getState().applyDoc(r.data as EmailDocument, false);
     }
@@ -192,11 +214,15 @@ export function EmailBuilder(props: EmailBuilderProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Expose export helper via prop callback.
+  // Expose export helper via prop callback — also fires when raw HTML changes in full HTML mode.
   useEffect(() => {
     if (!props.onExportHtml) return;
     return useEmailStore.subscribe((s, prev) => {
-      if (s.doc !== prev.doc) props.onExportHtml?.(renderEmailHtml(s.doc));
+      if (s.fullHtmlMode) {
+        if (s.rawHtml !== prev.rawHtml) props.onExportHtml!(s.rawHtml);
+      } else {
+        if (s.doc !== prev.doc) props.onExportHtml!(renderEmailHtml(s.doc));
+      }
     });
   }, [props.onExportHtml]);
 
@@ -477,6 +503,7 @@ export function registerModule(def: ModuleDefinition): void {
 
 export type { BlockPreset } from "./store/emailStore";
 export type { CurrencySettings } from "./store/emailStore";
+export type { UIConfig } from "./store/emailStore";
 
 /**
  * Set the list of block presets shown in the Custom blocks panel dropdown.

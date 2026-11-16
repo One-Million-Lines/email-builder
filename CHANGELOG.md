@@ -4,6 +4,11 @@ All notable changes to this package are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/) and the
 [Keep a Changelog](https://keepachangelog.com/) format.
 
+
+## [0.15.0] — 2026-10-20
+- allow for directly HTML editing of the entire email
+- allow for show-hide buttons using input configuration toggles
+
 ## [0.10.0] — 2026-10-20
 
 ### Added

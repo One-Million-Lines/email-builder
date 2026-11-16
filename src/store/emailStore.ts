@@ -30,6 +30,13 @@ export interface CurrencySettings {
   after: string;
 }
 
+export interface UIConfig {
+  /** Show or hide the "Save draft (local)" button in the toolbar. Default: true. */
+  showSaveDraft: boolean;
+  /** Show or hide the HTML mode button in the toolbar. Default: true. */
+  showHtml: boolean;
+}
+
 interface State {
   doc: EmailDocument;
   selection: Selection;
@@ -47,6 +54,11 @@ interface State {
   customModulesRevision: number;
   blockPresets: BlockPreset[];
   currency: CurrencySettings;
+  uiConfig: UIConfig;
+  /** True when the editor is replaced with a raw HTML textarea. */
+  fullHtmlMode: boolean;
+  /** The raw HTML content when fullHtmlMode is active. */
+  rawHtml: string;
 
   // Mutations
   setSelection: (sel: Selection) => void;
@@ -76,6 +88,9 @@ interface State {
   updateSettings: (patch: Partial<EmailDocument["settings"]>) => void;
   setBlockPresets: (presets: BlockPreset[]) => void;
   setCurrency: (settings: Partial<CurrencySettings>) => void;
+  setUIConfig: (config: Partial<UIConfig>) => void;
+  enterFullHtmlMode: (initialHtml: string) => void;
+  setRawHtml: (html: string) => void;
 
   // Templates
   loadTemplate: (def: TemplateDefinition) => void;
@@ -116,6 +131,9 @@ export const useEmailStore = create<State>((set, get) => ({
   customModulesRevision: 0,
   blockPresets: [],
   currency: { before: '', after: '' },
+  uiConfig: { showSaveDraft: true, showHtml: true },
+  fullHtmlMode: false,
+  rawHtml: '',
 
   setSelection: (sel) => set({ selection: sel }),
   setViewMode: (mode) => set({ viewMode: mode }),
@@ -282,6 +300,9 @@ export const useEmailStore = create<State>((set, get) => ({
 
   setBlockPresets: (presets) => set({ blockPresets: presets }),
   setCurrency: (settings) => set((s) => ({ currency: { ...s.currency, ...settings } })),
+  setUIConfig: (config) => set((s) => ({ uiConfig: { ...s.uiConfig, ...config } })),
+  enterFullHtmlMode: (html) => set({ fullHtmlMode: true, rawHtml: html }),
+  setRawHtml: (html) => set({ rawHtml: html }),
 
   loadTemplate: (def) => {
     const next = def.build();
@@ -292,7 +313,7 @@ export const useEmailStore = create<State>((set, get) => ({
   resetDocument: () => {
     const { doc, applyDoc } = get();
     applyDoc(emptyDoc(doc.theme));
-    set({ selection: { kind: "email" }, past: [], future: [] });
+    set({ selection: { kind: "email" }, past: [], future: [], fullHtmlMode: false, rawHtml: '' });
   },
 
   exportJson: () => JSON.stringify(get().doc, null, 2),

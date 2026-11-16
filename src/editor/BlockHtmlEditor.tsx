@@ -22,7 +22,7 @@ function validateHtml(html: string): { ok: true } | { ok: false; error: string }
  * conditional comments like <!--[if mso]>), and plain text nodes.
  * Does NOT alter attribute values or inline styles.
  */
-function formatHtml(raw: string): string {
+export function formatHtml(raw: string): string {
   const VOID = new Set([
     "area", "base", "br", "col", "embed", "hr", "img", "input",
     "link", "meta", "param", "source", "track", "wbr",

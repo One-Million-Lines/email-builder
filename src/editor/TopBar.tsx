@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { TemplatesModal } from "./TemplatesModal";
 
 export function TopBar() {
-  const { doc, updateMeta, undo, redo, past, future, exportJson, importJson, exportHtml, saveToLocalStorage, viewMode, setViewMode, resetDocument, htmlEditMode, setHtmlEditMode } =
+  const { doc, updateMeta, undo, redo, past, future, exportJson, importJson, exportHtml, saveToLocalStorage, viewMode, setViewMode, resetDocument, htmlEditMode, setHtmlEditMode, uiConfig, fullHtmlMode, enterFullHtmlMode } =
     useEmailStore();
   const fileRef = useRef<HTMLInputElement>(null);
   const [previewing, setPreviewing] = useState(false);
@@ -44,6 +44,15 @@ export function TopBar() {
       if (!r.ok) alert(`Import failed: ${r.error}`);
     });
     e.target.value = "";
+  };
+
+  const handleEnterHtmlMode = () => {
+    if (!window.confirm(
+      "Switch to raw HTML mode?\n\n" +
+      "The current email will be converted to HTML as a starting point.\n" +
+      "The visual builder will be disabled — use Reset ↺ to start fresh."
+    )) return;
+    enterFullHtmlMode(exportHtml());
   };
 
   const handlePreview = () => {
@@ -93,7 +102,7 @@ export function TopBar() {
         <ToolButton title="Browse templates" onClick={() => setTemplatesOpen(true)}>
           <LayoutTemplate size={16} /> Templates
         </ToolButton>
-        <ToolButton title="Reset editor" onClick={handleReset} disabled={doc.modules.length === 0}>
+        <ToolButton title="Reset editor" onClick={handleReset} disabled={!fullHtmlMode && doc.modules.length === 0}>
           <RotateCcw size={16} /> Reset
         </ToolButton>
         <Divider />
@@ -104,25 +113,39 @@ export function TopBar() {
           <Redo2 size={16} />
         </ToolButton>
         <Divider />
-        <ToolButton title="Save draft (local)" onClick={saveToLocalStorage}>
-          <Save size={16} />
-        </ToolButton>
+        {uiConfig.showSaveDraft && (
+          <ToolButton title="Save draft (local)" onClick={saveToLocalStorage}>
+            <Save size={16} />
+          </ToolButton>
+        )}
         <ToolButton title="Preview" onClick={handlePreview}>
           <Eye size={16} /> {previewing ? "Opened" : "Preview"}
         </ToolButton>
         <Divider />
-        <button
-          title={htmlEditMode ? "Exit HTML editing mode" : "Edit HTML — click to enable per-block HTML editing"}
-          onClick={() => setHtmlEditMode(!htmlEditMode)}
-          className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded text-sm transition-colors ${
-            htmlEditMode
-              ? "bg-orange-100 text-orange-700 hover:bg-orange-200 ring-1 ring-orange-300"
-              : "text-gray-700 hover:bg-gray-100"
-          }`}
-        >
-          <Code2 size={16} />
-          {htmlEditMode ? "HTML" : "HTML"}
-        </button>
+        {uiConfig.showHtml && !fullHtmlMode && (
+          <button
+            title="Switch to raw HTML mode — the visual builder will be disabled"
+            onClick={handleEnterHtmlMode}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded text-sm transition-colors text-gray-700 hover:bg-gray-100"
+          >
+            <Code2 size={16} />
+            HTML
+          </button>
+        )}
+        {!uiConfig.showHtml && !fullHtmlMode && (
+          <button
+            title={htmlEditMode ? "Exit per-block HTML editing mode" : "Enable per-block HTML editing"}
+            onClick={() => setHtmlEditMode(!htmlEditMode)}
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded text-sm transition-colors ${
+              htmlEditMode
+                ? "bg-orange-100 text-orange-700 hover:bg-orange-200 ring-1 ring-orange-300"
+                : "text-gray-700 hover:bg-gray-100"
+            }`}
+          >
+            <Code2 size={16} />
+            HTML
+          </button>
+        )}
       </div>
 
       {/* Right: Export dropdown */}
