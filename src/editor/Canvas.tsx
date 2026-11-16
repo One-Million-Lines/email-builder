@@ -98,21 +98,6 @@ export function Canvas() {
     reorderModules(from, to);
   };
 
-  // Keyboard delete (modules and elements)
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (e.key !== "Delete" && e.key !== "Backspace") return;
-      const target = e.target as HTMLElement;
-      if (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable)
-        return;
-      if (selection?.kind === "module") deleteModule(selection.moduleId);
-      else if (selection?.kind === "element")
-        deleteElement(selection.moduleId, selection.elementId);
-    };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [selection, deleteModule, deleteElement]);
-
   const bg = resolveToken(doc.settings.backgroundColor, doc.theme) as string;
   const cbg = resolveToken(doc.settings.contentBackgroundColor, doc.theme) as string;
 
@@ -702,6 +687,8 @@ function ProductGridRender({
   const btnBg = (s.buttonBackgroundColor as string) ?? "#3A7D52";
   const btnColor = (s.buttonColor as string) ?? "#FFFFFF";
   const radius = (s.borderRadius as number) ?? 0;
+  const imageHeight = (s.imageHeight as number) || 0; // 0 = natural height
+  const { before: cb, after: ca } = useEmailStore((s) => s.currency);
 
   const wrapStyle: React.CSSProperties = {
     paddingTop: (s.paddingTop as number) ?? 16,
@@ -729,7 +716,13 @@ function ProductGridRender({
             <img
               src={p.image}
               alt={p.imageAlt ?? p.name}
-              style={{ display: "block", width: "100%", height: "auto", borderRadius: radius }}
+              style={{
+                display: "block",
+                width: "100%",
+                height: imageHeight ? imageHeight : "auto",
+                objectFit: imageHeight ? "cover" : undefined,
+                borderRadius: radius,
+              }}
             />
             <div
               style={{
@@ -768,14 +761,14 @@ function ProductGridRender({
                     marginRight: 8,
                   }}
                 >
-                  {p.oldPrice}
+                  {cb}{p.oldPrice}{ca}
                 </span>
               )}
               <span
                 className="final_price"
                 style={{ color: finalColor, fontWeight: "bold", fontSize: 18 }}
               >
-                {p.finalPrice}
+                {cb}{p.finalPrice}{ca}
               </span>
             </div>
             {el.showDescription && p.description && (

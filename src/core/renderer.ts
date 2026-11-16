@@ -270,6 +270,7 @@ function renderProductGrid(
   const btnBg = (s.buttonBackgroundColor as string) ?? "{colors.buttonBackground}";
   const btnColor = (s.buttonColor as string) ?? "{colors.buttonText}";
   const radius = (s.borderRadius as number) ?? 0;
+  const imageHeight = (s.imageHeight as number) | 0 || 0; // 0 = auto
   const padTop = px(s.paddingTop as number, 16);
   const padBot = px(s.paddingBottom as number, 16);
   const padL = px(s.paddingLeft as number, 16);
@@ -303,7 +304,13 @@ function renderProductGrid(
 <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" href="${safeUrl(link)}" style="height:36px;v-text-anchor:middle;width:140px;" arcsize="15%" stroke="f" fillcolor="${resolveTokenSafe(btnBg, ctx.theme)}"><w:anchorlock/><center style="color:${resolveTokenSafe(btnColor, ctx.theme)};font-family:Arial,sans-serif;font-size:13px;font-weight:bold;">${escapeHtml(btnLabel)}</center></v:roundrect>
 <![endif]--><!--[if !mso]><!-- --><a class="item-url" href="${safeUrl(link)}" style="display:inline-block;padding:10px 18px;font-family:Arial,Helvetica,sans-serif;font-size:13px;font-weight:bold;color:${resolveTokenSafe(btnColor, ctx.theme)};background-color:${resolveTokenSafe(btnBg, ctx.theme)};border-radius:6px;text-decoration:none;">${escapeHtml(btnLabel)}</a><!--<![endif]--></td></tr></table>`
       : "";
-    const img = `<img class="item-image" src="${escapeHtml(p.image)}" alt="${escapeHtml(p.imageAlt ?? p.name)}" width="100%" style="display:block;width:100%;max-width:100%;height:auto;border:0;outline:none;text-decoration:none;border-radius:${radius}px;" />`;
+    const img = (() => {
+      const imgStyle = imageHeight
+        ? `display:block;width:100%;max-width:100%;height:${imageHeight}px;object-fit:cover;border:0;outline:none;text-decoration:none;border-radius:${radius}px;`
+        : `display:block;width:100%;max-width:100%;height:auto;border:0;outline:none;text-decoration:none;border-radius:${radius}px;`;
+      const heightAttr = imageHeight ? ` height="${imageHeight}"` : "";
+      return `<img class="item-image" src="${escapeHtml(p.image)}" alt="${escapeHtml(p.imageAlt ?? p.name)}" width="100%"${heightAttr} style="${imgStyle}" />`;
+    })();
     const imgWrapped = p.link
       ? `<a class="item-url" href="${safeUrl(p.link)}" style="text-decoration:none;color:inherit;">${img}</a>`
       : img;
@@ -326,9 +333,12 @@ function renderProductGrid(
     const cellPadding = direct
       ? `${top}px ${right}px ${bottom}px ${left}px`
       : `0 ${last ? 0 : 8}px 16px 0`;
+    const imgTdStyle = imageHeight
+      ? `padding:0;font-size:0;line-height:0;overflow:hidden;height:${imageHeight}px;`
+      : `padding:0;font-size:0;line-height:0;`;
     return `<td${recsItemAttr} class="stack" valign="top" style="padding:${cellPadding};width:${colWidthPct};vertical-align:top;">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:${resolveTokenSafe(cardBg, ctx.theme)};border-radius:${radius}px;">
-    <tr><td style="padding:0;font-size:0;line-height:0;">${imgWrapped}</td></tr>
+    <tr><td style="${imgTdStyle}">${imgWrapped}</td></tr>
     <tr><td class="item-title" style="padding:12px 12px 4px 12px;font-family:Arial,Helvetica,sans-serif;font-size:15px;font-weight:bold;color:${resolveTokenSafe(nameColor, ctx.theme)};line-height:1.3;">${escapeHtml(p.name)}</td></tr>
     ${stars ? `<tr><td style="padding:0 12px 4px 12px;">${stars}</td></tr>` : ""}
     <tr><td style="padding:0 12px 8px 12px;font-family:Arial,Helvetica,sans-serif;">${oldPrice}${finalPrice}</td></tr>
@@ -475,7 +485,11 @@ export function renderEmailHtml(doc: unknown): string {
   const bg = resolveToken(safeDoc.settings.backgroundColor, safeDoc.theme) as string;
   const cbg = resolveToken(safeDoc.settings.contentBackgroundColor, safeDoc.theme) as string;
   const width = safeDoc.settings.width;
-  const ctx: RenderCtx = { theme: safeDoc.theme, mobileRules: [], classCounter: { n: 0 } };
+  const ctx: RenderCtx = {
+    theme: safeDoc.theme,
+    mobileRules: [],
+    classCounter: { n: 0 },
+  };
   let body: string;
   try {
     body = safeDoc.modules.map((m) => renderModule(m, ctx)).join("\n");

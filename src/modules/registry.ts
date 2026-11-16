@@ -36,6 +36,12 @@ class ModuleRegistry {
   private modules = new Map<string, ModuleDefinition>();
 
   register(def: ModuleDefinition) {
+    const existing = this.modules.get(def.type);
+    if (existing && existing.name !== def.name) {
+      console.warn(
+        `[email-builder] registerModule: type "${def.type}" already registered as "${existing.name}". Overwriting with "${def.name}".`
+      );
+    }
     this.modules.set(def.type, def);
   }
 

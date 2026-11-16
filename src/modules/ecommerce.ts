@@ -17,60 +17,19 @@ import {
 
 export const ecommerceModules: ModuleDefinition[] = [
   {
-    type: "ecom.product_single",
+    type: "ecom.product_grid",
     category: "ecommerce",
-    name: "Single Product",
-    description: "One product with image, title, price, short description and Buy button. Use to feature a hero product. Supports old/final price and per-product link.",
-    tags: ["product", "single", "buy", "hero"],
+    name: "Product Grid",
+    description: "Responsive product grid with configurable columns (1–3). Each card has image, name, price, optional description, stars and button. Supports recommendations plugin for dynamic product slots.",
+    tags: ["product", "grid", "ecommerce", "responsive", "recommendations"],
     create: () =>
-      mod("ecom.product_single", "Single Product", [
-        productGrid(
-          [
-            product({
-              name: "Linen Tote Bag",
-              image: PLACEHOLDER(560, 400, "Product"),
-              oldPrice: "$59.00",
-              finalPrice: "$39.00",
-              description: "Heavyweight natural linen, made in Portugal.",
-            }),
-          ],
-          { columns: 1, showOldPrice: true, showDescription: true, buttonLabel: "Buy now" }
-        ),
-      ]),
-  },
-  {
-    type: "ecom.product_grid_2",
-    category: "ecommerce",
-    name: "Product Grid (2 up)",
-    description: "Two products side-by-side on desktop, stacked on mobile. Each card has image, name, old/final price, optional description and Shop button. Curated picks layout.",
-    tags: ["product", "grid", "two-up", "curated", "responsive"],
-    create: () =>
-      mod("ecom.product_grid_2", "Product Grid 2", [
+      mod("ecom.product_grid", "Product Grid", [
         productGrid(
           [
             product({ name: "Product A", finalPrice: "$29", oldPrice: "$39" }),
             product({ name: "Product B", finalPrice: "$34", oldPrice: "$45" }),
           ],
           { columns: 2, showOldPrice: true }
-        ),
-      ]),
-  },
-  {
-    type: "ecom.product_grid_3",
-    category: "ecommerce",
-    name: "Product Grid (3 up)",
-    description: "Three product cards in a row on desktop, stacked on mobile. Use for 'New arrivals' or 'Bestsellers' rows.",
-    tags: ["product", "grid", "three-up", "bestsellers", "new-arrivals", "responsive"],
-    create: () =>
-      mod("ecom.product_grid_3", "Product Grid 3", [
-        eyebrow("New arrivals", { align: "center" }),
-        productGrid(
-          [
-            product({ name: "Product 1", finalPrice: "$19" }),
-            product({ name: "Product 2", finalPrice: "$24" }),
-            product({ name: "Product 3", finalPrice: "$32" }),
-          ],
-          { columns: 3, showOldPrice: false }
         ),
       ]),
   },
@@ -87,29 +46,6 @@ export const ecommerceModules: ModuleDefinition[] = [
         muted("Lighter fabrics, brighter colors.", { align: "center" }),
         button("Shop the collection"),
         spacer(16),
-      ]),
-  },
-  {
-    type: "ecom.discount",
-    category: "ecommerce",
-    name: "Discount Code",
-    description: "Big discount code in monospaced caps with 'Your code' label and a Redeem button.",
-    tags: ["discount", "promo", "code", "coupon"],
-    create: () =>
-      mod("ecom.discount", "Discount Code", [
-        muted("Your code", { align: "center" }),
-        text("SAVE20", {
-          fontFamily: "{fonts.heading}",
-          fontSize: 36,
-          fontWeight: "bold",
-          align: "center",
-          color: "{colors.primary}",
-          letterSpacing: 4,
-          paddingTop: 4,
-          paddingBottom: 16,
-        }),
-        button("Redeem"),
-        spacer(24),
       ]),
   },
   {

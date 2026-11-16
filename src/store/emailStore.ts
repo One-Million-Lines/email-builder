@@ -9,12 +9,26 @@ import type {
 import { uid } from "../core/utils";
 import { documentSchema } from "../core/validation";
 import { renderEmailHtml } from "../core/renderer";
+import { resolveStyle } from "../core/theme";
 import { defaultThemes } from "../themes/defaultThemes";
 import type { TemplateDefinition } from "../templates/registry";
 
 const HISTORY_LIMIT = 50;
 
 export type ViewMode = "desktop" | "mobile";
+
+export interface BlockPreset {
+  title: string;
+  /** Ordered list of module type strings (e.g. "hamangiu.header.logo_browser"). */
+  blocks_list: string[];
+}
+
+export interface CurrencySettings {
+  /** Text prepended to every price value, e.g. "$", "€ ". Default: "". */
+  before: string;
+  /** Text appended to every price value, e.g. " RON", "lei". Default: "". */
+  after: string;
+}
 
 interface State {
   doc: EmailDocument;
@@ -31,6 +45,8 @@ interface State {
    * to expose the global moduleRegistry as a reactive store.
    */
   customModulesRevision: number;
+  blockPresets: BlockPreset[];
+  currency: CurrencySettings;
 
   // Mutations
   setSelection: (sel: Selection) => void;
@@ -58,6 +74,8 @@ interface State {
   applyTheme: (theme: Theme) => void;
   updateMeta: (patch: Partial<EmailDocument["meta"]>) => void;
   updateSettings: (patch: Partial<EmailDocument["settings"]>) => void;
+  setBlockPresets: (presets: BlockPreset[]) => void;
+  setCurrency: (settings: Partial<CurrencySettings>) => void;
 
   // Templates
   loadTemplate: (def: TemplateDefinition) => void;
@@ -96,6 +114,8 @@ export const useEmailStore = create<State>((set, get) => ({
   viewMode: "desktop",
   htmlEditMode: false,
   customModulesRevision: 0,
+  blockPresets: [],
+  currency: { before: '', after: '' },
 
   setSelection: (sel) => set({ selection: sel }),
   setViewMode: (mode) => set({ viewMode: mode }),
@@ -128,9 +148,19 @@ export const useEmailStore = create<State>((set, get) => ({
 
   addModule: (mod, index) => {
     const { doc, applyDoc } = get();
+    // Bake the current theme's concrete values into the new block's container
+    // style so it immediately shows the right background and padding.
+    // The mobile sub-object is preserved as-is (tokens remain there).
+    const rawStyle = (mod.style ?? {}) as Record<string, unknown>;
+    const { mobile, ...topLevel } = rawStyle;
+    const resolvedTop = resolveStyle(topLevel, doc.theme);
+    const themedMod: EmailModule = {
+      ...mod,
+      style: (mobile ? { ...resolvedTop, mobile } : resolvedTop) as EmailModule["style"],
+    };
     const idx = index ?? doc.modules.length;
     const modules = [...doc.modules];
-    modules.splice(idx, 0, mod);
+    modules.splice(idx, 0, themedMod);
     applyDoc({ ...doc, modules });
     set({ selection: { kind: "module", moduleId: mod.id } });
   },
@@ -249,6 +279,9 @@ export const useEmailStore = create<State>((set, get) => ({
     const { doc, applyDoc } = get();
     applyDoc({ ...doc, settings: { ...doc.settings, ...patch } });
   },
+
+  setBlockPresets: (presets) => set({ blockPresets: presets }),
+  setCurrency: (settings) => set((s) => ({ currency: { ...s.currency, ...settings } })),
 
   loadTemplate: (def) => {
     const next = def.build();

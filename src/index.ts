@@ -7,6 +7,7 @@ import type { EmailDocument, Theme, MergeTag } from "./core/types";
 import { documentSchema } from "./core/validation";
 import { renderEmailHtml } from "./core/renderer";
 import { useEmailStore } from "./store/emailStore";
+import type { BlockPreset, CurrencySettings } from "./store/emailStore";
 import { App } from "./App";
 import { registerDefaultModules } from "./modules/defaultModules";
 import { moduleRegistry, type ModuleDefinition } from "./modules/registry";
@@ -99,6 +100,23 @@ export interface EmailBuilderProps {
    * Defaults to `false` — the panel is hidden unless explicitly enabled.
    */
   enableRecommendations?: boolean;
+  /**
+   * Block presets — ordered lists of module types shown as a "Presets" dropdown
+   * at the top of the Custom blocks panel. When the user selects a preset and
+   * confirms, the entire email content is replaced with the preset's blocks.
+   *
+   * Can also be set at any time via the standalone `setBlockPresets()` export
+   * (useful for dynamic loading from an API).
+   */
+  blockPresets?: BlockPreset[];
+  /**
+   * Currency formatting applied around all product prices in the canvas preview
+   * and HTML output. `before` is prepended, `after` is appended.
+   * Example: `{ before: "€ " }` renders "€ 29.99".
+   * Defaults to empty strings (no prefix/suffix).
+   * Can also be set at any time via the standalone `setCurrencySettings()` export.
+   */
+  currency?: Partial<CurrencySettings>;
   onChange?: (doc: EmailDocument) => void;
   onExportHtml?: (html: string) => void;
 }
@@ -161,6 +179,8 @@ export function EmailBuilder(props: EmailBuilderProps) {
     }
     if (props.mergeTags) builder.registerMergeTags(props.mergeTags);
     if (props.enableRecommendations) builder.registerRecommendationsPlugin();
+    if (props.blockPresets) useEmailStore.getState().setBlockPresets(props.blockPresets);
+    if (props.currency) useEmailStore.getState().setCurrency(props.currency);
     if (props.initialDocument) {
       const r = documentSchema.safeParse(props.initialDocument);
       if (r.success) useEmailStore.getState().applyDoc(r.data as EmailDocument, false);
@@ -453,4 +473,46 @@ export function registerModule(def: ModuleDefinition): void {
       customModulesRevision: s.customModulesRevision + 1,
     }));
   }
+}
+
+export type { BlockPreset } from "./store/emailStore";
+export type { CurrencySettings } from "./store/emailStore";
+
+/**
+ * Set the list of block presets shown in the Custom blocks panel dropdown.
+ * Each preset is an ordered collection of module types that replaces the full
+ * email content when the user selects and confirms it.
+ *
+ * Call this after registering the corresponding custom modules so the sidebar
+ * can resolve the type strings to live module definitions.
+ *
+ * @example
+ *   import { setBlockPresets } from "@one-million-lines/email-builder";
+ *   setBlockPresets([
+ *     { title: "Info Newsletter", blocks_list: ["acme.header.logo", "acme.content.news"] },
+ *   ]);
+ */
+export function setBlockPresets(presets: BlockPreset[]): void {
+  useEmailStore.getState().setBlockPresets(presets);
+}
+
+/**
+ * Configure currency prefix/suffix applied around all product prices in both
+ * the canvas preview and the exported HTML.
+ *
+ * The currency text is rendered as static HTML outside the `item-final_price` /
+ * `item-old_price` class-marked spans so that the backend's value-replacement
+ * engine leaves the currency text intact.
+ *
+ * @example
+ *   setCurrencySettings({ before: "$" })          // → $29.99
+ *   setCurrencySettings({ before: "", after: " RON" })  // → 29.99 RON
+ */
+export function setCurrencySettings(settings: Partial<CurrencySettings>): void {
+  useEmailStore.getState().setCurrency(settings);
+}
+
+/** Read the current currency settings from the editor state. */
+export function getCurrencySettings(): CurrencySettings {
+  return useEmailStore.getState().currency;
 }

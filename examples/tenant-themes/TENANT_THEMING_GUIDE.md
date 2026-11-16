@@ -898,7 +898,64 @@ Reference: examples/tenant-themes/TENANT_THEMING_GUIDE.md (this file)
 
 ---
 
-## Appendix: exported API reference
+## Appendix A: VT backend HTML class markers
+
+When writing `htmlOverride` HTML for custom blocks, specific CSS class names and `data-link-type` attributes are used by the VT backend Python system to identify elements and replace placeholders with real per-recipient or per-product data at send time.
+
+### Product element classes (for product/recommendation blocks)
+
+| Class | Element type | What VT backend does |
+|---|---|---|
+| `item-url` | `<a>` | Replaces `href` with the product URL |
+| `item-title` | Any (e.g. `<td>`, `<p>`) | Replaces text content with the product name |
+| `item-final_price final_price` | `<span>` | Replaces text with the product final price |
+| `item-old_price old_price` | `<span>` | Replaces text with the product original price |
+
+> **`item-image` is NOT confirmed** — the standard productGrid renderer does NOT add `class="item-image"` to the `<img>` tag. The product image link is found via `<a class="item-url">`. Do not add `class="item-image"` unless the VT backend spec explicitly requires it.
+
+For full recommendation system integration, set `data: { vtproduct: "pos01" }` on the module instance. Replace `"pos01"` with the position identifier (`"pos01"`, `"pos02"`, …).
+
+**Minimal single-product HTML pattern:**
+```html
+<a href="#" class="item-url" style="display:block;text-decoration:none;">
+  <img src="https://placehold.co/560x400/D0D0D0/888888?text=PRODUCT+IMAGE" alt="Product" width="560"
+       style="display:block;max-width:100%;height:auto;" />
+</a>
+<p class="item-title" style="font-size:24px;font-weight:bold;color:#1A1A2E;">Product Name</p>
+<p><s class="item-old_price old_price">99,00</s></p>
+<p><span class="item-final_price final_price">79,00</span></p>
+<a href="#" class="item-url" style="...">Buy now</a>
+```
+
+### Shop / account marker classes
+
+| Class | `data-link-type` | Used on | What VT backend does |
+|---|---|---|---|
+| `vtw-logo` | — | `<img>` | Replaces `src` with the account's logo URL |
+| `vtw-url` | — | `<a>` | Replaces `href` with the account's shop homepage URL |
+| `vtw-info` | — | element | Replaces text with the account's address/info text |
+| `vtw-domain` | — | element | Replaces text with the account's domain name |
+
+### System link classes (for email footer/header links)
+
+| Class | `data-link-type` | Placeholder `href` | Purpose |
+|---|---|---|---|
+| `vtunsubscribe` | `unsubscribe` | `{{unsubscribe_url}}` | Unsubscribe link |
+| `vtpreview` | `view_in_browser` | `{{view_in_browser_url}}` | View email in browser |
+| `vtsubconfirm` | `manage_preferences` | `{{manage_preferences_url}}` | Manage email preferences |
+| `vtprofile` | `user_profile` | `{{user_profile_url}}` | User profile link |
+
+**Pattern:**
+```html
+<a class="vtpreview" href="{{view_in_browser_url}}" data-link-type="view_in_browser"
+   style="...">
+  Vezi in browser
+</a>
+```
+
+---
+
+## Appendix B: exported API reference
 
 All from `@one-million-lines/email-builder`:
 

@@ -1103,7 +1103,13 @@ function ProductGridElementPanel({ mod, el }: { mod: EmailModule; el: ProductGri
             onChange={(np) => {
               const next = [...el.products];
               next[idx] = np;
-              setProducts(next);
+              // Auto-enable visibility flags when values are entered manually,
+              // mirroring the same logic in applySearchResult.
+              const flags: Partial<ProductGridElement> = {};
+              if (np.description && !el.showDescription) flags.showDescription = true;
+              if (np.stars != null && !el.showStars) flags.showStars = true;
+              if (np.oldPrice && !el.showOldPrice) flags.showOldPrice = true;
+              patch({ products: next, ...flags } as Partial<ProductGridElement>);
             }}
             onDelete={() => setProducts(el.products.filter((_, i) => i !== idx))}
           />
@@ -1128,6 +1134,15 @@ function ProductGridElementPanel({ mod, el }: { mod: EmailModule; el: ProductGri
           <ColorInput
             value={(style.cardBackgroundColor as string) ?? ""}
             onChange={(v) => setStyle({ cardBackgroundColor: v })}
+          />
+        </Field>
+        <Field label="Image height (px, 0 = auto)">
+          <NumberInput
+            value={(style.imageHeight as number) ?? 0}
+            min={0}
+            step={10}
+            placeholder="auto"
+            onChange={(e) => setStyle({ imageHeight: Number(e.target.value) || undefined })}
           />
         </Field>
         <Field label="Name color">

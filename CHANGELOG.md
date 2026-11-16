@@ -74,8 +74,8 @@ This project adheres to [Semantic Versioning](https://semver.org/) and the
 - **Invalid hook call** (dual React via `npm link`) — host Vite config aliases
   `react` / `react-dom` to force a single instance.
 
-- **Currency symbols** — `transformResponse` wraps prices with `currencyBefore`
-  / `currencyAfter` read from account settings via `useRef`.
+- **Currency symbols** — `transformResponse` wraps prices with `currency_before`
+  / `currency_after` read from account settings via `useRef`.
 
 ## [0.9.1] — 2026-09-14
 - ** Using markers to detect various elements.

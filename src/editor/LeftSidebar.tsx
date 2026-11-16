@@ -1,6 +1,7 @@
 import { useState, Suspense, useMemo } from "react";
+import type React from "react";
 import { useEmailStore } from "../store/emailStore";
-import { moduleRegistry, CATEGORY_LABELS, type ModuleCategory } from "../modules/registry";
+import { moduleRegistry, CATEGORY_LABELS, type ModuleCategory, type ModuleDefinition } from "../modules/registry";
 import { AIChatPanel, useAIAvailable } from "../ai/AIChatPanel";
 import { usePluginSlotStore } from "../core/pluginSlots";
 import {
@@ -225,6 +226,7 @@ export function LeftSidebar() {
             })()
           ) : (
             <>
+              {active === "custom" && <CustomBlockPresets />}
               <div className="grid grid-cols-1 gap-2">
                 {moduleRegistry.byCategory(active as ModuleCategory).map((def) => (
                   <button
@@ -259,6 +261,60 @@ export function LeftSidebar() {
           <PanelLeftOpen size={14} />
         </button>
       )}
+    </div>
+  );
+}
+
+// ---------- Custom block presets selector ----------
+
+function CustomBlockPresets() {
+  const [selected, setSelected] = useState("");
+  const { blockPresets, doc, applyDoc } = useEmailStore();
+
+  if (!blockPresets || blockPresets.length === 0) return null;
+
+  const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const title = e.target.value;
+    if (!title) return;
+    const preset = blockPresets.find((p) => p.title === title);
+    if (!preset) return;
+
+    const confirmed = window.confirm(
+      `Replace all email content with the "${preset.title}" preset?\n\nThis will clear the current content.`
+    );
+    setSelected("");
+    if (!confirmed) return;
+
+    const modules = preset.blocks_list
+      .flatMap((type) => {
+        const def = moduleRegistry.get(type);
+        if (!def) {
+          console.warn(`[email-builder] preset "${preset.title}": unknown block type "${type}" — skipping.`);
+          return [];
+        }
+        return [def.create()];
+      });
+
+    applyDoc({ ...doc, modules });
+  };
+
+  return (
+    <div className="mb-3">
+      <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-400 mb-1">
+        Presets
+      </p>
+      <select
+        value={selected}
+        onChange={handleChange}
+        className="w-full text-xs border border-gray-200 rounded px-2 py-1.5 bg-white text-gray-700 focus:outline-none focus:border-purple-400 cursor-pointer"
+      >
+        <option value="">— Apply a preset —</option>
+        {blockPresets.map((p) => (
+          <option key={p.title} value={p.title}>
+            {p.title}
+          </option>
+        ))}
+      </select>
     </div>
   );
 }

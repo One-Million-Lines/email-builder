@@ -154,6 +154,8 @@ export interface ProductGridElement {
     cardBackgroundColor?: string;
     borderRadius?: number;
     align?: "left" | "center" | "right";
+    /** Fixed height in px for the product image area. Images are cropped with object-fit:cover. */
+    imageHeight?: number;
   };
 }
 

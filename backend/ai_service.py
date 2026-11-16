@@ -32,7 +32,7 @@ import urllib.error
 # Configuration (all optional; sensible offline defaults).
 # --------------------------------------------------------------------------- #
 
-MODEL = os.environ.get("AI_MODEL", "gpt-4o-mini")
+MODEL = os.environ.get("AI_MODEL", "gpt-6-luna")
 API_KEY = os.environ.get("AI_API_KEY", "")
 # OpenAI-compatible base URL. Override for Azure/Ollama/local runtimes.
 BASE_URL = os.environ.get("AI_BASE_URL", "https://api.openai.com/v1")
