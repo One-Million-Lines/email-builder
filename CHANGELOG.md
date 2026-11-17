@@ -5,7 +5,11 @@ This project adheres to [Semantic Versioning](https://semver.org/) and the
 [Keep a Changelog](https://keepachangelog.com/) format.
 
 
-## [0.15.0] — 2026-10-20
+## [0.15.1] — 2026-11-17
+- cleaned some blocks
+- added images for previews, not in use yet.
+
+## [0.15.0] — 2026-11-15
 - allow for directly HTML editing of the entire email
 - allow for show-hide buttons using input configuration toggles
 

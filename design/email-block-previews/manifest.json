@@ -1,0 +1,722 @@
+[
+  {
+    "category": "basic",
+    "id": "text-block",
+    "label": "Text Block",
+    "width": 300,
+    "height": 100,
+    "png": "png/basic/text-block.png",
+    "svg": "svg/basic/text-block.svg"
+  },
+  {
+    "category": "basic",
+    "id": "heading",
+    "label": "Heading",
+    "width": 300,
+    "height": 100,
+    "png": "png/basic/heading.png",
+    "svg": "svg/basic/heading.svg"
+  },
+  {
+    "category": "basic",
+    "id": "image",
+    "label": "Image",
+    "width": 300,
+    "height": 100,
+    "png": "png/basic/image.png",
+    "svg": "svg/basic/image.svg"
+  },
+  {
+    "category": "basic",
+    "id": "image-with-caption",
+    "label": "Image with Caption",
+    "width": 300,
+    "height": 100,
+    "png": "png/basic/image-with-caption.png",
+    "svg": "svg/basic/image-with-caption.svg"
+  },
+  {
+    "category": "basic",
+    "id": "spacer",
+    "label": "Spacer",
+    "width": 300,
+    "height": 100,
+    "png": "png/basic/spacer.png",
+    "svg": "svg/basic/spacer.svg"
+  },
+  {
+    "category": "basic",
+    "id": "divider",
+    "label": "Divider",
+    "width": 300,
+    "height": 100,
+    "png": "png/basic/divider.png",
+    "svg": "svg/basic/divider.svg"
+  },
+  {
+    "category": "menu",
+    "id": "horizontal-nav",
+    "label": "Horizontal Nav",
+    "width": 300,
+    "height": 100,
+    "png": "png/menu/horizontal-nav.png",
+    "svg": "svg/menu/horizontal-nav.svg"
+  },
+  {
+    "category": "menu",
+    "id": "section-tabs",
+    "label": "Section Tabs",
+    "width": 300,
+    "height": 100,
+    "png": "png/menu/section-tabs.png",
+    "svg": "svg/menu/section-tabs.svg"
+  },
+  {
+    "category": "menu",
+    "id": "in-this-issue",
+    "label": "In This Issue",
+    "width": 300,
+    "height": 100,
+    "png": "png/menu/in-this-issue.png",
+    "svg": "svg/menu/in-this-issue.svg"
+  },
+  {
+    "category": "menu",
+    "id": "linked-action-strip",
+    "label": "Linked Action Strip",
+    "width": 300,
+    "height": 100,
+    "png": "png/menu/linked-action-strip.png",
+    "svg": "svg/menu/linked-action-strip.svg"
+  },
+  {
+    "category": "header",
+    "id": "logo-centered",
+    "label": "Logo Centered",
+    "width": 300,
+    "height": 100,
+    "png": "png/header/logo-centered.png",
+    "svg": "svg/header/logo-centered.svg"
+  },
+  {
+    "category": "header",
+    "id": "logo-left-date-right",
+    "label": "Logo Left + Date Right",
+    "width": 300,
+    "height": 100,
+    "png": "png/header/logo-left-date-right.png",
+    "svg": "svg/header/logo-left-date-right.svg"
+  },
+  {
+    "category": "header",
+    "id": "publication-masthead",
+    "label": "Publication Masthead",
+    "width": 300,
+    "height": 100,
+    "png": "png/header/publication-masthead.png",
+    "svg": "svg/header/publication-masthead.svg"
+  },
+  {
+    "category": "header",
+    "id": "hero-headline-image",
+    "label": "Hero with Headline & Image",
+    "width": 300,
+    "height": 100,
+    "png": "png/header/hero-headline-image.png",
+    "svg": "svg/header/hero-headline-image.svg"
+  },
+  {
+    "category": "header",
+    "id": "hero-text-only",
+    "label": "Hero Text Only",
+    "width": 300,
+    "height": 100,
+    "png": "png/header/hero-text-only.png",
+    "svg": "svg/header/hero-text-only.svg"
+  },
+  {
+    "category": "header",
+    "id": "announcement-bar",
+    "label": "Announcement Bar",
+    "width": 300,
+    "height": 100,
+    "png": "png/header/announcement-bar.png",
+    "svg": "svg/header/announcement-bar.svg"
+  },
+  {
+    "category": "header",
+    "id": "logo-view-in-browser",
+    "label": "Logo + View in Browser",
+    "width": 300,
+    "height": 100,
+    "png": "png/header/logo-view-in-browser.png",
+    "svg": "svg/header/logo-view-in-browser.svg"
+  },
+  {
+    "category": "header",
+    "id": "welcome-header",
+    "label": "Welcome Header",
+    "width": 300,
+    "height": 100,
+    "png": "png/header/welcome-header.png",
+    "svg": "svg/header/welcome-header.svg"
+  },
+  {
+    "category": "header",
+    "id": "logo-tagline",
+    "label": "Logo + Tagline",
+    "width": 300,
+    "height": 100,
+    "png": "png/header/logo-tagline.png",
+    "svg": "svg/header/logo-tagline.svg"
+  },
+  {
+    "category": "header",
+    "id": "story-label-header",
+    "label": "Story Label Header",
+    "width": 300,
+    "height": 100,
+    "png": "png/header/story-label-header.png",
+    "svg": "svg/header/story-label-header.svg"
+  },
+  {
+    "category": "content",
+    "id": "headline-body",
+    "label": "Headline + Body",
+    "width": 300,
+    "height": 100,
+    "png": "png/content/headline-body.png",
+    "svg": "svg/content/headline-body.svg"
+  },
+  {
+    "category": "content",
+    "id": "lead-story",
+    "label": "Lead Story",
+    "width": 300,
+    "height": 100,
+    "png": "png/content/lead-story.png",
+    "svg": "svg/content/lead-story.svg"
+  },
+  {
+    "category": "content",
+    "id": "article-card",
+    "label": "Article Card",
+    "width": 300,
+    "height": 100,
+    "png": "png/content/article-card.png",
+    "svg": "svg/content/article-card.svg"
+  },
+  {
+    "category": "content",
+    "id": "image-text",
+    "label": "Image + Text",
+    "width": 300,
+    "height": 100,
+    "png": "png/content/image-text.png",
+    "svg": "svg/content/image-text.svg"
+  },
+  {
+    "category": "content",
+    "id": "two-stories",
+    "label": "Two Stories",
+    "width": 300,
+    "height": 100,
+    "png": "png/content/two-stories.png",
+    "svg": "svg/content/two-stories.svg"
+  },
+  {
+    "category": "content",
+    "id": "three-picks",
+    "label": "Three Picks",
+    "width": 300,
+    "height": 100,
+    "png": "png/content/three-picks.png",
+    "svg": "svg/content/three-picks.svg"
+  },
+  {
+    "category": "content",
+    "id": "pull-quote",
+    "label": "Pull Quote",
+    "width": 300,
+    "height": 100,
+    "png": "png/content/pull-quote.png",
+    "svg": "svg/content/pull-quote.svg"
+  },
+  {
+    "category": "content",
+    "id": "byline",
+    "label": "Byline",
+    "width": 300,
+    "height": 100,
+    "png": "png/content/byline.png",
+    "svg": "svg/content/byline.svg"
+  },
+  {
+    "category": "content",
+    "id": "editors-note",
+    "label": "Editor's Note",
+    "width": 300,
+    "height": 100,
+    "png": "png/content/editors-note.png",
+    "svg": "svg/content/editors-note.svg"
+  },
+  {
+    "category": "content",
+    "id": "tip-box",
+    "label": "Tip Box",
+    "width": 300,
+    "height": 100,
+    "png": "png/content/tip-box.png",
+    "svg": "svg/content/tip-box.svg"
+  },
+  {
+    "category": "content",
+    "id": "numbered-list",
+    "label": "Numbered List",
+    "width": 300,
+    "height": 100,
+    "png": "png/content/numbered-list.png",
+    "svg": "svg/content/numbered-list.svg"
+  },
+  {
+    "category": "content",
+    "id": "bullets",
+    "label": "Bullets",
+    "width": 300,
+    "height": 100,
+    "png": "png/content/bullets.png",
+    "svg": "svg/content/bullets.svg"
+  },
+  {
+    "category": "content",
+    "id": "q-and-a",
+    "label": "Q&A",
+    "width": 300,
+    "height": 100,
+    "png": "png/content/q-and-a.png",
+    "svg": "svg/content/q-and-a.svg"
+  },
+  {
+    "category": "content",
+    "id": "stat-row",
+    "label": "Stat Row",
+    "width": 300,
+    "height": 100,
+    "png": "png/content/stat-row.png",
+    "svg": "svg/content/stat-row.svg"
+  },
+  {
+    "category": "content",
+    "id": "timeline",
+    "label": "Timeline",
+    "width": 300,
+    "height": 100,
+    "png": "png/content/timeline.png",
+    "svg": "svg/content/timeline.svg"
+  },
+  {
+    "category": "content",
+    "id": "podcast-episode",
+    "label": "Podcast Episode",
+    "width": 300,
+    "height": 100,
+    "png": "png/content/podcast-episode.png",
+    "svg": "svg/content/podcast-episode.svg"
+  },
+  {
+    "category": "content",
+    "id": "video",
+    "label": "Video",
+    "width": 300,
+    "height": 100,
+    "png": "png/content/video.png",
+    "svg": "svg/content/video.svg"
+  },
+  {
+    "category": "content",
+    "id": "event",
+    "label": "Event",
+    "width": 300,
+    "height": 100,
+    "png": "png/content/event.png",
+    "svg": "svg/content/event.svg"
+  },
+  {
+    "category": "content",
+    "id": "code",
+    "label": "Code",
+    "width": 300,
+    "height": 100,
+    "png": "png/content/code.png",
+    "svg": "svg/content/code.svg"
+  },
+  {
+    "category": "feature",
+    "id": "feature-list",
+    "label": "Feature List",
+    "width": 300,
+    "height": 100,
+    "png": "png/feature/feature-list.png",
+    "svg": "svg/feature/feature-list.svg"
+  },
+  {
+    "category": "feature",
+    "id": "three-features",
+    "label": "Three Features",
+    "width": 300,
+    "height": 100,
+    "png": "png/feature/three-features.png",
+    "svg": "svg/feature/three-features.svg"
+  },
+  {
+    "category": "feature",
+    "id": "before-after",
+    "label": "Before / After",
+    "width": 300,
+    "height": 100,
+    "png": "png/feature/before-after.png",
+    "svg": "svg/feature/before-after.svg"
+  },
+  {
+    "category": "feature",
+    "id": "benefit-pair",
+    "label": "Benefit Pair",
+    "width": 300,
+    "height": 100,
+    "png": "png/feature/benefit-pair.png",
+    "svg": "svg/feature/benefit-pair.svg"
+  },
+  {
+    "category": "feature",
+    "id": "testimonial",
+    "label": "Testimonial",
+    "width": 300,
+    "height": 100,
+    "png": "png/feature/testimonial.png",
+    "svg": "svg/feature/testimonial.svg"
+  },
+  {
+    "category": "feature",
+    "id": "logo-strip",
+    "label": "Logo Strip",
+    "width": 300,
+    "height": 100,
+    "png": "png/feature/logo-strip.png",
+    "svg": "svg/feature/logo-strip.svg"
+  },
+  {
+    "category": "feature",
+    "id": "gradient-hero-cta",
+    "label": "Gradient Hero CTA",
+    "width": 300,
+    "height": 100,
+    "png": "png/feature/gradient-hero-cta.png",
+    "svg": "svg/feature/gradient-hero-cta.svg"
+  },
+  {
+    "category": "call-to-action",
+    "id": "simple-cta",
+    "label": "Simple CTA",
+    "width": 300,
+    "height": 100,
+    "png": "png/call-to-action/simple-cta.png",
+    "svg": "svg/call-to-action/simple-cta.svg"
+  },
+  {
+    "category": "call-to-action",
+    "id": "cta-banner",
+    "label": "CTA Banner",
+    "width": 300,
+    "height": 100,
+    "png": "png/call-to-action/cta-banner.png",
+    "svg": "svg/call-to-action/cta-banner.svg"
+  },
+  {
+    "category": "call-to-action",
+    "id": "button",
+    "label": "Button",
+    "width": 300,
+    "height": 100,
+    "png": "png/call-to-action/button.png",
+    "svg": "svg/call-to-action/button.svg"
+  },
+  {
+    "category": "call-to-action",
+    "id": "two-buttons",
+    "label": "Two Buttons",
+    "width": 300,
+    "height": 100,
+    "png": "png/call-to-action/two-buttons.png",
+    "svg": "svg/call-to-action/two-buttons.svg"
+  },
+  {
+    "category": "call-to-action",
+    "id": "image-cta",
+    "label": "Image CTA",
+    "width": 300,
+    "height": 100,
+    "png": "png/call-to-action/image-cta.png",
+    "svg": "svg/call-to-action/image-cta.svg"
+  },
+  {
+    "category": "call-to-action",
+    "id": "subscribe",
+    "label": "Subscribe",
+    "width": 300,
+    "height": 100,
+    "png": "png/call-to-action/subscribe.png",
+    "svg": "svg/call-to-action/subscribe.svg"
+  },
+  {
+    "category": "call-to-action",
+    "id": "referral",
+    "label": "Referral",
+    "width": 300,
+    "height": 100,
+    "png": "png/call-to-action/referral.png",
+    "svg": "svg/call-to-action/referral.svg"
+  },
+  {
+    "category": "call-to-action",
+    "id": "upgrade",
+    "label": "Upgrade",
+    "width": 300,
+    "height": 100,
+    "png": "png/call-to-action/upgrade.png",
+    "svg": "svg/call-to-action/upgrade.svg"
+  },
+  {
+    "category": "call-to-action",
+    "id": "feedback",
+    "label": "Feedback",
+    "width": 300,
+    "height": 100,
+    "png": "png/call-to-action/feedback.png",
+    "svg": "svg/call-to-action/feedback.svg"
+  },
+  {
+    "category": "ecommerce",
+    "id": "product-grid",
+    "label": "Product Grid",
+    "width": 300,
+    "height": 100,
+    "png": "png/ecommerce/product-grid.png",
+    "svg": "svg/ecommerce/product-grid.svg"
+  },
+  {
+    "category": "ecommerce",
+    "id": "collection",
+    "label": "Collection",
+    "width": 300,
+    "height": 100,
+    "png": "png/ecommerce/collection.png",
+    "svg": "svg/ecommerce/collection.svg"
+  },
+  {
+    "category": "ecommerce",
+    "id": "voucher-code",
+    "label": "Voucher Code",
+    "width": 300,
+    "height": 100,
+    "png": "png/ecommerce/voucher-code.png",
+    "svg": "svg/ecommerce/voucher-code.svg"
+  },
+  {
+    "category": "ecommerce",
+    "id": "flash-sale",
+    "label": "Flash Sale",
+    "width": 300,
+    "height": 100,
+    "png": "png/ecommerce/flash-sale.png",
+    "svg": "svg/ecommerce/flash-sale.svg"
+  },
+  {
+    "category": "ecommerce",
+    "id": "abandoned-cart",
+    "label": "Abandoned Cart",
+    "width": 300,
+    "height": 100,
+    "png": "png/ecommerce/abandoned-cart.png",
+    "svg": "svg/ecommerce/abandoned-cart.svg"
+  },
+  {
+    "category": "ecommerce",
+    "id": "review",
+    "label": "Review",
+    "width": 300,
+    "height": 100,
+    "png": "png/ecommerce/review.png",
+    "svg": "svg/ecommerce/review.svg"
+  },
+  {
+    "category": "ecommerce",
+    "id": "gift-pick",
+    "label": "Gift Pick",
+    "width": 300,
+    "height": 100,
+    "png": "png/ecommerce/gift-pick.png",
+    "svg": "svg/ecommerce/gift-pick.svg"
+  },
+  {
+    "category": "transactional",
+    "id": "appointment",
+    "label": "Appointment",
+    "width": 300,
+    "height": 100,
+    "png": "png/transactional/appointment.png",
+    "svg": "svg/transactional/appointment.svg"
+  },
+  {
+    "category": "transactional",
+    "id": "verify-email",
+    "label": "Verify Email",
+    "width": 300,
+    "height": 100,
+    "png": "png/transactional/verify-email.png",
+    "svg": "svg/transactional/verify-email.svg"
+  },
+  {
+    "category": "transactional",
+    "id": "password-reset",
+    "label": "Password Reset",
+    "width": 300,
+    "height": 100,
+    "png": "png/transactional/password-reset.png",
+    "svg": "svg/transactional/password-reset.svg"
+  },
+  {
+    "category": "transactional",
+    "id": "invoice",
+    "label": "Invoice",
+    "width": 300,
+    "height": 100,
+    "png": "png/transactional/invoice.png",
+    "svg": "svg/transactional/invoice.svg"
+  },
+  {
+    "category": "transactional",
+    "id": "shipping-update",
+    "label": "Shipping Update",
+    "width": 300,
+    "height": 100,
+    "png": "png/transactional/shipping-update.png",
+    "svg": "svg/transactional/shipping-update.svg"
+  },
+  {
+    "category": "transactional",
+    "id": "order-summary",
+    "label": "Order Summary",
+    "width": 300,
+    "height": 100,
+    "png": "png/transactional/order-summary.png",
+    "svg": "svg/transactional/order-summary.svg"
+  },
+  {
+    "category": "social",
+    "id": "social-post",
+    "label": "Social Post",
+    "width": 300,
+    "height": 100,
+    "png": "png/social/social-post.png",
+    "svg": "svg/social/social-post.svg"
+  },
+  {
+    "category": "social",
+    "id": "share-bar",
+    "label": "Share Bar",
+    "width": 300,
+    "height": 100,
+    "png": "png/social/share-bar.png",
+    "svg": "svg/social/share-bar.svg"
+  },
+  {
+    "category": "social",
+    "id": "social-icons",
+    "label": "Social Icons",
+    "width": 300,
+    "height": 100,
+    "png": "png/social/social-icons.png",
+    "svg": "svg/social/social-icons.svg"
+  },
+  {
+    "category": "social",
+    "id": "ig-grid",
+    "label": "IG Grid",
+    "width": 300,
+    "height": 100,
+    "png": "png/social/ig-grid.png",
+    "svg": "svg/social/ig-grid.svg"
+  },
+  {
+    "category": "social",
+    "id": "community-stats",
+    "label": "Community Stats",
+    "width": 300,
+    "height": 100,
+    "png": "png/social/community-stats.png",
+    "svg": "svg/social/community-stats.svg"
+  },
+  {
+    "category": "footer",
+    "id": "simple-footer",
+    "label": "Simple Footer",
+    "width": 300,
+    "height": 100,
+    "png": "png/footer/simple-footer.png",
+    "svg": "svg/footer/simple-footer.svg"
+  },
+  {
+    "category": "footer",
+    "id": "social-footer",
+    "label": "Social Footer",
+    "width": 300,
+    "height": 100,
+    "png": "png/footer/social-footer.png",
+    "svg": "svg/footer/social-footer.svg"
+  },
+  {
+    "category": "footer",
+    "id": "publisher-footer",
+    "label": "Publisher Footer",
+    "width": 300,
+    "height": 100,
+    "png": "png/footer/publisher-footer.png",
+    "svg": "svg/footer/publisher-footer.svg"
+  },
+  {
+    "category": "footer",
+    "id": "app-footer",
+    "label": "App Footer",
+    "width": 300,
+    "height": 100,
+    "png": "png/footer/app-footer.png",
+    "svg": "svg/footer/app-footer.svg"
+  },
+  {
+    "category": "footer",
+    "id": "address",
+    "label": "Address",
+    "width": 300,
+    "height": 100,
+    "png": "png/footer/address.png",
+    "svg": "svg/footer/address.svg"
+  },
+  {
+    "category": "footer",
+    "id": "preferences",
+    "label": "Preferences",
+    "width": 300,
+    "height": 100,
+    "png": "png/footer/preferences.png",
+    "svg": "svg/footer/preferences.svg"
+  },
+  {
+    "category": "footer",
+    "id": "signature",
+    "label": "Signature",
+    "width": 300,
+    "height": 100,
+    "png": "png/footer/signature.png",
+    "svg": "svg/footer/signature.svg"
+  }
+]

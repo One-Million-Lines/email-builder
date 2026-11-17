@@ -11,7 +11,7 @@ export const socialModules: ModuleDefinition[] = [
     create: () =>
       mod("social.icons", "Social Icons", [
         muted("Follow us", { align: "center" }),
-        text("Twitter · Instagram · LinkedIn · YouTube", {
+        text("Twitter · Instagram · LinkedIn · YouTube · Facebook · TikTok", {
           align: "center",
           color: "{colors.primary}",
           paddingBottom: 16,

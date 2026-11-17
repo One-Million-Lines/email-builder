@@ -26,8 +26,8 @@ export const ecommerceModules: ModuleDefinition[] = [
       mod("ecom.product_grid", "Product Grid", [
         productGrid(
           [
-            product({ name: "Product A", finalPrice: "$29", oldPrice: "$39" }),
-            product({ name: "Product B", finalPrice: "$34", oldPrice: "$45" }),
+            product({ name: "Product A", finalPrice: "29", oldPrice: "39" }),
+            product({ name: "Product B", finalPrice: "34", oldPrice: "45" }),
           ],
           { columns: 2, showOldPrice: true }
         ),
@@ -161,24 +161,5 @@ export const ecommerceModules: ModuleDefinition[] = [
           { columns: 1, showOldPrice: true, showDescription: true, buttonLabel: "View product" }
         ),
       ]),
-  },
-  {
-    type: "ecom.bestseller_list",
-    category: "ecommerce",
-    name: "Bestseller Grid",
-    description: "Top products grid (3 up) with old/final prices. Used by retailers for weekly bestsellers.",
-    tags: ["bestsellers", "grid", "ranking", "top"],
-    create: () =>
-      mod("ecom.bestseller_list", "Bestsellers", [
-        eyebrow("Top 3 this week"),
-        productGrid(
-          [
-            product({ name: "Linen Tote", finalPrice: "$39", oldPrice: "$49" }),
-            product({ name: "Ceramic Mug", finalPrice: "$24" }),
-            product({ name: "Brass Lamp", finalPrice: "$129", oldPrice: "$149" }),
-          ],
-          { columns: 3, showOldPrice: true }
-        ),
-      ]),
-  },
+  }
 ];

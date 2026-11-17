@@ -214,10 +214,10 @@ export const kidsLand: TemplateDefinition = {
           }),
           productGrid(
             [
-              product({ name: "School Suit No.1", image: "https://placehold.co/300x300?text=Suit+1", oldPrice: "$49.99", finalPrice: "$34.99", link: SPECIAL_LINK_PLACEHOLDERS.shop_url, buttonLabel: "Shop Now" }),
-              product({ name: "School Suit No.2", image: "https://placehold.co/300x300?text=Suit+2", oldPrice: "$49.99", finalPrice: "$34.99", link: SPECIAL_LINK_PLACEHOLDERS.shop_url, buttonLabel: "Shop Now" }),
-              product({ name: "School Suit No.3", image: "https://placehold.co/300x300?text=Suit+3", oldPrice: "$49.99", finalPrice: "$34.99", link: SPECIAL_LINK_PLACEHOLDERS.shop_url, buttonLabel: "Shop Now" }),
-              product({ name: "School Suit No.4", image: "https://placehold.co/300x300?text=Suit+4", oldPrice: "$49.99", finalPrice: "$34.99", link: SPECIAL_LINK_PLACEHOLDERS.shop_url, buttonLabel: "Shop Now" }),
+              product({ name: "School Suit No.1", image: "https://placehold.co/300x300?text=Suit+1", oldPrice: "49.99", finalPrice: "34.99", link: SPECIAL_LINK_PLACEHOLDERS.shop_url, buttonLabel: "Shop Now" }),
+              product({ name: "School Suit No.2", image: "https://placehold.co/300x300?text=Suit+2", oldPrice: "49.99", finalPrice: "34.99", link: SPECIAL_LINK_PLACEHOLDERS.shop_url, buttonLabel: "Shop Now" }),
+              product({ name: "School Suit No.3", image: "https://placehold.co/300x300?text=Suit+3", oldPrice: "49.99", finalPrice: "34.99", link: SPECIAL_LINK_PLACEHOLDERS.shop_url, buttonLabel: "Shop Now" }),
+              product({ name: "School Suit No.4", image: "https://placehold.co/300x300?text=Suit+4", oldPrice: "49.99", finalPrice: "34.99", link: SPECIAL_LINK_PLACEHOLDERS.shop_url, buttonLabel: "Shop Now" }),
             ],
             {
               columns: 2,

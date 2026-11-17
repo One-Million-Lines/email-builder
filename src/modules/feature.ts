@@ -169,28 +169,6 @@ export const featureModules: ModuleDefinition[] = [
       ]),
   },
   {
-    type: "feature.single_product_spotlight",
-    category: "feature",
-    name: "Single Product Spotlight",
-    description: "One product with image, name, price and buy button. Use to feature a hero product in a feature-focused email.",
-    tags: ["product", "spotlight", "single", "buy", "shop", "ecommerce"],
-    create: () =>
-      mod("feature.single_product_spotlight", "Product Spotlight", [
-        productGrid(
-          [
-            product({
-              name: "The Signature Bag",
-              finalPrice: "$129",
-              oldPrice: "$159",
-              description: "Handmade, built to last.",
-              image: PLACEHOLDER(520, 520, "Product"),
-            }),
-          ],
-          { columns: 1, showDescription: true, buttonLabel: "Buy now" }
-        ),
-      ]),
-  },
-  {
     type: "feature.pill_nav",
     category: "feature",
     name: "Pill Navigation",

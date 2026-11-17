@@ -413,3 +413,36 @@ export const shopDomainText = (
   }),
   vtMarker: "vtw-domain",
 } as EmailElement);
+
+// Creates multiple images displayed side-by-side in a single row.
+// Uses inline-block styling for email client compatibility.
+export const imageRow = (
+  images: Array<{ src: string; alt: string; width?: number; link?: string }>,
+  opts: Partial<{
+    gap: number;
+    paddingTop: number;
+    paddingBottom: number;
+  }> = {}
+): EmailElement => {
+  const gap = opts.gap ?? 8;
+  const imageHtmls = images
+    .map((img, idx) => {
+      const marginRight = idx < images.length - 1 ? `margin-right:${gap}px;` : "";
+      const imgTag = `<img src="${img.src}" alt="${img.alt}" width="${img.width ?? 135}" style="display:inline-block;${marginRight}max-width:100%;height:auto;" />`;
+      return img.link ? `<a href="${img.link}" style="text-decoration:none;">${imgTag}</a>` : imgTag;
+    })
+    .join("");
+
+  return {
+    id: uid("el"),
+    type: "text",
+    content: imageHtmls,
+    style: {
+      align: "center",
+      paddingTop: opts.paddingTop ?? 0,
+      paddingBottom: opts.paddingBottom ?? 0,
+      paddingLeft: 0,
+      paddingRight: 0,
+    },
+  };
+};

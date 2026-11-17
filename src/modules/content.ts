@@ -137,24 +137,6 @@ export const contentModules: ModuleDefinition[] = [
       ]),
   },
   {
-    type: "content.quote",
-    category: "content",
-    name: "Pull Quote",
-    description: "Centered serif pull quote with attribution. Adds rhythm to long editorial newsletters.",
-    tags: ["quote", "pull-quote", "editorial", "attribution"],
-    create: () =>
-      mod("content.quote", "Pull Quote", [
-        text("“The best way to predict the future is to create it.”", {
-          fontFamily: "{fonts.heading}",
-          fontSize: 22,
-          align: "center",
-          paddingTop: 24,
-          lineHeight: 1.4,
-        }),
-        text("— Peter Drucker", { color: "{colors.muted}", align: "center", paddingBottom: 24 }),
-      ]),
-  },
-  {
     type: "content.author_byline",
     category: "content",
     name: "Author Byline",

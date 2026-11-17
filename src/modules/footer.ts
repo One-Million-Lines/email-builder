@@ -1,5 +1,5 @@
 import type { ModuleDefinition } from "./registry";
-import { text, mod, divider, image, muted, footerLinks, logoImage, shopInfoText, PLACEHOLDER } from "./helpers";
+import { text, mod, divider, image, muted, footerLinks, logoImage, shopInfoText, imageRow, PLACEHOLDER } from "./helpers";
 
 const baseFooterStyle = {
   backgroundColor: "{colors.background}",
@@ -19,12 +19,13 @@ export const footerModules: ModuleDefinition[] = [
         "footer.simple",
         "Simple Footer",
         [
-          muted("© 2026 Your Company. All rights reserved.", { align: "center", fontSize: 12 }),
+          muted("© 2026 Your Company. All rights reserved. You are receiving this email because you signed up for our newsletter. ", { align: "center", fontSize: 12 }),
           muted("123 Main St · City · Country", { align: "center", fontSize: 12 }),
           footerLinks([
+            { label: "Privacy Policy", type: "policy_page" },
+            { label: "Terms", type: "terms_page" },
             { label: "Unsubscribe", type: "unsubscribe" },
-            { label: "View in browser", type: "view_in_browser" },
-          ]),
+          ], { paddingBottom: 2 }),
         ],
         { ...baseFooterStyle, paddingTop: 24 }
       ),
@@ -41,7 +42,7 @@ export const footerModules: ModuleDefinition[] = [
         "Social Footer",
         [
           text("Follow us", { align: "center", paddingTop: 24 }),
-          text("Twitter · Instagram · LinkedIn", {
+          text("Twitter · Instagram · LinkedIn · Facebook · TikTok", {
             align: "center",
             color: "{colors.primary}",
             paddingBottom: 12,
@@ -49,42 +50,6 @@ export const footerModules: ModuleDefinition[] = [
           divider(),
           muted("© 2026 Your Company", { align: "center", fontSize: 12 }),
           footerLinks([{ label: "Unsubscribe", type: "unsubscribe" }], { paddingBottom: 24 }),
-        ],
-        baseFooterStyle
-      ),
-  },
-  {
-    type: "footer.legal",
-    category: "footer",
-    name: "Legal Footer",
-    description: "Long-form footer with explanation of why the user is receiving the email plus privacy/terms/unsubscribe links. Used by enterprise and finance newsletters.",
-    tags: ["footer", "legal", "compliance", "enterprise"],
-    create: () =>
-      mod(
-        "footer.legal",
-        "Legal Footer",
-        [
-          text(
-            "You are receiving this email because you signed up for our newsletter. If you no longer wish to receive emails, you can unsubscribe at any time.",
-            {
-              align: "center",
-              color: "{colors.muted}",
-              fontSize: 11,
-              lineHeight: 1.6,
-              paddingTop: 24,
-            }
-          ),
-          shopInfoText("Your company · 123 Main St · City · Country", {
-            align: "center",
-            fontSize: 11,
-            paddingTop: 0,
-            paddingBottom: 12,
-          }),
-          footerLinks([
-            { label: "Privacy Policy", type: "policy_page" },
-            { label: "Terms", type: "terms_page" },
-            { label: "Unsubscribe", type: "unsubscribe" },
-          ], { paddingBottom: 24 }),
         ],
         baseFooterStyle
       ),
@@ -131,9 +96,11 @@ export const footerModules: ModuleDefinition[] = [
         "footer.app_links",
         "App Footer",
         [
-          text("Get the app", { align: "center", fontWeight: "bold", paddingTop: 24, paddingBottom: 8 }),
-          image(PLACEHOLDER(135, 40, "App Store"), "App Store", { width: 135, align: "center", paddingTop: 0, paddingBottom: 4 }),
-          image(PLACEHOLDER(135, 40, "Google Play"), "Google Play", { width: 135, align: "center", paddingTop: 0, paddingBottom: 16 }),
+          text("Get the app", { align: "center", fontWeight: "bold", paddingTop: 24, paddingBottom: 12 }),
+          imageRow([
+            { src: PLACEHOLDER(135, 40, "App Store"), alt: "App Store", width: 135 },
+            { src: PLACEHOLDER(135, 40, "Google Play"), alt: "Google Play", width: 135 },
+          ], { gap: 12, paddingBottom: 16 }),
           divider(),
           muted("© 2026 Your Brand", { align: "center", fontSize: 11 }),
           footerLinks([{ label: "Unsubscribe", type: "unsubscribe" }], { paddingBottom: 24 }),
