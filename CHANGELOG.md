@@ -4,8 +4,12 @@ All notable changes to this package are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/) and the
 [Keep a Changelog](https://keepachangelog.com/) format.
 
+## [0.15.2] — 2026-11-17
 
-## [0.15.1] — 2026-11-17
+### Changed
+- Updated dev dependencies: eslint 10.14 → 10.15, jsdom 31.0.0 → 31.0.1, vite 8.3.6 → 8.3.8
+- Updated lucide-react 1.70 → 1.74 (runtime dependency)
+- Resolved 3 moderate `minimatch` vulnerabilities inherited from older eslint
 - cleaned some blocks
 - added images for previews, not in use yet.
 

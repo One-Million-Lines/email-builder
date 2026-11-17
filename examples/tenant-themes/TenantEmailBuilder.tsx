@@ -22,6 +22,8 @@ import {
 import "@one-million-lines/email-builder/styles.css";
 
 // Tenant-specific assets — import your own theme files here.
+import actordoStarterDef, { actordoTheme } from "./actordo-theme";
+import { actordoBlocks } from "./actordo-blocks";
 import campmorStarterDef, { campmorTheme } from "./campmor-theme";
 import { campmorBlocks } from "./campmor-blocks";
 import hamangiuStarterDef, { hamangiuTheme } from "./hamangiu-theme";
@@ -59,6 +61,12 @@ const TENANT_CONFIGS: Record<string, TenantConfig> = {
     themes:          [feroshopTheme, ...defaultThemes],
     starterTemplate: feroshopStarterDef,
     modules:         feroshopBlocks,   // Promo Strip, Deal Badge, B2B Features
+  },
+
+  actordo: {
+    themes: [actordoTheme, ...defaultThemes],
+    starterTemplate: actordoStarterDef,
+    modules: actordoBlocks,
   },
 
   campmor: {
