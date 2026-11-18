@@ -493,6 +493,27 @@ function ThemeEditor() {
     });
   };
 
+  const updateButtonToken = (patch: Partial<NonNullable<typeof current.tokens.button>>) => {
+    applyTheme({
+      ...current,
+      tokens: { ...current.tokens, button: { ...(current.tokens.button ?? {}), ...patch } },
+    });
+  };
+
+  const updateTextToken = (patch: Partial<NonNullable<typeof current.tokens.text>>) => {
+    applyTheme({
+      ...current,
+      tokens: { ...current.tokens, text: { ...(current.tokens.text ?? {}), ...patch } },
+    });
+  };
+
+  const updateHeadingToken = (patch: Partial<NonNullable<typeof current.tokens.heading>>) => {
+    applyTheme({
+      ...current,
+      tokens: { ...current.tokens, heading: { ...(current.tokens.heading ?? {}), ...patch } },
+    });
+  };
+
   return (
     <>
       {/* ── Preset switcher ─────────────────────────────────────── */}
@@ -560,6 +581,110 @@ function ThemeEditor() {
             onChange={(hex) => updateColor(key, hex)}
           />
         ))}
+      </div>
+
+      {/* ── Button tokens ─────────────────────────────────────────── */}
+      <div className="text-xs font-semibold uppercase tracking-wide text-gray-500 mt-4 mb-2 flex items-center gap-2">
+        Button
+        {preset && JSON.stringify(current.tokens.button) !== JSON.stringify(preset.tokens.button) && (
+          <button
+            onClick={() => preset && applyTheme({ ...current, tokens: { ...current.tokens, button: preset.tokens.button } })}
+            className="normal-case font-normal text-[10px] text-blue-600 hover:underline"
+          >Reset</button>
+        )}
+      </div>
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-gray-500 w-28 shrink-0 truncate">Border radius (px)</span>
+          <input
+            type="number" min={0} max={99}
+            value={current.tokens.button?.borderRadius ?? 6}
+            onChange={(e) => updateButtonToken({ borderRadius: Number(e.target.value) })}
+            className="flex-1 min-w-0 px-2 py-1 text-xs border border-gray-200 rounded focus:border-blue-500 focus:outline-none"
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-gray-500 w-28 shrink-0 truncate">Border width (px)</span>
+          <input
+            type="number" min={0} max={10}
+            value={current.tokens.button?.borderWidth ?? 0}
+            onChange={(e) => updateButtonToken({ borderWidth: Number(e.target.value) })}
+            className="flex-1 min-w-0 px-2 py-1 text-xs border border-gray-200 rounded focus:border-blue-500 focus:outline-none"
+          />
+        </div>
+        <ThemeColorRow
+          label="Border color"
+          value={current.tokens.button?.borderColor ?? "transparent"}
+          onChange={(v) => updateButtonToken({ borderColor: v })}
+        />
+      </div>
+
+      {/* ── Text tokens ───────────────────────────────────────────── */}
+      <div className="text-xs font-semibold uppercase tracking-wide text-gray-500 mt-4 mb-2 flex items-center gap-2">
+        Text
+        {preset && JSON.stringify(current.tokens.text) !== JSON.stringify(preset.tokens.text) && (
+          <button
+            onClick={() => preset && applyTheme({ ...current, tokens: { ...current.tokens, text: preset.tokens.text } })}
+            className="normal-case font-normal text-[10px] text-blue-600 hover:underline"
+          >Reset</button>
+        )}
+      </div>
+      <div className="flex items-center gap-2">
+        <span className="text-xs text-gray-500 w-28 shrink-0">Link underline</span>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={current.tokens.text?.linkUnderline !== false}
+          onClick={() => updateTextToken({ linkUnderline: !(current.tokens.text?.linkUnderline !== false) })}
+          className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors ${current.tokens.text?.linkUnderline !== false ? "bg-blue-600" : "bg-gray-300"}`}
+        >
+          <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${current.tokens.text?.linkUnderline !== false ? "translate-x-4" : "translate-x-0.5"}`} />
+        </button>
+      </div>
+
+      {/* ── Heading tokens ────────────────────────────────────────── */}
+      <div className="text-xs font-semibold uppercase tracking-wide text-gray-500 mt-4 mb-2 flex items-center gap-2">
+        Heading defaults
+        {preset && JSON.stringify(current.tokens.heading) !== JSON.stringify(preset.tokens.heading) && (
+          <button
+            onClick={() => preset && applyTheme({ ...current, tokens: { ...current.tokens, heading: preset.tokens.heading } })}
+            className="normal-case font-normal text-[10px] text-blue-600 hover:underline"
+          >Reset</button>
+        )}
+      </div>
+      <p className="text-[10px] text-gray-400 mb-2 leading-snug">
+        Applied to headline elements that use a theme token for color/size (not an explicit override).
+      </p>
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-gray-500 w-28 shrink-0 truncate">Font size (px)</span>
+          <input
+            type="number" min={8} max={96}
+            value={current.tokens.heading?.fontSize ?? ""}
+            placeholder="inherit"
+            onChange={(e) => updateHeadingToken({ fontSize: e.target.value ? Number(e.target.value) : undefined })}
+            className="flex-1 min-w-0 px-2 py-1 text-xs border border-gray-200 rounded focus:border-blue-500 focus:outline-none"
+          />
+        </div>
+        <ThemeColorRow
+          label="Color"
+          value={current.tokens.heading?.color ?? ""}
+          onChange={(v) => updateHeadingToken({ color: v || undefined })}
+        />
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-gray-500 w-28 shrink-0 truncate">Font weight</span>
+          <select
+            value={current.tokens.heading?.fontWeight ?? "bold"}
+            onChange={(e) => updateHeadingToken({ fontWeight: e.target.value })}
+            className="flex-1 min-w-0 px-2 py-1 text-xs border border-gray-200 rounded focus:border-blue-500 focus:outline-none bg-white"
+          >
+            <option value="bold">bold</option>
+            <option value="normal">normal</option>
+            <option value="600">600</option>
+            <option value="700">700</option>
+            <option value="800">800</option>
+          </select>
+        </div>
       </div>
     </>
   );

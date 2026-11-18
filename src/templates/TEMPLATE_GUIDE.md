@@ -75,16 +75,38 @@ settings: {
 
 ## 3. Theme & design tokens
 
-Every theme has an `id`, a `name`, and a `tokens` object with four sub-objects.
+Every theme has an `id`, a `name`, and a `tokens` object with **seven** sub-objects
+(four original + three new optional groups added in v0.16).
 
 ```ts
 interface ThemeTokens {
-  colors: Record<string, string>;   // Named hex values
-  fonts:  Record<string, string>;   // Named font-stack strings
-  spacing: Record<string, number>;  // Named pixel values (rarely used in elements directly)
-  radius:  Record<string, number>;  // Named border-radius px values
+  // ── Core (required) ───────────────────────────────────────────────────────
+  colors:  Record<string, string>;   // Named hex values
+  fonts:   Record<string, string>;   // Named font-stack strings
+  spacing: Record<string, number>;   // Named pixel values
+  radius:  Record<string, number>;   // Named border-radius px values
+
+  // ── Extended (optional, all fields have built-in defaults) ────────────────
+  button?: {
+    borderRadius?: number;  // px; default 6
+    borderColor?:  string;  // hex or token ref; default "transparent"
+    borderWidth?:  number;  // px; default 0 (no border)
+  };
+  text?: {
+    linkUnderline?: boolean; // default true
+  };
+  heading?: {
+    fontSize?:    number;  // px; default 28 (applied to role="headline" elements)
+    color?:       string;  // hex or token ref; default → element's own color token
+    fontWeight?:  string;  // "bold" | "normal" | "600" …; default "bold"
+  };
 }
 ```
+
+> **heading token cascading rule**: heading tokens apply to `TextElement` nodes
+> with `role === "headline"` **only when the element's own value for that property
+> is a theme token reference (`{…}`) or is unset**. An explicit concrete value
+> (e.g. `fontSize: 36` passed to the `heading()` helper) always wins.
 
 ### Standard token names
 
@@ -110,20 +132,51 @@ To reference a token in any style field, write the exact path in braces:
 ```
 
 The renderer resolves these at render time. **Always prefer tokens over hardcoded hex values.**
+You can also reference the new token groups, e.g. `{ color: "{heading.color}" }`.
 
 ### Available themes (from `src/themes/defaultThemes.ts`)
 
 Import by name:
 ```ts
-import { minimalSaaS, ecommercePromo, publisherClassic, warmCreator, boldBrand } from "../themes/defaultThemes";
+import {
+  minimalSaaS, ecommercePromo, luxuryBlack, greenEco, newsletterEditorial,
+  DEFAULT_BUTTON_TOKENS, DEFAULT_TEXT_TOKENS, DEFAULT_HEADING_TOKENS,
+} from "../themes/defaultThemes";
 ```
 
-Pick the theme that best fits the template category:
-- `minimalSaaS` — clean blue/white, good for onboarding, transactional
-- `ecommercePromo` — orange accent, good for sales/promotions
-- `publisherClassic` — serif heading, muted palette, good for newsletters
-- `warmCreator` — warm off-white, personal tone, good for creator newsletters
-- `boldBrand` — strong contrast, large typography, good for launches
+| Theme | Style notes |
+|---|---|
+| `minimalSaaS` | Clean blue/white; 8px button radius; 28px headings |
+| `ecommercePromo` | Orange accent; pill buttons (24px radius); 32px headings in primary color |
+| `luxuryBlack` | Gold on black; square buttons with 1px gold border; 36px gold headings |
+| `greenEco` | Natural palette; 4px button radius; 26px headings |
+| `newsletterEditorial` | Serif; 2px button radius; 22px light-weight headings; links not underlined |
+
+### Authoring a custom theme
+
+Spread the default token groups to inherit defaults, then override:
+
+```ts
+import { DEFAULT_BUTTON_TOKENS, DEFAULT_TEXT_TOKENS, DEFAULT_HEADING_TOKENS } from "../themes/defaultThemes";
+import type { Theme } from "../core/types";
+
+export const myBrandTheme: Theme = {
+  id: "my-brand",
+  name: "My Brand",
+  tokens: {
+    colors: {
+      background: "#F5F0FF", surface: "#FFFFFF", primary: "#7C3AED",
+      text: "#1E1B4B", muted: "#6B7280", buttonBackground: "#7C3AED", buttonText: "#FFFFFF",
+    },
+    fonts:   { heading: "Inter, sans-serif", body: "Inter, sans-serif", button: "Inter, sans-serif" },
+    spacing: { xs: 4, sm: 8, md: 16, lg: 24, xl: 40 },
+    radius:  { sm: 4, md: 8, lg: 16 },
+    button:  { ...DEFAULT_BUTTON_TOKENS, borderRadius: 12 },
+    text:    { ...DEFAULT_TEXT_TOKENS },
+    heading: { ...DEFAULT_HEADING_TOKENS, fontSize: 30, color: "{colors.primary}" },
+  },
+};
+```
 
 ---
 

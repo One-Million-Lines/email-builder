@@ -1,5 +1,31 @@
 import type { Theme } from "../core/types";
 
+/**
+ * Shared defaults for the new token groups. These match the previous hardcoded
+ * behaviour so existing emails render identically after the upgrade.
+ * Custom tenant themes should spread these and override what they need:
+ *
+ * ```ts
+ * import { DEFAULT_BUTTON_TOKENS, DEFAULT_TEXT_TOKENS } from "./defaultThemes";
+ * const myTheme: Theme = {
+ *   tokens: {
+ *     ...
+ *     button: { ...DEFAULT_BUTTON_TOKENS, borderRadius: 0 },
+ *     text:   { ...DEFAULT_TEXT_TOKENS },
+ *     heading: { fontSize: 32, color: "{colors.primary}" },
+ *   },
+ * };
+ * ```
+ */
+export const DEFAULT_BUTTON_TOKENS = { borderRadius: 6, borderColor: "transparent", borderWidth: 0 } as const;
+export const DEFAULT_TEXT_TOKENS   = { linkUnderline: true } as const;
+/**
+ * Default heading token values. These are used when a heading element has no
+ * explicit (concrete, non-token) fontSize / fontWeight / color set.
+ * fontSize: 28 matches the previous hardcoded default for unlevel headings.
+ */
+export const DEFAULT_HEADING_TOKENS = { fontSize: 28, fontWeight: "bold" } as const;
+
 export const minimalSaaS: Theme = {
   id: "minimal-saas",
   name: "Minimal SaaS",
@@ -20,6 +46,9 @@ export const minimalSaaS: Theme = {
     },
     spacing: { xs: 4, sm: 8, md: 16, lg: 24, xl: 40 },
     radius: { sm: 4, md: 8, lg: 16 },
+    button:  { ...DEFAULT_BUTTON_TOKENS, borderRadius: 8 },
+    text:    { ...DEFAULT_TEXT_TOKENS },
+    heading: { ...DEFAULT_HEADING_TOKENS, fontSize: 28 },
   },
 };
 
@@ -43,6 +72,9 @@ export const ecommercePromo: Theme = {
     },
     spacing: { xs: 4, sm: 8, md: 16, lg: 24, xl: 40 },
     radius: { sm: 4, md: 8, lg: 24 },
+    button:  { ...DEFAULT_BUTTON_TOKENS, borderRadius: 24 },
+    text:    { ...DEFAULT_TEXT_TOKENS },
+    heading: { ...DEFAULT_HEADING_TOKENS, fontSize: 32, color: "{colors.primary}" },
   },
 };
 
@@ -66,6 +98,9 @@ export const luxuryBlack: Theme = {
     },
     spacing: { xs: 4, sm: 8, md: 16, lg: 24, xl: 48 },
     radius: { sm: 0, md: 0, lg: 0 },
+    button:  { ...DEFAULT_BUTTON_TOKENS, borderRadius: 0, borderColor: "{colors.primary}", borderWidth: 1 },
+    text:    { ...DEFAULT_TEXT_TOKENS },
+    heading: { ...DEFAULT_HEADING_TOKENS, fontSize: 36, color: "{colors.primary}" },
   },
 };
 
@@ -89,6 +124,9 @@ export const greenEco: Theme = {
     },
     spacing: { xs: 4, sm: 8, md: 16, lg: 24, xl: 40 },
     radius: { sm: 4, md: 8, lg: 16 },
+    button:  { ...DEFAULT_BUTTON_TOKENS, borderRadius: 4 },
+    text:    { ...DEFAULT_TEXT_TOKENS },
+    heading: { ...DEFAULT_HEADING_TOKENS, fontSize: 26 },
   },
 };
 
@@ -112,6 +150,9 @@ export const newsletterEditorial: Theme = {
     },
     spacing: { xs: 4, sm: 8, md: 16, lg: 32, xl: 48 },
     radius: { sm: 2, md: 4, lg: 8 },
+    button:  { ...DEFAULT_BUTTON_TOKENS, borderRadius: 2 },
+    text:    { ...DEFAULT_TEXT_TOKENS, linkUnderline: false },
+    heading: { fontSize: 22, fontWeight: "normal", color: "{colors.text}" },
   },
 };
 

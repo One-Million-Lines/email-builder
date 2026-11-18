@@ -188,6 +188,40 @@ export interface ThemeTokens {
   fonts: Record<string, string>;
   spacing: Record<string, number>;
   radius: Record<string, number>;
+  /**
+   * Theme-level button defaults. These apply when the individual button element
+   * does not have its own explicit (concrete, non-token) value for the same property.
+   * Override order: element-explicit > theme.button.* > built-in fallback.
+   */
+  button?: {
+    /** Corner radius in px. Default: 6. */
+    borderRadius?: number;
+    /** Border color (hex or token ref like "{colors.primary}"). Default: "transparent". */
+    borderColor?: string;
+    /** Border width in px. Set > 0 to show a button border. Default: 0. */
+    borderWidth?: number;
+  };
+  /**
+   * Theme-level text behaviour. Applied during HTML rendering.
+   */
+  text?: {
+    /** Whether links within text elements are underlined. Default: true. */
+    linkUnderline?: boolean;
+  };
+  /**
+   * Theme-level heading/title defaults. Applied to TextElement nodes with
+   * `role === "headline"` when the element has no explicit (non-token) value
+   * for the same property.
+   * Accepts concrete values (e.g. "#FF0000") or token refs (e.g. "{colors.primary}").
+   */
+  heading?: {
+    /** Heading font size in px. */
+    fontSize?: number;
+    /** Heading text color — hex or token reference. */
+    color?: string;
+    /** Heading font weight ("bold", "normal", "600", …). */
+    fontWeight?: string;
+  };
 }
 
 export interface Theme {

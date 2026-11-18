@@ -4,6 +4,80 @@ All notable changes to this package are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/) and the
 [Keep a Changelog](https://keepachangelog.com/) format.
 
+## [0.16.0] — 2026-11-18
+
+### Added — Extended theme token groups
+
+Three new optional token groups extend `ThemeTokens` beyond colors. They are
+backwards-compatible: omitting them leaves all existing behavior unchanged.
+
+#### `tokens.button` — global button defaults
+Applies to every `button` element and to product-grid buttons. Per-element
+explicit style values still take priority.
+
+| Field | Type | Default | Notes |
+|---|---|---|---|
+| `borderRadius` | `number` (px) | `6` | Renders in CSS + Outlook VML (`arcsize`). |
+| `borderWidth` | `number` (px) | `0` | Set > 0 to show a border. |
+| `borderColor` | `string` | `"transparent"` | Hex or token ref (`{colors.primary}`). Outlook VML: `strokecolor` / `strokeweight`. |
+
+#### `tokens.text` — text behaviour
+| Field | Type | Default | Notes |
+|---|---|---|---|
+| `linkUnderline` | `boolean` | `true` | Controls `text-decoration` on links within text elements in the HTML output. |
+
+#### `tokens.heading` — headline/title defaults
+Applied to `TextElement` nodes with `role === "headline"` **only when the
+element's own value is a theme-token reference (`{…}`) or unset** — explicit
+concrete values always win.
+
+| Field | Type | Default | Notes |
+|---|---|---|---|
+| `fontSize` | `number` (px) | — (inherit) | |
+| `color` | `string` | — (inherit) | Hex or token ref (`{colors.primary}`). |
+| `fontWeight` | `string` | `"bold"` | `"bold"`, `"normal"`, `"600"`, … |
+
+#### Theme editor UI
+All three sections are now editable in the right sidebar Themes panel, each
+with a per-section **Reset** button that restores the preset values.
+
+#### Authoring new themes
+Spread the exported defaults and override what you need:
+
+```ts
+import {
+  DEFAULT_BUTTON_TOKENS,
+  DEFAULT_TEXT_TOKENS,
+  DEFAULT_HEADING_TOKENS,
+} from "@one-million-lines/email-builder";
+
+const myTheme: Theme = {
+  id: "my-brand",
+  name: "My Brand",
+  tokens: {
+    colors: { background: "#FFF", surface: "#FFF", primary: "#E00", text: "#111",
+              muted: "#888", buttonBackground: "#E00", buttonText: "#FFF" },
+    fonts:   { heading: "Georgia, serif", body: "Arial, sans-serif", button: "Arial, sans-serif" },
+    spacing: { xs: 4, sm: 8, md: 16, lg: 24, xl: 40 },
+    radius:  { sm: 2, md: 4, lg: 8 },
+    // --- new groups ---
+    button:  { ...DEFAULT_BUTTON_TOKENS, borderRadius: 0, borderColor: "{colors.primary}", borderWidth: 2 },
+    text:    { ...DEFAULT_TEXT_TOKENS },
+    heading: { ...DEFAULT_HEADING_TOKENS, fontSize: 32, color: "{colors.primary}" },
+  },
+};
+```
+
+### Changed
+- `defaultThemes.ts`: All 5 built-in themes now include `button`, `text`, and
+  `heading` token groups. Notable opinionated defaults:
+  - **Luxury Black**: button has 1px gold border + 0 radius; heading color =
+    `{colors.primary}` (gold).
+  - **Ecommerce Promo**: button `borderRadius: 24` (pill shape).
+  - **Newsletter Editorial**: button `borderRadius: 2`; heading `fontSize: 24`.
+- `ThemeTokens` and `DEFAULT_*` constants are now exported from the package
+  public API.
+
 ## [0.15.3] — 2026-11-18
 
 ### Fixed

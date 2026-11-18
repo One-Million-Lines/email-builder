@@ -174,6 +174,17 @@ export const mod = (
 });
 
 // Heading shortcut for newsletter article titles.
+/**
+ * Heading element (role="headline").
+ *
+ * fontSize and fontWeight are intentionally left unset when not explicitly
+ * requested — this allows the theme's `heading.fontSize` / `heading.fontWeight`
+ * tokens to apply. Pass `level` or an explicit `fontSize` to pin a concrete value
+ * that the theme token will not override.
+ *
+ * Level → size guide (used only when `level` is supplied):
+ *   1 → 32 px   2 → 24 px   3 → 18 px
+ */
 export const heading = (
   content: string,
   opts: {
@@ -182,14 +193,21 @@ export const heading = (
     paddingTop?: number;
     paddingBottom?: number;
     fontSize?: number;
+    fontWeight?: string;
+    color?: string;
   } = {}
 ) => {
   const sizes = { 1: 32, 2: 24, 3: 18 } as const;
+  const explicitSize = opts.fontSize ?? (opts.level ? sizes[opts.level] : undefined);
   return text(content, {
     role: "headline",
     fontFamily: "{fonts.heading}",
-    fontSize: opts.fontSize ?? sizes[opts.level ?? 2],
-    fontWeight: "bold",
+    // Set only when an explicit level/size is requested; otherwise the
+    // theme heading.fontSize token provides the default via the renderer.
+    ...(explicitSize !== undefined ? { fontSize: explicitSize } : {}),
+    // fontWeight: not set → theme heading.fontWeight token applies (default "bold")
+    ...(opts.fontWeight !== undefined ? { fontWeight: opts.fontWeight } : {}),
+    ...(opts.color !== undefined ? { color: opts.color } : {}),
     align: opts.align,
     paddingTop: opts.paddingTop ?? 16,
     paddingBottom: opts.paddingBottom ?? 8,

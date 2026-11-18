@@ -115,15 +115,42 @@ function collectMobile(
   return cls;
 }
 
+/** Returns true when v is undefined or a `{token.path}` reference (not an explicit value). */
+function isTokenRefOrUnset(v: unknown): boolean {
+  return v === undefined || v === null || (typeof v === "string" && /^\{[\w.]+\}$/.test(v));
+}
+
 function renderText(el: TextElement, ctx: RenderCtx): string {
-  const s = resolveStyle((el.style ?? {}) as Record<string, unknown>, ctx.theme);
+  const rawStyle = (el.style ?? {}) as Record<string, unknown>;
+  const s = resolveStyle(rawStyle, ctx.theme);
+
+  // Apply heading theme tokens for headline elements when the element itself
+  // is using a token reference (not an explicit concrete value).
+  const h = ctx.theme.tokens.heading;
+  const isHeadline = el.role === "headline";
+  let effectiveColor    = (s.color as string) ?? "#111827";
+  let effectiveFontSize = s.fontSize as number | undefined;
+  let effectiveFontWeight = (s.fontWeight as string) ?? "normal";
+  if (isHeadline && h) {
+    if (h.color && isTokenRefOrUnset(rawStyle.color)) {
+      const resolved = resolveToken(h.color, ctx.theme);
+      effectiveColor = typeof resolved === "string" ? resolved : h.color;
+    }
+    if (h.fontSize !== undefined && isTokenRefOrUnset(rawStyle.fontSize)) {
+      effectiveFontSize = h.fontSize;
+    }
+    if (h.fontWeight && isTokenRefOrUnset(rawStyle.fontWeight)) {
+      effectiveFontWeight = h.fontWeight;
+    }
+  }
+
   const css = styleString({
     "font-family": s.fontFamily ?? "Arial, Helvetica, sans-serif",
-    "font-size": s.fontSize ? `${s.fontSize}px` : "16px",
+    "font-size": effectiveFontSize ? `${effectiveFontSize}px` : "16px",
     "line-height": s.lineHeight ?? 1.5,
     "letter-spacing": s.letterSpacing ? `${s.letterSpacing}px` : undefined,
-    "font-weight": s.fontWeight ?? "normal",
-    color: s.color ?? "#111827",
+    "font-weight": effectiveFontWeight,
+    color: effectiveColor,
     "text-align": s.align ?? "left",
     "padding-top": px(s.paddingTop as number, 8),
     "padding-bottom": px(s.paddingBottom as number, 8),
@@ -138,8 +165,11 @@ function renderText(el: TextElement, ctx: RenderCtx): string {
   const linkType = s.linkType as string | undefined;
   const linkTypeAttr = linkType ? ` data-link-type="${escapeHtml(linkType)}"` : "";
   const linkClass = linkType ? VT_LINK_CLASSES[linkType] : undefined;
+  // Respect the theme-level linkUnderline token (default: true).
+  const linkUnderline = ctx.theme.tokens.text?.linkUnderline !== false;
+  const linkDecoration = linkUnderline ? "underline" : "none";
   const inner = link
-    ? `<a${classAttr([linkClass])} href="${safeUrl(link)}"${linkTypeAttr} style="color:inherit;text-decoration:underline">${el.content}</a>`
+    ? `<a${classAttr([linkClass])} href="${safeUrl(link)}"${linkTypeAttr} style="color:inherit;text-decoration:${linkDecoration}">${el.content}</a>`
     : el.content;
   const cls = collectMobile(ctx, el.style as Record<string, unknown>);
   return `<div${classAttr([cls, el.role === "voucherCode" ? "vtw-voucher" : undefined, el.vtMarker])} style="${css}">${inner}</div>`;
@@ -177,6 +207,7 @@ function renderImage(el: ImageElement, ctx: RenderCtx): string {
 
 function renderButton(el: ButtonElement, ctx: RenderCtx): string {
   const s = resolveStyle((el.style ?? {}) as Record<string, unknown>, ctx.theme);
+  const rawStyle = (el.style ?? {}) as Record<string, unknown>;
   const align = (s.align as string) ?? "center";
   const wrapCss = styleString({
     "text-align": align,
@@ -187,10 +218,22 @@ function renderButton(el: ButtonElement, ctx: RenderCtx): string {
   });
   const bg = (s.backgroundColor as string) ?? "#3A7D52";
   const color = (s.color as string) ?? "#FFFFFF";
-  const radius = (s.borderRadius as number) ?? 6;
+  const btnTokens = ctx.theme.tokens.button;
+  // radius: element-explicit > theme.button.borderRadius > 6
+  const radius = isTokenRefOrUnset(rawStyle.borderRadius)
+    ? (btnTokens?.borderRadius ?? 6)
+    : ((s.borderRadius as number) ?? 6);
   const fontSize = (s.fontSize as number) ?? 16;
   const fontFamily = (s.fontFamily as string) ?? "Arial, Helvetica, sans-serif";
   const fontWeight = (s.fontWeight as string) ?? "bold";
+  // Border — from theme tokens; individual button elements cannot override this
+  const borderWidth = btnTokens?.borderWidth ?? 0;
+  const rawBorderColor = btnTokens?.borderColor ?? "transparent";
+  const borderColor = (() => {
+    const resolved = resolveToken(rawBorderColor, ctx.theme);
+    return typeof resolved === "string" ? resolved : rawBorderColor;
+  })();
+  const hasBorder = borderWidth > 0 && borderColor !== "transparent";
 
   const btnCss = styleString({
     display: "inline-block",
@@ -205,13 +248,18 @@ function renderButton(el: ButtonElement, ctx: RenderCtx): string {
     "mso-padding-alt": "0",
     "line-height": "100%",
     "-webkit-text-size-adjust": "none",
+    ...(hasBorder ? { border: `${borderWidth}px solid ${borderColor}` } : {}),
   });
   const label = escapeHtml(el.label);
   const href = safeUrl(el.link);
   const linkTypeAttr = el.linkType ? ` data-link-type="${escapeHtml(el.linkType)}"` : "";
   const arcsize = Math.min(50, Math.round((radius / 22) * 100));
+  // VML border: stroke="t" strokecolor strokeweight for Outlook
+  const vmlStrokeAttrs = hasBorder
+    ? `stroke="t" strokecolor="${borderColor}" strokeweight="${borderWidth}pt"`
+    : `stroke="f"`;
   const vml = `<!--[if mso]>
-<v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="${href}" style="height:44px;v-text-anchor:middle;width:200px;" arcsize="${arcsize}%" stroke="f" fillcolor="${bg}">
+<v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="${href}" style="height:44px;v-text-anchor:middle;width:200px;" arcsize="${arcsize}%" ${vmlStrokeAttrs} fillcolor="${bg}">
 <w:anchorlock/>
 <center style="color:${color};font-family:${fontFamily};font-size:${fontSize}px;font-weight:${fontWeight};">${label}</center>
 </v:roundrect>
@@ -296,13 +344,22 @@ function renderProductGrid(
       : "";
     const btnLabel = p.buttonLabel ?? el.buttonLabel ?? "Shop now";
     const link = p.link ?? "#";
+    const pgBtnRadius = ctx.theme.tokens.button?.borderRadius ?? 6;
+    const pgBtnBorderWidth = ctx.theme.tokens.button?.borderWidth ?? 0;
+    const pgBtnBorderColor = (() => {
+      const raw = ctx.theme.tokens.button?.borderColor ?? "transparent";
+      const resolved = resolveToken(raw, ctx.theme);
+      return typeof resolved === "string" ? resolved : raw;
+    })();
+    const pgBtnBorder = pgBtnBorderWidth > 0 && pgBtnBorderColor !== "transparent"
+      ? `border:${pgBtnBorderWidth}px solid ${pgBtnBorderColor};` : "";
     const btn = el.showButton
       ? `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto;"><tr><td align="center" bgcolor="${resolveTokenSafe(
           btnBg,
           ctx.theme
-        )}" style="border-radius:6px;"><!--[if mso]>
-<v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" href="${safeUrl(link)}" style="height:36px;v-text-anchor:middle;width:140px;" arcsize="15%" stroke="f" fillcolor="${resolveTokenSafe(btnBg, ctx.theme)}"><w:anchorlock/><center style="color:${resolveTokenSafe(btnColor, ctx.theme)};font-family:Arial,sans-serif;font-size:13px;font-weight:bold;">${escapeHtml(btnLabel)}</center></v:roundrect>
-<![endif]--><!--[if !mso]><!-- --><a class="item-url" href="${safeUrl(link)}" style="display:inline-block;padding:10px 18px;font-family:Arial,Helvetica,sans-serif;font-size:13px;font-weight:bold;color:${resolveTokenSafe(btnColor, ctx.theme)};background-color:${resolveTokenSafe(btnBg, ctx.theme)};border-radius:6px;text-decoration:none;">${escapeHtml(btnLabel)}</a><!--<![endif]--></td></tr></table>`
+        )}" style="border-radius:${pgBtnRadius}px;${pgBtnBorder}"><!--[if mso]>
+<v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" href="${safeUrl(link)}" style="height:36px;v-text-anchor:middle;width:140px;" arcsize="${Math.min(50, Math.round((pgBtnRadius / 22) * 100))}%" stroke="${pgBtnBorderWidth > 0 ? "t" : "f"}"${pgBtnBorderWidth > 0 ? ` strokecolor="${pgBtnBorderColor}" strokeweight="${pgBtnBorderWidth}pt"` : ""} fillcolor="${resolveTokenSafe(btnBg, ctx.theme)}"><w:anchorlock/><center style="color:${resolveTokenSafe(btnColor, ctx.theme)};font-family:Arial,sans-serif;font-size:13px;font-weight:bold;">${escapeHtml(btnLabel)}</center></v:roundrect>
+<![endif]--><!--[if !mso]><!-- --><a class="item-url" href="${safeUrl(link)}" style="display:inline-block;padding:10px 18px;font-family:Arial,Helvetica,sans-serif;font-size:13px;font-weight:bold;color:${resolveTokenSafe(btnColor, ctx.theme)};background-color:${resolveTokenSafe(btnBg, ctx.theme)};border-radius:${pgBtnRadius}px;text-decoration:none;${pgBtnBorder}">${escapeHtml(btnLabel)}</a><!--<![endif]--></td></tr></table>`
       : "";
     const img = (() => {
       const imgStyle = imageHeight

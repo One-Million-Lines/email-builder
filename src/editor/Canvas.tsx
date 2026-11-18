@@ -534,17 +534,35 @@ function TextRender({
   });
 
   const merged = mergeMobile(el.style as Record<string, unknown>, viewMode);
+  const rawStyle = el.style as Record<string, unknown> ?? {};
   const s = resolveStyle(merged, theme);
-  const color = (s.color as string) ?? "#000000";
-  const isLightColor = isColorLight(color);
+
+  // Apply heading theme tokens for headline elements (mirrors renderer.ts logic)
+  const h = theme.tokens.heading;
+  const isHeadline = el.role === "headline";
+  let effectiveColor    = (s.color as string) ?? "#000000";
+  let effectiveFontSize = s.fontSize as number | undefined;
+  let effectiveFontWeight = s.fontWeight as React.CSSProperties["fontWeight"] | undefined;
+  if (isHeadline && h) {
+    const isTokenRefOrUnset = (v: unknown) =>
+      v === undefined || v === null || (typeof v === "string" && /^\{[\w.]+\}$/.test(v));
+    if (h.color && isTokenRefOrUnset(rawStyle.color)) {
+      const resolved = resolveToken(h.color, theme);
+      if (typeof resolved === "string") effectiveColor = resolved;
+    }
+    if (h.fontSize !== undefined && isTokenRefOrUnset(rawStyle.fontSize)) effectiveFontSize = h.fontSize;
+    if (h.fontWeight && isTokenRefOrUnset(rawStyle.fontWeight)) effectiveFontWeight = h.fontWeight as React.CSSProperties["fontWeight"];
+  }
+
+  const isLightColor = isColorLight(effectiveColor);
 
   const style: React.CSSProperties = {
     fontFamily: s.fontFamily as string,
-    fontSize: s.fontSize as number,
+    fontSize: effectiveFontSize,
     lineHeight: s.lineHeight as number,
     letterSpacing: s.letterSpacing as number,
-    fontWeight: s.fontWeight as React.CSSProperties["fontWeight"],
-    color,
+    fontWeight: effectiveFontWeight,
+    color: effectiveColor,
     textAlign: s.align as React.CSSProperties["textAlign"],
     paddingTop: (s.paddingTop as number) ?? 8,
     paddingBottom: (s.paddingBottom as number) ?? 8,
@@ -615,6 +633,7 @@ function ImageRender({ el, viewMode, theme }: { el: ImageElement; viewMode: "des
 
 function ButtonRender({ el, viewMode, theme }: { el: ButtonElement; viewMode: "desktop" | "mobile"; theme: Theme }) {
   const merged = mergeMobile(el.style as Record<string, unknown>, viewMode);
+  const rawStyle = el.style as Record<string, unknown> ?? {};
   const s = resolveStyle(merged, theme);
   const wrap: React.CSSProperties = {
     textAlign: (s.align as React.CSSProperties["textAlign"]) ?? "center",
@@ -623,6 +642,19 @@ function ButtonRender({ el, viewMode, theme }: { el: ButtonElement; viewMode: "d
     paddingLeft: (s.paddingLeft as number) ?? 16,
     paddingRight: (s.paddingRight as number) ?? 16,
   };
+  const btnTokens = theme.tokens.button;
+  const isTokenRefOrUnset = (v: unknown) =>
+    v === undefined || v === null || (typeof v === "string" && /^\{[\w.]+\}$/.test(v));
+  const radius = isTokenRefOrUnset(rawStyle.borderRadius)
+    ? (btnTokens?.borderRadius ?? 6)
+    : ((s.borderRadius as number) ?? 6);
+  const borderWidth = btnTokens?.borderWidth ?? 0;
+  const borderColor = (() => {
+    const raw = btnTokens?.borderColor ?? "transparent";
+    const resolved = resolveToken(raw, theme);
+    return typeof resolved === "string" ? resolved : raw;
+  })();
+  const hasBorder = borderWidth > 0 && borderColor !== "transparent";
   const btn: React.CSSProperties = {
     display: "inline-block",
     backgroundColor: (s.backgroundColor as string) ?? "#3A7D52",
@@ -630,9 +662,10 @@ function ButtonRender({ el, viewMode, theme }: { el: ButtonElement; viewMode: "d
     fontFamily: s.fontFamily as string,
     fontSize: (s.fontSize as number) ?? 16,
     fontWeight: (s.fontWeight as React.CSSProperties["fontWeight"]) ?? "bold",
-    borderRadius: (s.borderRadius as number) ?? 6,
+    borderRadius: radius,
     padding: "12px 24px",
     textDecoration: "none",
+    ...(hasBorder ? { border: `${borderWidth}px solid ${borderColor}` } : {}),
   };
   return (
     <div style={wrap}>
@@ -689,6 +722,19 @@ function ProductGridRender({
   const radius = (s.borderRadius as number) ?? 0;
   const imageHeight = (s.imageHeight as number) || 0; // 0 = natural height
   const { before: cb, after: ca } = useEmailStore((s) => s.currency);
+
+  // Product grid button tokens — read from theme, same as ButtonRender
+  const pgBtnTokens = theme.tokens.button;
+  const pgBtnRadius = pgBtnTokens?.borderRadius ?? 6;
+  const pgBtnBorderWidth = pgBtnTokens?.borderWidth ?? 0;
+  const pgBtnBorderColor = (() => {
+    const raw = pgBtnTokens?.borderColor ?? "transparent";
+    const resolved = resolveToken(raw, theme);
+    return typeof resolved === "string" ? resolved : raw;
+  })();
+  const pgBtnBorder: React.CSSProperties = pgBtnBorderWidth > 0 && pgBtnBorderColor !== "transparent"
+    ? { border: `${pgBtnBorderWidth}px solid ${pgBtnBorderColor}` }
+    : {};
 
   const wrapStyle: React.CSSProperties = {
     paddingTop: (s.paddingTop as number) ?? 16,
@@ -795,7 +841,9 @@ function ProductGridRender({
                     fontWeight: "bold",
                     color: btnColor,
                     backgroundColor: btnBg,
-                    borderRadius: 6,
+                    borderRadius: pgBtnRadius,
+                    textDecoration: "none",
+                    ...pgBtnBorder,
                   }}
                 >
                   {p.buttonLabel ?? el.buttonLabel ?? "Shop now"}

@@ -3,7 +3,7 @@
 import { createRoot, type Root } from "react-dom/client";
 import { createElement, useEffect } from "react";
 import "./lib.css";
-import type { EmailDocument, Theme, MergeTag } from "./core/types";
+import type { EmailDocument, Theme, MergeTag, ThemeTokens } from "./core/types";
 import { documentSchema } from "./core/validation";
 import { renderEmailHtml } from "./core/renderer";
 import { useEmailStore } from "./store/emailStore";
@@ -275,7 +275,7 @@ export function clearEmailBuilderDocument(): void {
 }
 
 // Re-exports for plugin authors.
-export type { Plugin, ModuleDefinition, AIProvider, EmailDocument, Theme, MergeTag };
+export type { Plugin, ModuleDefinition, AIProvider, EmailDocument, Theme, MergeTag, ThemeTokens };
 export { registerPlugin, renderEmailHtml, documentSchema };
 export { imageUploaderPlugin } from "./plugins/imageUploader";
 export type { ImageUploaderOptions } from "./plugins/imageUploader";
@@ -420,6 +420,11 @@ export {
   luxuryBlack,
   greenEco,
   newsletterEditorial,
+  // Shared defaults for the new token groups — spread these in custom themes:
+  //   button: { ...DEFAULT_BUTTON_TOKENS, borderRadius: 0 }
+  DEFAULT_BUTTON_TOKENS,
+  DEFAULT_TEXT_TOKENS,
+  DEFAULT_HEADING_TOKENS,
 } from "./themes/defaultThemes";
 
 // ─── Document-building helpers ───────────────────────────────────────────────
