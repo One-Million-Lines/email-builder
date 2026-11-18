@@ -1,5 +1,5 @@
 import type { ModuleDefinition } from "./registry";
-import { text, image, button, mod, divider, heading, muted, eyebrow, spacer, product, productGrid, PLACEHOLDER } from "./helpers";
+import { text, image, button, mod, divider, heading, muted, eyebrow, spacer, product, productGrid, logoImage, PLACEHOLDER } from "./helpers";
 
 export const featureModules: ModuleDefinition[] = [
   {
@@ -176,7 +176,7 @@ export const featureModules: ModuleDefinition[] = [
     tags: ["menu", "nav", "links", "pill"],
     create: () =>
       mod("feature.pill_nav", "Pill Navigation", [
-        image(PLACEHOLDER(120, 32, "LOGO"), "Logo", { width: 120, paddingBottom: 8 }),
+        logoImage(PLACEHOLDER(120, 32, "LOGO"), { width: 120, paddingBottom: 8, align: "center" }),
         text(
           '<a href="#">Shop</a> &nbsp; <a href="#">New</a> &nbsp; <a href="#">Sale</a> &nbsp; <a href="#">About</a>',
           { align: "center", color: "{colors.primary}", paddingBottom: 8 }

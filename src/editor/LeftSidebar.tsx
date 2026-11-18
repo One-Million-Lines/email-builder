@@ -48,7 +48,7 @@ export function LeftSidebar() {
   const [panelOpen, setPanelOpen] = useState(
     () => typeof window !== "undefined" ? window.innerWidth >= 1280 : true
   );
-  const { addModule, themes, applyTheme, doc, customModulesRevision } = useEmailStore();
+  const { addModule, themes, applyTheme, doc, customModulesRevision, setSelection } = useEmailStore();
   const aiAvailable = useAIAvailable();
   const leftSidebarPanels = usePluginSlotStore((s) => s.leftSidebarPanels);
 
@@ -64,9 +64,14 @@ export function LeftSidebar() {
   }, [customModulesRevision]);
 
   // Clicking a rail button while collapsed auto-expands the panel.
+  // When switching to "themes", also deselect any selected block so the right
+  // sidebar automatically shows the Theme editor (email settings panel).
   const handleRailClick = (id: typeof active) => {
     setActive(id);
     setPanelOpen(true);
+    if (id === "themes") {
+      setSelection({ kind: "email" });
+    }
   };
 
   return (
