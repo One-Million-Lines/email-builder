@@ -135,12 +135,14 @@ function Sep() {
 /** State captured at the moment the link button is clicked. */
 interface LinkInitial {
   selectedText: string;
+  /** Inner HTML of the existing <a> element, used to preserve content when editing. */
+  anchorInnerHtml: string;
   href: string;
   linkType: SpecialLinkType | "";
   isEditing: boolean; // true when cursor was inside an existing <a>
 }
 
-const EMPTY_LINK_INITIAL: LinkInitial = { selectedText: "", href: "", linkType: "", isEditing: false };
+const EMPTY_LINK_INITIAL: LinkInitial = { selectedText: "", anchorInnerHtml: "", href: "", linkType: "", isEditing: false };
 
 /** Reverse-lookup: given an href, return the matching SpecialLinkType if any. */
 function hrefToLinkType(href: string): SpecialLinkType | "" {
@@ -197,8 +199,13 @@ function LinkPopover({
       }
     }
 
-    // Build the inner HTML — use the original selection or the href as fallback text
+    // Build the inner HTML:
+    // - When editing an existing link, preserve its inner content (anchorInnerHtml)
+    //   rather than using cloneContents() which, after range expansion, would
+    //   include the outer <a> tags and cause double-wrapping.
+    // - Otherwise use the selected content, falling back to the href as text.
     const innerHtml = (() => {
+      if (initial.isEditing && initial.anchorInnerHtml) return initial.anchorInnerHtml;
       if (!savedRange) return href;
       const div = document.createElement("div");
       div.appendChild(savedRange.cloneContents());
@@ -522,9 +529,10 @@ export function RichTextToolbar() {
       let existingHref = "";
       let existingLinkType: SpecialLinkType | "" = "";
       let isEditing = false;
+      let anchorInnerHtml = "";
 
       if (range) {
-        // Selected text for display
+        // Selected text for display (from whatever the user has highlighted)
         const div = document.createElement("div");
         div.appendChild(range.cloneContents());
         selectedText = (div.textContent || "").trim();
@@ -545,10 +553,24 @@ export function RichTextToolbar() {
           existingLinkType = hrefToLinkType(existingHref) || (lt as SpecialLinkType | "");
           // If it's a known special link, keep the canonical placeholder as the href
           if (existingLinkType) existingHref = SPECIAL_LINK_PLACEHOLDERS[existingLinkType];
+
+          // Preserve the anchor's inner HTML so apply() can restore the link text
+          anchorInnerHtml = anchorEl.innerHTML;
+
+          // Always show the full anchor text, even when nothing was selected
+          if (!selectedText) selectedText = anchorEl.textContent?.trim() || "";
+
+          // When cursor is collapsed inside <a> (no selection), expand the saved
+          // range to cover the entire anchor so apply() can replace the whole link
+          if (range.collapsed) {
+            const expanded = document.createRange();
+            expanded.selectNode(anchorEl);
+            setSavedRange(expanded);
+          }
         }
       }
 
-      setLinkInitial({ selectedText, href: existingHref, linkType: existingLinkType, isEditing });
+      setLinkInitial({ selectedText, anchorInnerHtml, href: existingHref, linkType: existingLinkType, isEditing });
       setOpenPopover((cur) => (cur === "link" ? null : "link"));
       return;
     }

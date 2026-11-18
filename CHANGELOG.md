@@ -4,6 +4,18 @@ All notable changes to this package are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/) and the
 [Keep a Changelog](https://keepachangelog.com/) format.
 
+## [0.15.3] — 2026-11-18
+
+### Fixed
+- **Edit link — cursor inside `<a>` with no selection**: clicking "Edit link"
+  while the cursor was placed inside an existing link (without selecting text)
+  now correctly shows the link's visible text in the dialog and replaces the
+  entire link on "Update link". Previously, clicking "Update link" would
+  insert the URL as literal text next to the existing link text.
+- **Edit link — text field always populated**: the "Text:" preview in the
+  Edit link dialog now always shows the full anchor text, even when nothing
+  was selected before opening the dialog.
+
 ## [0.15.2] — 2026-11-17
 
 ### Changed
