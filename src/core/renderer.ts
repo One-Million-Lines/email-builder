@@ -14,7 +14,7 @@ import type {
   Theme,
 } from "./types";
 import { resolveStyle, resolveToken } from "./theme";
-import { escapeHtml, safeUrl, starGlyphs, STAR_COLOR, applyEditableSlots } from "./utils";
+import { escapeHtml, safeUrl, starGlyphs, STAR_COLOR, applyEditableSlots, applyThemeTokens } from "./utils";
 import { documentSchema } from "./validation";
 
 const VT_LINK_CLASSES: Record<string, string> = {
@@ -466,9 +466,10 @@ function renderModule(m: EmailModule, ctx: RenderCtx): string {
     : "";
   const cls = collectMobile(ctx, m.style as Record<string, unknown>);
 
-  // When the module has an HTML override, apply editable slots then use it as inner content.
+  // When the module has an HTML override, apply editable slots then theme tokens, then use as inner content.
   if (m.htmlOverride) {
-    const html = applyEditableSlots(m.htmlOverride, m.editableSlots);
+    let html = applyEditableSlots(m.htmlOverride, m.editableSlots);
+    html = applyThemeTokens(html, ctx.theme);
     return `<tr><td${cls ? ` class="${cls}"` : ""} style="${css}">${html}</td></tr>`;
   }
 
@@ -614,6 +615,10 @@ ${body}
  */
 export function renderModuleInner(m: EmailModule, theme: Theme): string {
   const ctx: RenderCtx = { theme, mobileRules: [], classCounter: { n: 0 } };
-  if (m.htmlOverride) return applyEditableSlots(m.htmlOverride, m.editableSlots);
+  if (m.htmlOverride) {
+    let html = applyEditableSlots(m.htmlOverride, m.editableSlots);
+    html = applyThemeTokens(html, theme);
+    return html;
+  }
   return m.children.map((c) => renderElement(c, ctx)).join("\n");
 }

@@ -8,7 +8,7 @@
 import { uid, type ModuleDefinition } from "@one-million-lines/email-builder";
 
 const home = "https://www.campmor.com";
-const ink = "#222222", yellow = "#FFD238", white = "#FFFFFF", paper = "#F6F5F1";
+const ink = "{colors.text}", yellow = "{colors.buttonBackground}", white = "#FFFFFF", paper = "{colors.background}";
 const font = "font-family:Arial,Helvetica,sans-serif;";
 const table = (rows: string, color: string) =>
   `<table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0" bgcolor="${color}" style="width:100%;background-color:${color};border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0pt;">${rows}</table>`;
@@ -27,7 +27,7 @@ const SHIPPING_HTML = table(
     "9px 12px", "text-align:center;font-size:12px;line-height:18px;color:#FFFFFF;"), ink);
 
 const TRAILMAIL_HTML = table(
-  row(table(`<tr><td style="${font}font-size:34px;line-height:38px;font-weight:900;letter-spacing:-2px;"><a data-slot="logo_link" href="${home}/" style="color:${ink};text-decoration:none;">Campmor</a></td><td align="right" style="${font}${label11}">TRAILMAIL<br><span style="font-weight:normal;letter-spacing:0;color:#555555;">Outdoor gear</span></td></tr>`, white), "18px 24px"), white);
+  row(table(`<tr><td style="${font}font-size:34px;line-height:38px;font-weight:900;letter-spacing:-2px;"><a data-slot="logo_link" href="${home}/" style="color:${ink};text-decoration:none;">Campmor</a></td><td align="right" style="${font}${label11}">TRAILMAIL<br><span style="font-weight:normal;letter-spacing:0;color:{colors.muted};">Outdoor gear</span></td></tr>`, white), "18px 24px"), white);
 
 const departments = [["Camp &amp; Hike", `${home}/collections/camp-hike`], ["Footwear", `${home}/collections/footwear`], ["Deals", `${home}/pages/campmor-deals`]];
 const NAV_HTML = table(
@@ -50,7 +50,7 @@ const GEAR_HTML = table(
 // Gift guide — hero image, eyebrow, headline, body, CTA link/label
 const GIFT_GUIDE_IMG_DEFAULT = `${home}/cdn/shop/files/a_wide_cinematic_winter_landscape_banner_hero_sce_600x600%402x.png?v=1791480014`;
 const GIFT_HTML = `\
-<table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0" bgcolor="${white}" style="width:100%;background-color:${white};border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0pt;">
+<table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0pt;">
   ${row(`<a data-slot="gift_cta_link" href="${home}/pages/gift-guide" style="${font}text-decoration:none;"><img data-slot="gift_image" src="${GIFT_GUIDE_IMG_DEFAULT}" width="600" alt="Snowy mountain cabin at sunset — Campmor holiday gift guide" style="display:block;width:100%;max-width:600px;height:auto;border:0;"></a>`, "0", "line-height:0;")}
   ${row('<span data-slot="gift_eyebrow" style="">THE CAMPMOR GIFT GUIDE</span>', "20px 24px 5px", label11)}
   ${row('<h1 style="margin:0;font-size:32px;line-height:37px;"><span data-slot="gift_headline">For the next adventure</span></h1>', "0 24px")}
@@ -60,7 +60,7 @@ const GIFT_HTML = `\
 
 // Editorial — editable eyebrow, headline, body, link/href
 const INSIDER_HTML = `\
-<table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0" bgcolor="${white}" style="width:100%;background-color:${white};border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0pt;">
+<table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0pt;">
   ${row('<span data-slot="insider_eyebrow">FROM THE CAMPMOR INSIDER</span>', "24px 24px 7px", label11)}
   ${row('<h2 style="margin:0;font-size:25px;line-height:30px;"><span data-slot="insider_headline">A better-fitting backpack</span></h2>', "0 24px")}
   ${row('<span data-slot="insider_body">A pack should carry its share. See what happens at a Campmor fitting before you load up for your next trip.</span>', "8px 24px 12px", "font-size:16px;line-height:24px;")}

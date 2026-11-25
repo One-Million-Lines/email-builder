@@ -4,7 +4,35 @@ All notable changes to this package are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/) and the
 [Keep a Changelog](https://keepachangelog.com/) format.
 
-## [0.17.0] — 2026-11-25
+## [0.18.0] — 2026-11-25
+
+### Added — Theme token resolution for `htmlOverride` blocks
+
+Custom blocks using `htmlOverride` now **respond to theme colour/font changes** in the
+right sidebar, just like standard built-in blocks.
+
+**How it works:**
+
+- New `applyThemeTokens(html, theme)` utility replaces `{colors.X}`, `{fonts.X}`,
+  `{spacing.X}` and `{radius.X}` token references in raw HTML strings with their
+  resolved values from the active theme.
+
+**Tenant theme updates:**
+
+All HTML templates in `actordo-blocks.ts`, `campmor-blocks.ts`, `feroshop-blocks.ts`
+and `hamangiu-blocks.ts` now use token refs (e.g. `{colors.primary}`,
+`{colors.text}`, `{fonts.body}`) 
+
+**New export:** `applyThemeTokens`.
+
+### Fixed
+
+- Links in the builder canvas no longer navigate (all `<a href>` clicks are
+  intercepted with `preventDefault` in the capture phase).
+- The rich text toolbar now hides correctly when clicking a different block
+  (`setActiveEl(null)` on every selection change).
+- Standard `<img>` elements show a pointer cursor, confirming they are selectable.
+
 
 ### Added — `editableSlots`: content editing inside `htmlOverride` blocks
 

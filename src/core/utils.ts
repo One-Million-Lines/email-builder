@@ -118,3 +118,33 @@ export function applyEditableSlots(
   }
   return result;
 }
+
+// ── Theme token resolution for htmlOverride strings ───────────────────────────
+
+import type { Theme } from "./types";
+
+/**
+ * Replace all `{group.key}` token references in an HTML string with their
+ * resolved values from the email document's theme.
+ *
+ * Example: `{colors.primary}` → `#3024F4` (or whatever the active theme sets it to).
+ *
+ * This is the HTML-string equivalent of `resolveToken()` (which works on individual
+ * style property values).  It is applied to `htmlOverride` content:
+ *   - in the renderer before exporting HTML
+ *   - in the canvas before displaying a preview
+ *
+ * Token groups: `colors`, `fonts`, `spacing`, `radius`.
+ * Any key in the theme tokens can be referenced: `{colors.muted}`, `{fonts.heading}`, etc.
+ *
+ * Unknown references (not found in the theme) are left unchanged so they remain
+ * visible if a token is accidentally misspelled.
+ */
+export function applyThemeTokens(html: string, theme: Theme | null | undefined): string {
+  if (!html || !theme?.tokens) return html;
+  const tokens = theme.tokens as Record<string, Record<string, unknown>>;
+  return html.replace(/\{(\w+)\.(\w+)\}/g, (match, group, key) => {
+    const val = tokens[group]?.[key];
+    return val !== undefined ? String(val) : match;
+  });
+}

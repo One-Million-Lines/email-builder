@@ -201,3 +201,147 @@ Pass the blocks to the host application or the gallery:
 | `campmor-blocks.ts` | 7 blocks | Hero image, eyebrow, headline, body, editorial excerpt, contact info |
 | `feroshop-blocks.ts` | 3 blocks | Complex layouts — intentionally static |
 | `hamangiu-blocks.ts` | 3+ blocks | Complex layouts — intentionally static |
+
+---
+
+## 7. Theme token resolution in `htmlOverride` HTML
+
+Since **v0.18.0**, `htmlOverride` HTML strings support the same `{group.key}` token
+syntax used by standard module `style` objects. The `applyThemeTokens(html, theme)`
+utility substitutes them at render time — both in the canvas preview and in the
+exported HTML.
+
+### Use token refs instead of hardcoded hex values
+
+```html
+<!-- ✓ Correct — responds to theme changes -->
+<p style="color:{colors.primary};font-family:{fonts.body};">EYEBROW</p>
+<h1 style="color:{colors.text};">Headline</h1>
+<td bgcolor="{colors.buttonBackground}">...</td>
+
+<!-- ✗ Avoid hardcoded hex for theme-driven colors -->
+<p style="color:#3024F4;">EYEBROW</p>
+```
+
+### Which colors should use tokens vs hardcoded
+
+| Use token ref | Keep hardcoded |
+|---|---|
+| Brand primary, text, muted, background, surface | Design-specific accent colors (lime, lavender, etc.) |
+| Button backgrounds and text | Structural borders (`#DDE1EA`) |
+| Font families | Specific spacing values |
+
+### Theme token definitions must use actual values (never self-references)
+
+```typescript
+// ✓ Correct — theme tokens hold actual values
+tokens: {
+  colors: { background: "#FAFAF7", primary: "#3024F4", text: "#192235" },
+  fonts:  { body: "Arial, Helvetica, sans-serif" }
+}
+
+// ✗ Wrong — circular reference, token won't resolve
+tokens: {
+  colors: { background: "{colors.background}" }  // ← NEVER DO THIS
+}
+```
+
+---
+
+## 8. Background color — per-block vs theme token
+
+The module's **Background color** field in the right sidebar changes `style.backgroundColor`.
+For standard modules, this applies directly. For `htmlOverride` blocks, there is a subtlety:
+
+- If the HTML has `bgcolor="{colors.background}"` on its outer table, the per-block color
+  picker will not visually override it because the HTML table's bgcolor covers the
+  outer module container.
+- **Solution**: Remove `bgcolor` from the outer table element. The module's
+  `style.backgroundColor` (editable from the sidebar) then provides the background.
+  Inner sections that need a specific design color keep their own `bgcolor`.
+
+```html
+<!-- ✓ Correct: outer table has no bgcolor — sidebar controls it -->
+<table role="presentation" width="100%" style="width:100%;border-collapse:collapse;">
+  <tr><td style="padding:32px 24px;">
+    <!-- inner sections with specific design colors keep their bgcolor -->
+    <td bgcolor="{colors.buttonBackground}" style="…">CTA</td>
+  </td></tr>
+</table>
+
+<!-- ✗ Wrong: outer table bgcolor overrides the sidebar background color picker -->
+<table ... bgcolor="{colors.background}" style="background-color:{colors.background};">
+```
+
+---
+
+## 9. Generating static HTML previews
+
+After building your tenant theme, generate a static `.html` file for each email
+so you can preview it in a browser without running the builder. This is also how
+AI agents can verify their work.
+
+### Script pattern
+
+```javascript
+// generate-preview.mjs
+import { renderEmailHtml } from '@one-million-lines/email-builder'
+import { writeFileSync } from 'fs'
+
+const myTheme = {
+  id: "mybrand", name: "MyBrand",
+  tokens: {
+    colors: { background: "#FAFAF7", surface: "#FFFFFF", primary: "#3024F4",
+               text: "#192235", muted: "#606C80", buttonBackground: "#3024F4", buttonText: "#FFFFFF" },
+    fonts:  { body: "Arial, Helvetica, sans-serif", heading: "Arial, Helvetica, sans-serif",
+               button: "Arial, Helvetica, sans-serif" },
+    spacing: { xs:4, sm:8, md:16, lg:24, xl:40 },
+    radius:  { sm:4, md:8, lg:12 },
+  }
+}
+
+const doc = {
+  version: "1.0",
+  meta: { name: "MyBrand Preview", previewText: "Preview subject line" },
+  theme: myTheme,
+  settings: { width: 600, backgroundColor: "{colors.background}", contentBackgroundColor: "{colors.surface}" },
+  modules: [
+    // Add your block module instances here (see actordo-blocks.ts create() return values)
+    {
+      id: "hero", type: "mybrand.hero", name: "Hero",
+      style: { backgroundColor: "{colors.background}", paddingTop: 0, paddingBottom: 0 },
+      children: [],
+      htmlOverride: "... your html with {colors.X} tokens ...",
+      editableSlots: { headline: { type: "text", value: "My headline", label: "Headline" } }
+    },
+    // Always end with footer.legal for unsubscribe links
+    {
+      id: "legal", type: "footer.legal", name: "Footer",
+      style: { backgroundColor: "{colors.surface}", paddingTop: 16, paddingBottom: 16 },
+      children: [
+        { id: "addr", type: "text", content: "Company · Address",
+          style: { fontSize: 12, color: "{colors.muted}", align: "center", paddingTop: 8, paddingBottom: 8 } },
+        { id: "unsub", type: "text", content: '<a class="vtunsubscribe" href="{{unsubscribe_url}}" style="color:inherit">Unsubscribe</a>',
+          style: { fontSize: 11, color: "{colors.muted}", align: "center", paddingTop: 4, paddingBottom: 16 } },
+      ]
+    }
+  ]
+}
+
+writeFileSync('mybrand-preview.html', renderEmailHtml(doc))
+console.log('Preview written to mybrand-preview.html')
+```
+
+Run with: `node --input-type=module generate-preview.mjs`
+
+### Rules for AI agents generating previews
+
+1. The `theme.tokens` values must be **actual hex/string values**, never `{token.ref}`.
+2. Use `{colors.X}` and `{fonts.X}` refs only inside `htmlOverride` HTML strings and
+   `style` objects — not in the theme token definitions themselves.
+3. Remove `bgcolor` from the outermost `<table>` of each `htmlOverride` block so the
+   module's `style.backgroundColor` can be changed from the sidebar.
+4. Keep `bgcolor` on inner elements with design-specific colors (buttons, accent strips).
+5. Always end the email with a `footer.legal` module containing unsubscribe + address.
+6. Verify the output HTML renders correctly in a browser before committing.
+

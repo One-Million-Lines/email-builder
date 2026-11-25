@@ -34,25 +34,25 @@ import { uid } from "@one-million-lines/email-builder";
 // All HTML is email-safe (table-based, inline styles, no gradients).
 
 const HAM_CAT_NAV_HTML = `\
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#D6E4EF;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:{colors.background};">
   <tr>
     <td align="center" style="padding:10px 16px 12px;">
       <table role="presentation" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td style="padding:4px 10px;border-bottom:2px solid #F07638;">
-            <a href="#" style="color:#F07638;text-decoration:none;font-family:Arial,Helvetica,sans-serif;font-size:13px;font-weight:bold;">Noutati</a>
+          <td style="padding:4px 10px;border-bottom:2px solid {colors.primary};">
+            <a href="#" style="color:{colors.primary};text-decoration:none;font-family:Arial,Helvetica,sans-serif;font-size:13px;font-weight:bold;">Noutati</a>
           </td>
           <td style="padding:4px 4px;color:#9CA3AF;font-family:Arial,sans-serif;font-size:13px;">|</td>
           <td style="padding:4px 10px;">
-            <a href="#" style="color:#1A1A2E;text-decoration:none;font-family:Arial,Helvetica,sans-serif;font-size:13px;">In curs de aparitie</a>
+            <a href="#" style="color:{colors.text};text-decoration:none;font-family:Arial,Helvetica,sans-serif;font-size:13px;">In curs de aparitie</a>
           </td>
           <td style="padding:4px 4px;color:#9CA3AF;font-family:Arial,sans-serif;font-size:13px;">|</td>
           <td style="padding:4px 10px;">
-            <a href="#" style="color:#1A1A2E;text-decoration:none;font-family:Arial,Helvetica,sans-serif;font-size:13px;">Recomandam</a>
+            <a href="#" style="color:{colors.text};text-decoration:none;font-family:Arial,Helvetica,sans-serif;font-size:13px;">Recomandam</a>
           </td>
           <td style="padding:4px 4px;color:#9CA3AF;font-family:Arial,sans-serif;font-size:13px;">|</td>
           <td style="padding:4px 10px;">
-            <a href="#" style="color:#1A1A2E;text-decoration:none;font-family:Arial,Helvetica,sans-serif;font-size:13px;">Comunitate</a>
+            <a href="#" style="color:{colors.text};text-decoration:none;font-family:Arial,Helvetica,sans-serif;font-size:13px;">Comunitate</a>
           </td>
         </tr>
       </table>
@@ -61,7 +61,7 @@ const HAM_CAT_NAV_HTML = `\
 </table>`;
 
 const HAM_BOOK_FEATURE_HTML = `\
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#FFFFFF;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:{colors.surface};">
   <tr>
     <td width="40%" style="padding:20px 12px 20px 24px;vertical-align:top;">
       <img src="https://placehold.co/180x250/D6E4EF/1A1A2E?text=Coperta"
@@ -69,18 +69,18 @@ const HAM_BOOK_FEATURE_HTML = `\
            style="display:block;max-width:100%;border:1px solid #E5E7EB;" />
     </td>
     <td width="60%" style="padding:20px 24px 20px 12px;vertical-align:top;">
-      <p style="margin:0 0 6px;font-family:Arial,Helvetica,sans-serif;font-size:11px;font-weight:bold;color:#F07638;letter-spacing:2px;text-transform:uppercase;">DREPT CIVIL · EDITIA A II-A</p>
-      <p style="margin:0 0 10px;font-family:Arial,Helvetica,sans-serif;font-size:18px;font-weight:bold;color:#1A1A2E;line-height:1.3;">Titlul cartii si<br/>subtitlul sau</p>
-      <p style="margin:0 0 10px;font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#6B7280;line-height:1.5;">Autor: Prenume Nume<br/>560 pag. · ISBN 978-xxx-xxx</p>
-      <p style="margin:0 0 14px;font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#1A1A2E;line-height:1.5;">Lucrare fundamentala pentru practicieni si studenti in domeniu.</p>
+      <p style="margin:0 0 6px;font-family:Arial,Helvetica,sans-serif;font-size:11px;font-weight:bold;color:{colors.primary};letter-spacing:2px;text-transform:uppercase;">DREPT CIVIL · EDITIA A II-A</p>
+      <p style="margin:0 0 10px;font-family:Arial,Helvetica,sans-serif;font-size:18px;font-weight:bold;color:{colors.text};line-height:1.3;">Titlul cartii si<br/>subtitlul sau</p>
+      <p style="margin:0 0 10px;font-family:Arial,Helvetica,sans-serif;font-size:13px;color:{colors.muted};line-height:1.5;">Autor: Prenume Nume<br/>560 pag. · ISBN 978-xxx-xxx</p>
+      <p style="margin:0 0 14px;font-family:Arial,Helvetica,sans-serif;font-size:13px;color:{colors.text};line-height:1.5;">Lucrare fundamentala pentru practicieni si studenti in domeniu.</p>
       <p style="margin:0 0 16px;">
         <s style="font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#9CA3AF;">99,00 lei</s>
-        <strong style="font-family:Arial,Helvetica,sans-serif;font-size:22px;color:#F07638;margin-left:8px;">79,00 lei</strong>
+        <strong style="font-family:Arial,Helvetica,sans-serif;font-size:22px;color:{colors.primary};margin-left:8px;">79,00 lei</strong>
       </p>
       <table role="presentation" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td bgcolor="#F07638" style="border-radius:4px;">
-            <a href="#" style="display:inline-block;padding:10px 20px;font-family:Arial,Helvetica,sans-serif;font-size:13px;font-weight:bold;color:#FFFFFF;text-decoration:none;">Vezi detalii</a>
+          <td bgcolor="{colors.buttonBackground}" style="border-radius:4px;">
+            <a href="#" style="display:inline-block;padding:10px 20px;font-family:Arial,Helvetica,sans-serif;font-size:13px;font-weight:bold;color:{colors.buttonText};text-decoration:none;">Vezi detalii</a>
           </td>
         </tr>
       </table>
@@ -89,10 +89,10 @@ const HAM_BOOK_FEATURE_HTML = `\
 </table>`;
 
 const HAM_PROMO_BADGE_HTML = `\
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#F07638;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:{colors.primary};">
   <tr>
     <td align="center" style="padding:14px 24px;">
-      <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:14px;font-weight:bold;color:#FFFFFF;line-height:1.4;">
+      <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:14px;font-weight:bold;color:{colors.surface};line-height:1.4;">
         🎁 DISCOUNT SPECIAL &nbsp;·&nbsp;
         <s style="opacity:0.75;">99,00</s> &nbsp;→&nbsp;
         <strong style="font-size:18px;">79,00 lei</strong>
@@ -116,7 +116,7 @@ export const hamangiuCategoryNav: ModuleDefinition = {
     type: "hamangiu.nav.categories",
     name: "Category Navigation",
     style: {
-      backgroundColor: "#D6E4EF",
+      backgroundColor: "{colors.background}",
       paddingTop:    0,
       paddingBottom: 0,
       mobile: { paddingLeft: 0, paddingRight: 0 },
@@ -138,7 +138,7 @@ export const hamangiuBookFeature: ModuleDefinition = {
     type: "hamangiu.content.book_feature",
     name: "Book Feature",
     style: {
-      backgroundColor: "#FFFFFF",
+      backgroundColor: "{colors.surface}",
       paddingTop:    0,
       paddingBottom: 0,
       mobile: { paddingLeft: 0, paddingRight: 0 },
@@ -153,14 +153,14 @@ export const hamangiuPromoBadge: ModuleDefinition = {
   category: "custom",
   name: "Promo Badge",
   description:
-    "Full-width orange badge strip with promotional discount announcement. Hamangiu brand orange (#F07638) background.",
+    "Full-width orange badge strip with promotional discount announcement. Hamangiu brand orange ({colors.primary}) background.",
   tags: ["hamangiu", "promo", "badge", "discount", "announcement", "custom"],
   create: () => ({
     id: uid("module"),
     type: "hamangiu.promo.badge",
     name: "Promo Badge",
     style: {
-      backgroundColor: "#F07638",
+      backgroundColor: "{colors.primary}",
       paddingTop:    0,
       paddingBottom: 0,
       mobile: { paddingLeft: 0, paddingRight: 0 },
@@ -185,11 +185,11 @@ export const hamangiuBlocks: ModuleDefinition[] = [
 
 /**
  * Block 1 — Logo + "Vezi in browser" bar.
- * Steel-blue (#D6E4EF) background, full-width.
+ * Steel-blue ({colors.background}) background, full-width.
  * VT markers: vtw-logo on logo image, vtw-url on logo link, vtpreview on "view in browser".
  */
 const HAM_LOGO_BROWSER_HTML = `\
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#D6E4EF;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:{colors.background};">
   <tr>
     <td style="padding:15px 24px;">
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
@@ -202,7 +202,7 @@ const HAM_LOGO_BROWSER_HTML = `\
                     <img src="https://placehold.co/22x30/1A1A2E/D6E4EF?text=%E2%9C%A6" alt="" height="30" class="vtw-logo" style="display:block;border:none; max-height:30px;" />
                   </td>
                   <td style="vertical-align:middle;">
-                    <span style="font-family:Arial,Helvetica,sans-serif;font-size:16px;font-weight:bold;color:#1A1A2E;letter-spacing:0.2px;">Editura Hamangiu</span>
+                    <span style="font-family:Arial,Helvetica,sans-serif;font-size:16px;font-weight:bold;color:{colors.text};letter-spacing:0.2px;">Editura Hamangiu</span>
                   </td>
                 </tr>
               </table>
@@ -222,7 +222,7 @@ const HAM_LOGO_BROWSER_HTML = `\
 
 /**
  * Block 2 — Single product hero.
- * White (#FFFFFF) background.
+ * White ({colors.surface}) background.
  * Layout: eyebrow label → large product image → bold title → description with links
  *         → body paragraph → old/new price → wide rounded CTA button.
  *
@@ -239,7 +239,7 @@ const HAM_LOGO_BROWSER_HTML = `\
  * on the module instance (via create() or the gallery item).
  */
 const HAM_PRODUCT_SINGLE_HERO_HTML = `\
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#FFFFFF;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:{colors.surface};">
   <tr>
     <td align="center" style="padding:18px 0 0;">
       <p style="margin:0 0 12px;font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#9CA3AF;text-align:center;letter-spacing:0.2px;">Astazi, noi va recomandam</p>
@@ -255,22 +255,22 @@ const HAM_PRODUCT_SINGLE_HERO_HTML = `\
   </tr>
   <tr>
     <td style="padding:24px 32px 0;">
-      <p class="item-title" style="margin:0 0 14px;font-family:Arial,Helvetica,sans-serif;font-size:34px;font-weight:bold;color:#1A1A2E;text-align:center;line-height:1.2;">Titlul cartii / Produsului</p>
-      <p style="margin:0 0 14px;font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#1A1A2E;text-align:center;line-height:1.65;">
-        Vizitati <a href="#" style="color:#F07638;text-decoration:underline;">site-ul hamangiu.ro</a> pentru a descoperi cele mai <a href="#" style="color:#F07638;text-decoration:underline;">noi aparitii</a> dar si ultimele oferte special gandite pentru cititorii nostrii.
+      <p class="item-title" style="margin:0 0 14px;font-family:Arial,Helvetica,sans-serif;font-size:34px;font-weight:bold;color:{colors.text};text-align:center;line-height:1.2;">Titlul cartii / Produsului</p>
+      <p style="margin:0 0 14px;font-family:Arial,Helvetica,sans-serif;font-size:14px;color:{colors.text};text-align:center;line-height:1.65;">
+        Vizitati <a href="#" style="color:{colors.primary};text-decoration:underline;">site-ul hamangiu.ro</a> pentru a descoperi cele mai <a href="#" style="color:{colors.primary};text-decoration:underline;">noi aparitii</a> dar si ultimele oferte special gandite pentru cititorii nostrii.
       </p>
-      <p style="margin:0 0 20px;font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#1A1A2E;text-align:justify;line-height:1.75;">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec vitae venenatis nulla. Proin bibendum lacus at dapibus viverra. Pellentesque iaculis arcu vitae ipsum pellentesque placerat. Vivamus quis sollicitudin ligula, ac egestas erat.</p>
+      <p style="margin:0 0 20px;font-family:Arial,Helvetica,sans-serif;font-size:14px;color:{colors.text};text-align:justify;line-height:1.75;">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec vitae venenatis nulla. Proin bibendum lacus at dapibus viverra. Pellentesque iaculis arcu vitae ipsum pellentesque placerat. Vivamus quis sollicitudin ligula, ac egestas erat.</p>
     </td>
   </tr>
   <tr>
     <td align="center" style="padding:0 32px 28px;">
       <p style="margin:0 0 2px;font-family:Arial,Helvetica,sans-serif;font-size:15px;color:#9CA3AF;text-align:center;"><s class="item-old_price old_price" style="text-decoration:line-through;">530,00</s></p>
-      <p style="margin:0 0 18px;font-family:Arial,Helvetica,sans-serif;font-size:16px;font-weight:bold;color:#1A1A2E;text-align:center;"><span class="item-final_price final_price">450,00</span></p>
+      <p style="margin:0 0 18px;font-family:Arial,Helvetica,sans-serif;font-size:16px;font-weight:bold;color:{colors.text};text-align:center;"><span class="item-final_price final_price">450,00</span></p>
       <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto;">
         <tr>
-          <td bgcolor="#F07638" style="border-radius:22px;">
+          <td bgcolor="{colors.buttonBackground}" style="border-radius:22px;">
             <a href="#" class="item-url"
-               style="display:inline-block;padding:14px 56px;font-family:Arial,Helvetica,sans-serif;font-size:16px;font-weight:bold;color:#FFFFFF;text-decoration:none;white-space:nowrap;border-radius:22px;">
+               style="display:inline-block;padding:14px 56px;font-family:Arial,Helvetica,sans-serif;font-size:16px;font-weight:bold;color:{colors.buttonText};text-decoration:none;white-space:nowrap;border-radius:22px;">
               Vezi detalii
             </a>
           </td>
@@ -282,12 +282,12 @@ const HAM_PRODUCT_SINGLE_HERO_HTML = `\
 
 /**
  * Block 3 — News header.
- * White (#FFFFFF) background.
+ * White ({colors.surface}) background.
  * Layout: centered book+envelope illustration → "Avem noutati" heading → description.
  * Standalone section that introduces a news/updates segment of the email.
  */
 const HAM_NEWS_HEADER_HTML = `\
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#FFFFFF;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:{colors.surface};">
   <tr>
     <td align="center" style="padding:32px 24px 8px;">
       <img src="https://placehold.co/200x195/F9DFA5/C8854A?text=Newsletter" alt="Avem Noutati" width="200"
@@ -296,9 +296,9 @@ const HAM_NEWS_HEADER_HTML = `\
   </tr>
   <tr>
     <td align="center" style="padding:8px 40px 28px;">
-      <p style="margin:0 0 16px;font-family:Arial,Helvetica,sans-serif;font-size:38px;font-weight:bold;color:#1A1A2E;text-align:center;line-height:1.2;">Avem noutati</p>
-      <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#1A1A2E;text-align:center;line-height:1.65;">
-        Vizitati <a href="#" style="color:#F07638;text-decoration:underline;">site-ul hamangiu.ro</a> pentru a descoperi cele mai <a href="#" style="color:#F07638;text-decoration:underline;">noi aparitii</a> dar si ultimele oferte special gandite pentru cititorii nostrii.
+      <p style="margin:0 0 16px;font-family:Arial,Helvetica,sans-serif;font-size:38px;font-weight:bold;color:{colors.text};text-align:center;line-height:1.2;">Avem noutati</p>
+      <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:14px;color:{colors.text};text-align:center;line-height:1.65;">
+        Vizitati <a href="#" style="color:{colors.primary};text-decoration:underline;">site-ul hamangiu.ro</a> pentru a descoperi cele mai <a href="#" style="color:{colors.primary};text-decoration:underline;">noi aparitii</a> dar si ultimele oferte special gandite pentru cititorii nostrii.
       </p>
     </td>
   </tr>
@@ -306,13 +306,13 @@ const HAM_NEWS_HEADER_HTML = `\
 
 /**
  * Block 4 — News with article items.
- * White (#FFFFFF) background.
+ * White ({colors.surface}) background.
  * Layout: centered book+envelope illustration → bold left-aligned heading → body paragraph
  *         → repeating news rows (thumbnail 70×70 | title + description + "Vezi detalii" link).
  * Add/remove rows by duplicating the news-item table block.
  */
 const HAM_NEWS_ITEMS_HTML = `\
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#FFFFFF;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:{colors.surface};">
   <tr>
     <td align="center" style="padding:28px 24px 0;">
       <img src="https://placehold.co/185x175/F9DFA5/C8854A?text=Newsletter" alt="Noutati" width="185"
@@ -321,8 +321,8 @@ const HAM_NEWS_ITEMS_HTML = `\
   </tr>
   <tr>
     <td style="padding:20px 24px 4px;">
-      <p style="margin:0 0 14px;font-family:Arial,Helvetica,sans-serif;font-size:32px;font-weight:bold;color:#1A1A2E;text-align:left;line-height:1.25;">Avem noutati care te-ar putea interesa</p>
-      <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#1A1A2E;text-align:left;line-height:1.75;">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis ultrices cursus facilisis. In hac habitasse platea dictumst. Sed lacinia ante velit, quis condimentum nibh ultrices ac. Pellentesque facilisis sollicitudin sem eu auctor. In non pulvinar ante. Vestibulum placerat est efficitur libero porttitor aliquet. Donec tristique euismod quam id porttitor.</p>
+      <p style="margin:0 0 14px;font-family:Arial,Helvetica,sans-serif;font-size:32px;font-weight:bold;color:{colors.text};text-align:left;line-height:1.25;">Avem noutati care te-ar putea interesa</p>
+      <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:14px;color:{colors.text};text-align:left;line-height:1.75;">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis ultrices cursus facilisis. In hac habitasse platea dictumst. Sed lacinia ante velit, quis condimentum nibh ultrices ac. Pellentesque facilisis sollicitudin sem eu auctor. In non pulvinar ante. Vestibulum placerat est efficitur libero porttitor aliquet. Donec tristique euismod quam id porttitor.</p>
     </td>
   </tr>
   <!-- News item 1 -->
@@ -335,9 +335,9 @@ const HAM_NEWS_ITEMS_HTML = `\
                  style="display:block;border:none;" />
           </td>
           <td style="vertical-align:top;padding-left:16px;">
-            <p style="margin:0 0 6px;font-family:Arial,Helvetica,sans-serif;font-size:15px;font-weight:bold;color:#1A1A2E;line-height:1.3;">Noi evenimente</p>
-            <p style="margin:0 0 8px;font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#1A1A2E;line-height:1.65;">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis ultrices cursus facilisis. In hac habitasse platea dictumst. Sed lacinia ante velit, quis condimentum nibh ultrices ac. Pellentesque facilisis sollicitudin sem eu auctor. In non pulvinar ante.</p>
-            <a href="#" style="font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#F07638;text-decoration:underline;">
+            <p style="margin:0 0 6px;font-family:Arial,Helvetica,sans-serif;font-size:15px;font-weight:bold;color:{colors.text};line-height:1.3;">Noi evenimente</p>
+            <p style="margin:0 0 8px;font-family:Arial,Helvetica,sans-serif;font-size:13px;color:{colors.text};line-height:1.65;">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis ultrices cursus facilisis. In hac habitasse platea dictumst. Sed lacinia ante velit, quis condimentum nibh ultrices ac. Pellentesque facilisis sollicitudin sem eu auctor. In non pulvinar ante.</p>
+            <a href="#" style="font-family:Arial,Helvetica,sans-serif;font-size:13px;color:{colors.primary};text-decoration:underline;">
               Vezi detalii
             </a>
           </td>
@@ -355,9 +355,9 @@ const HAM_NEWS_ITEMS_HTML = `\
                  style="display:block;border:none;" />
           </td>
           <td style="vertical-align:top;padding-left:16px;">
-            <p style="margin:0 0 6px;font-family:Arial,Helvetica,sans-serif;font-size:15px;font-weight:bold;color:#1A1A2E;line-height:1.3;">Noi evenimente</p>
-            <p style="margin:0 0 8px;font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#1A1A2E;line-height:1.65;">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis ultrices cursus facilisis. In hac habitasse platea dictumst. Sed lacinia ante velit, quis condimentum nibh ultrices ac. Pellentesque facilisis sollicitudin sem eu auctor. In non pulvinar ante.</p>
-            <a href="#" style="font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#F07638;text-decoration:underline;">
+            <p style="margin:0 0 6px;font-family:Arial,Helvetica,sans-serif;font-size:15px;font-weight:bold;color:{colors.text};line-height:1.3;">Noi evenimente</p>
+            <p style="margin:0 0 8px;font-family:Arial,Helvetica,sans-serif;font-size:13px;color:{colors.text};line-height:1.65;">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis ultrices cursus facilisis. In hac habitasse platea dictumst. Sed lacinia ante velit, quis condimentum nibh ultrices ac. Pellentesque facilisis sollicitudin sem eu auctor. In non pulvinar ante.</p>
+            <a href="#" style="font-family:Arial,Helvetica,sans-serif;font-size:13px;color:{colors.primary};text-decoration:underline;">
               Vezi detalii
             </a>
           </td>
@@ -384,7 +384,7 @@ export const hamangiuLogoBrowser: ModuleDefinition = {
     type: "hamangiu.header.logo_browser",
     name: "Logo + View in Browser",
     style: {
-      backgroundColor: "#D6E4EF",
+      backgroundColor: "{colors.background}",
       paddingTop: 0, paddingBottom: 0,
       paddingLeft: 0, paddingRight: 0,
       mobile: { paddingLeft: 0, paddingRight: 0 },
@@ -406,7 +406,7 @@ export const hamangiuProductSingleHero: ModuleDefinition = {
     type: "hamangiu.product.single_hero",
     name: "Product Single Hero",
     style: {
-      backgroundColor: "#FFFFFF",
+      backgroundColor: "{colors.surface}",
       paddingTop: 0, paddingBottom: 0,
       paddingLeft: 0, paddingRight: 0,
       mobile: { paddingLeft: 0, paddingRight: 0 },
@@ -433,7 +433,7 @@ export const hamangiuNewsHeader: ModuleDefinition = {
     type: "hamangiu.header.news_header",
     name: "News Header",
     style: {
-      backgroundColor: "#FFFFFF",
+      backgroundColor: "{colors.surface}",
       paddingTop: 0, paddingBottom: 0,
       paddingLeft: 0, paddingRight: 0,
       mobile: { paddingLeft: 0, paddingRight: 0 },
@@ -455,7 +455,7 @@ export const hamangiuNewsItems: ModuleDefinition = {
     type: "hamangiu.content.news_items",
     name: "News with Items",
     style: {
-      backgroundColor: "#FFFFFF",
+      backgroundColor: "{colors.surface}",
       paddingTop: 0, paddingBottom: 0,
       paddingLeft: 0, paddingRight: 0,
       mobile: { paddingLeft: 0, paddingRight: 0 },

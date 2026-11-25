@@ -11,7 +11,7 @@ import type {
   Theme,
 } from "../core/types";
 import { resolveStyle, resolveToken } from "../core/theme";
-import { STAR_COLOR, starGlyphs, applyEditableSlots } from "../core/utils";
+import { STAR_COLOR, starGlyphs, applyEditableSlots, applyThemeTokens } from "../core/utils";
 import { Copy, Trash2, GripVertical, ArrowUp, ArrowDown, MousePointer2, Code2 } from "lucide-react";
 import {
   DndContext,
@@ -30,7 +30,7 @@ import {
   arrayMove,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { RichTextToolbar } from "./RichTextToolbar";
 import { useRichTextStore } from "./richTextState";
 import { BlockHtmlEditor } from "./BlockHtmlEditor";
@@ -68,6 +68,139 @@ function mergeMobile(
   return { ...base, ...mobile };
 }
 
+// ── HybridSlotRenderer ─────────────────────────────────────────────────────
+// Renders an htmlOverride block that has editableSlots.
+// - Text/html slots → contentEditable, wired to the same RichTextToolbar
+//   that standard TextRender uses. Click = inline edit, blur = save.
+// - Image slots → clickable <img>, click sets slot selection so the right
+//   sidebar shows the full image panel (URL, upload, AI, alt, link, width…).
+// - Href slots → edited via the sidebar SlotsPanel only (no inline UI).
+
+function HybridSlotRenderer({
+  mod,
+  theme,
+  onSelectModule,
+}: {
+  mod: EmailModule;
+  theme: Theme;
+  onSelectModule: () => void;
+}) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const updateSlot = useEmailStore((s) => s.updateSlot);
+  const setSelection = useEmailStore((s) => s.setSelection);
+  const setActiveEl = useRichTextStore((s) => s.setActiveEl);
+
+  // Build modified HTML: resolve theme tokens, then replace data-slot="key" with
+  // id="vt-slot-{moduleId}-{key}" so we can query them reliably after DOM insertion.
+  const modifiedHtml = useMemo(() => {
+    if (!mod.htmlOverride || !mod.editableSlots) {
+      // Even without slots, still apply theme tokens for display
+      return mod.htmlOverride ? applyThemeTokens(mod.htmlOverride, theme) : "";
+    }
+    // Apply theme tokens first, then process slot placeholders
+    const tokenized = applyThemeTokens(mod.htmlOverride, theme);
+    const doc = new DOMParser().parseFromString(tokenized, "text/html");
+    for (const key of Object.keys(mod.editableSlots)) {
+      const el = doc.body.querySelector(`[data-slot="${key}"]`);
+      if (!el) continue;
+      el.id = `vt-slot-${mod.id}-${key}`;
+      el.removeAttribute("data-slot");
+    }
+    return doc.body.innerHTML;
+  }, [mod.htmlOverride, mod.editableSlots, mod.id, theme]);
+
+  // Track which slots are currently being edited to avoid clobbering in-progress edits.
+  const focusedSlotRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container || !mod.editableSlots) return;
+
+    const cleanups: (() => void)[] = [];
+
+    for (const [key, slot] of Object.entries(mod.editableSlots)) {
+      if (!slot) continue;
+      const el = container.querySelector(`#vt-slot-${mod.id}-${key}`);
+      if (!el) continue;
+
+      if (slot.type === "text" || slot.type === "html") {
+        const htmlEl = el as HTMLElement;
+
+        // Sync content only when not focused
+        if (focusedSlotRef.current !== key) {
+          htmlEl.innerHTML =
+            slot.type === "html"
+              ? slot.value
+              : slot.value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        }
+        htmlEl.contentEditable = "true";
+        htmlEl.style.outline = "none";
+        htmlEl.style.cursor = "text";
+
+        const onFocus = () => {
+          focusedSlotRef.current = key;
+          setActiveEl(htmlEl);
+        };
+        const onBlur = (e: Event) => {
+          focusedSlotRef.current = null;
+          const related = (e as FocusEvent).relatedTarget as HTMLElement | null;
+          if (!related?.closest("[data-rich-toolbar]")) {
+            setActiveEl(null);
+          }
+          const next = slot.type === "html" ? htmlEl.innerHTML : htmlEl.textContent ?? "";
+          if (next !== slot.value) {
+            updateSlot(mod.id, key, { value: next });
+          }
+        };
+        const onClick = (e: Event) => { e.stopPropagation(); };
+
+        htmlEl.addEventListener("focus", onFocus);
+        htmlEl.addEventListener("blur", onBlur);
+        htmlEl.addEventListener("click", onClick);
+
+        cleanups.push(() => {
+          htmlEl.removeEventListener("focus", onFocus);
+          htmlEl.removeEventListener("blur", onBlur);
+          htmlEl.removeEventListener("click", onClick);
+          htmlEl.contentEditable = "false";
+        });
+
+      } else if (slot.type === "image") {
+        const imgEl = el as HTMLImageElement;
+        imgEl.src = slot.value;
+        if (slot.alt !== undefined) imgEl.alt = slot.alt;
+        imgEl.style.cursor = "pointer";
+
+        const onMouseEnter = () => { imgEl.style.outline = "2px solid #f59e0b"; };
+        const onMouseLeave = () => { imgEl.style.outline = ""; };
+        const onClick = (e: Event) => {
+          e.stopPropagation();
+          setSelection({ kind: "slot", moduleId: mod.id, slotKey: key });
+        };
+
+        imgEl.addEventListener("mouseenter", onMouseEnter);
+        imgEl.addEventListener("mouseleave", onMouseLeave);
+        imgEl.addEventListener("click", onClick);
+
+        cleanups.push(() => {
+          imgEl.removeEventListener("mouseenter", onMouseEnter);
+          imgEl.removeEventListener("mouseleave", onMouseLeave);
+          imgEl.removeEventListener("click", onClick);
+        });
+      }
+    }
+
+    return () => cleanups.forEach((c) => c());
+  });
+
+  return (
+    <div
+      ref={containerRef}
+      dangerouslySetInnerHTML={{ __html: modifiedHtml }}
+    />
+  );
+}
+
 export function Canvas() {
   const {
     doc,
@@ -81,6 +214,13 @@ export function Canvas() {
     viewMode,
     htmlEditMode,
   } = useEmailStore();
+
+  const setActiveEl = useRichTextStore((s) => s.setActiveEl);
+
+  // Hide the rich text toolbar whenever the selection changes (user clicked a different block).
+  useEffect(() => {
+    setActiveEl(null);
+  }, [selection, setActiveEl]);
 
   const [htmlEditingModuleId, setHtmlEditingModuleId] = useState<string | null>(null);
 
@@ -104,6 +244,13 @@ export function Canvas() {
   const reorderedIds = doc.modules.map((m) => m.id);
   const canvasWidth = viewMode === "mobile" ? MOBILE_WIDTH : doc.settings.width;
 
+  // Prevent links from navigating while in the builder canvas.
+  const blockLinkNavigation = (e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    const link = target.closest("a");
+    if (link) e.preventDefault();
+  };
+
   return (
     <>
       <RichTextToolbar />
@@ -111,6 +258,7 @@ export function Canvas() {
         className="flex-1 overflow-y-auto"
         style={{ background: bg }}
         onClick={() => setSelection({ kind: "email" })}
+        onClickCapture={blockLinkNavigation}
       >
         <div className="py-8 flex justify-center">
           <div
@@ -362,15 +510,9 @@ function ModuleView({
 
       {/* Render block content */}
       {mod.htmlOverride ? (
-        mod.editableSlots ? (
-          // Editable-slots mode: apply slot values and allow module-level selection
-          <div
-            className="cursor-pointer"
-            onClick={(e) => { e.stopPropagation(); onSelectModule(); }}
-            dangerouslySetInnerHTML={{
-              __html: applyEditableSlots(mod.htmlOverride, mod.editableSlots)
-            }}
-          />
+        mod.editableSlots && Object.keys(mod.editableSlots).length > 0 ? (
+          // Editable-slots mode: inline text editing + image selection via HybridSlotRenderer
+          <HybridSlotRenderer mod={mod} theme={theme} onSelectModule={onSelectModule} />
         ) : (
           // Plain HTML override: static, non-interactive
           <div
@@ -634,10 +776,12 @@ function ImageRender({ el, viewMode, theme }: { el: ImageElement; viewMode: "des
     width: s.width as number,
     height: (s.height as number) || "auto",
     borderRadius: s.borderRadius as number,
+    // Visual affordance: pointer cursor so users know images are clickable/selectable.
+    cursor: "pointer",
   };
   return (
     <div style={wrap}>
-      <img src={el.src} alt={el.alt ?? ""} style={img} />
+      <img src={el.src} alt={el.alt ?? ""} style={img} draggable={false} />
     </div>
   );
 }

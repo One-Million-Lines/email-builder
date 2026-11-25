@@ -304,4 +304,6 @@ export type Selection =
   | { kind: "email" }
   | { kind: "module"; moduleId: string }
   | { kind: "element"; moduleId: string; elementId: string }
+  /** An editable slot inside an htmlOverride block — used for image slot selection. */
+  | { kind: "slot"; moduleId: string; slotKey: string }
   | null;

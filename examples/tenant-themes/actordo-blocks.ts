@@ -18,16 +18,16 @@
 import { uid, type ModuleDefinition } from "@one-million-lines/email-builder";
 
 // ── Shared colors ─────────────────────────────────────────────────────────────
-const p = "#3024F4";      // primary blue
-const muted = "#606C80";
-const text = "#192235";
-const bg = "#FAFAF7";
-const surface = "#FFFFFF";
+const p = "{colors.primary}";      // primary blue
+const muted = "{colors.muted}";
+const text = "{colors.text}";
+const bg = "{colors.background}";
+const surface = "{colors.surface}";
 
 // ── 1. Actor signature (logo + nav) — complex structure, no text slots ────────
 // The design is intentionally static — only the href values are editable.
 const SIGNATURE_HTML = `\
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${surface}" style="width:100%;border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0pt;background-color:${surface};">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0pt;">
   <tr>
     <td style="font-family:Arial,Helvetica,sans-serif;padding:22px 24px;color:${text};border-bottom:1px solid #DDE1EA;">
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
@@ -46,7 +46,7 @@ const SIGNATURE_HTML = `\
 
 // ── 2. Hero — headline, body, CTA (fully editable text + link) ────────────────
 const HERO_HTML = `\
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${bg}" style="width:100%;border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0pt;background-color:${bg};">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0pt;">
   <tr>
     <td style="font-family:Arial,Helvetica,sans-serif;padding:32px 24px;color:${text};">
       <p data-slot="eyebrow" style="margin:0 0 14px;color:${p};font-size:11px;font-weight:bold;line-height:17px;letter-spacing:1.5px;">YOUR AI AGENT FOR EVERYDAY WORK</p>
@@ -67,18 +67,18 @@ const HERO_HTML = `\
 
 // ── 3. Channels grid (2×2 integration tiles) — keep static by design ─────────
 const CHANNELS_HTML = `\
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${surface}" style="width:100%;border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0pt;background-color:${surface};">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0pt;">
   <tr>
     <td style="font-family:Arial,Helvetica,sans-serif;padding:20px 24px;color:${text};">
       <p data-slot="channels_eyebrow" style="margin:0 0 14px;color:${p};font-size:11px;font-weight:bold;line-height:17px;letter-spacing:1.5px;">WORKS WHERE YOU WORK</p>
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${surface}">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" >
         <tr>
-          <td width="50%" style="font-family:Arial,Helvetica,sans-serif;padding:10px 8px;border:1px solid #DDE1EA;font-size:13px;font-weight:bold;color:${text};">Microsoft Teams</td>
-          <td width="50%" style="font-family:Arial,Helvetica,sans-serif;padding:10px 8px;border:1px solid #DDE1EA;font-size:13px;font-weight:bold;color:${text};">Slack</td>
+          <td width="50%" style="font-family:Arial,Helvetica,sans-serif;padding:10px 8px;border:1px solid #DDE1EA;font-size:13px;font-weight:bold;color:${text};" data-slot="cell_teams">Microsoft Teams</td>
+          <td width="50%" style="font-family:Arial,Helvetica,sans-serif;padding:10px 8px;border:1px solid #DDE1EA;font-size:13px;font-weight:bold;color:${text};" data-slot="cell_slack">Slack</td>
         </tr>
         <tr>
-          <td width="50%" style="font-family:Arial,Helvetica,sans-serif;padding:10px 8px;border:1px solid #DDE1EA;font-size:13px;font-weight:bold;color:${text};">Outlook add-in</td>
-          <td width="50%" style="font-family:Arial,Helvetica,sans-serif;padding:10px 8px;border:1px solid #DDE1EA;font-size:13px;font-weight:bold;color:${text};">Web app</td>
+          <td width="50%" style="font-family:Arial,Helvetica,sans-serif;padding:10px 8px;border:1px solid #DDE1EA;font-size:13px;font-weight:bold;color:${text};" data-slot="cell_outlook">Outlook add-in</td>
+          <td width="50%" style="font-family:Arial,Helvetica,sans-serif;padding:10px 8px;border:1px solid #DDE1EA;font-size:13px;font-weight:bold;color:${text};" data-slot="cell_webapp">Web app</td>
         </tr>
       </table>
     </td>
@@ -87,7 +87,7 @@ const CHANNELS_HTML = `\
 
 // ── 4. Demo conversation (lavender / result strip) — editable quotes ──────────
 const DEMO_HTML = `\
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${surface}" style="width:100%;border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0pt;background-color:${surface};">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0pt;">
   <tr>
     <td style="font-family:Arial,Helvetica,sans-serif;padding:0 24px 24px;color:${text};">
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
@@ -119,7 +119,7 @@ const DEMO_HTML = `\
 
 // ── 5. Tasks feature — editable eyebrow, headline, quote ─────────────────────
 const TASKS_HTML = `\
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${surface}" style="width:100%;border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0pt;background-color:${surface};">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0pt;">
   <tr>
     <td style="font-family:Arial,Helvetica,sans-serif;padding:0 24px 20px;color:${text};border-bottom:1px solid #DDE1EA;">
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
@@ -159,7 +159,7 @@ const STUDIO_HTML = `\
 
 // ── 7. Compatibility footer band — editable text ──────────────────────────────
 const COMPAT_HTML = `\
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${surface}" style="width:100%;border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0pt;background-color:${surface};">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0pt;">
   <tr>
     <td style="font-family:Arial,Helvetica,sans-serif;padding:22px 24px;color:${text};border-top:1px solid #DDE1EA;">
       <p data-slot="compat_line1" style="margin:0;font-size:16px;line-height:25px;color:${muted};">Works with Google Workspace and Microsoft 365.</p>
@@ -205,7 +205,7 @@ export const actordoBlocks: ModuleDefinition[] = [
       htmlOverride: HERO_HTML,
       editableSlots: {
         eyebrow:    { type: "text", value: "YOUR AI AGENT FOR EVERYDAY WORK", label: "Eyebrow label" },
-        headline:   { type: "html", value: "Less everyday admin.<br><span style=\"color:#3024F4;\">More time for<br>your business.</span>", label: "Headline (HTML)" },
+        headline:   { type: "html", value: "Less everyday admin.<br><span style=\"color:{colors.primary};\">More time for<br>your business.</span>", label: "Headline (HTML)" },
         body_text:  { type: "text", value: "Ask Actor to help with your calendar, tasks, or email from the conversation you are already in.", label: "Body text" },
         cta_label:  { type: "text", value: "Try Actor free ↗", label: "CTA button label" },
         cta_link:   { type: "href", value: "https://actor.do/web", label: "CTA button link" },
@@ -227,6 +227,10 @@ export const actordoBlocks: ModuleDefinition[] = [
       htmlOverride: CHANNELS_HTML,
       editableSlots: {
         channels_eyebrow: { type: "text", value: "WORKS WHERE YOU WORK", label: "Eyebrow label" },
+        cell_teams:   { type: "text", value: "Microsoft Teams",  label: "Cell 1: Teams" },
+        cell_slack:   { type: "text", value: "Slack",            label: "Cell 2: Slack" },
+        cell_outlook: { type: "text", value: "Outlook add-in",   label: "Cell 3: Outlook" },
+        cell_webapp:  { type: "text", value: "Web app",          label: "Cell 4: Web app" },
       },
     }),
   },
@@ -245,10 +249,10 @@ export const actordoBlocks: ModuleDefinition[] = [
       htmlOverride: DEMO_HTML,
       editableSlots: {
         user_message:    { type: "text", value: "\u201cAdd a focus block tomorrow at 10.\u201d", label: "User message" },
-        actor_response:  { type: "html", value: "<span style=\"color:#3024F4;\">Focus time added</span>", label: "Actor response headline" },
+        actor_response:  { type: "html", value: "<span style=\"color:{colors.primary};\">Focus time added</span>", label: "Actor response headline" },
         actor_detail:    { type: "html", value: "Tomorrow \u00b7 10:00\u201311:00<br>Project work", label: "Actor detail" },
         result_strip:    { type: "text", value: "Less calendar admin.", label: "Result strip text" },
-        disclaimer:      { type: "html", value: "<p style=\"margin:0;font-size:16px;line-height:25px;color:#606C80;\">Illustrative example. Available actions depend on your connected accounts and enabled tools.</p>", label: "Disclaimer" },
+        disclaimer:      { type: "html", value: "<p style=\"margin:0;font-size:16px;line-height:25px;color:{colors.muted};\">Illustrative example. Available actions depend on your connected accounts and enabled tools.</p>", label: "Disclaimer" },
       },
     }),
   },
@@ -269,7 +273,7 @@ export const actordoBlocks: ModuleDefinition[] = [
         tasks_eyebrow:  { type: "text", value: "02 / TASKS", label: "Section number / label" },
         tasks_headline: { type: "text", value: "Capture it while it is fresh.", label: "Headline" },
         tasks_quote:    { type: "text", value: "\u201cCreate a task to send the proposal on Friday.\u201d", label: "User quote" },
-        tasks_result:   { type: "html", value: "<span style=\"color:#3024F4;font-weight:bold;\">&#10003;</span> A task in your connected task list", label: "Result line" },
+        tasks_result:   { type: "html", value: "<span style=\"color:{colors.primary};font-weight:bold;\">&#10003;</span> A task in your connected task list", label: "Result line" },
       },
     }),
   },

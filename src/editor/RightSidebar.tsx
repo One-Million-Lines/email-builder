@@ -86,6 +86,12 @@ export function RightSidebar() {
             const m = doc.modules.find((x) => x.id === selection.moduleId);
             return m ? <ModulePanel mod={m} /> : <Empty />;
           })()
+        ) : selection.kind === "slot" ? (
+          (() => {
+            const m = doc.modules.find((x) => x.id === selection.moduleId);
+            const slot = m?.editableSlots?.[selection.slotKey];
+            return m && slot ? <SlotImagePanel mod={m} slotKey={selection.slotKey} /> : <Empty />;
+          })()
         ) : (
           (() => {
             const m = doc.modules.find((x) => x.id === selection.moduleId);
@@ -749,112 +755,70 @@ function ThemeColorRow({
 
 // ---------- Module panel ----------
 
+// ── SlotImagePanel ────────────────────────────────────────────────────────────
+// Shown in the right sidebar when an image slot is selected (kind === "slot").
+// Gives the same full image editing UX as the standard ImageElementPanel:
+// URL with upload + AI generate, alt text, link, and an Align selector.
+
+function SlotImagePanel({ mod, slotKey }: { mod: EmailModule; slotKey: string }) {
+  const updateSlot = useEmailStore((s) => s.updateSlot);
+  const setSelection = useEmailStore((s) => s.setSelection);
+  const slot = mod.editableSlots![slotKey];
+  if (!slot || slot.type !== "image") return <Empty />;
+
+  return (
+    <>
+      <PanelTitle>Image — {slot.label || slotKey}</PanelTitle>
+      <button
+        type="button"
+        className="mb-3 text-xs text-gray-400 hover:text-gray-600 flex items-center gap-1"
+        onClick={() => setSelection({ kind: "module", moduleId: mod.id })}
+      >
+        ← Back to block settings
+      </button>
+      <Field label="Image URL">
+        <ImageUrlInput
+          value={slot.value}
+          onChange={(url) => updateSlot(mod.id, slotKey, { value: url })}
+          onAlt={(alt) => updateSlot(mod.id, slotKey, { alt })}
+        />
+      </Field>
+      <Field label="Alt text">
+        <TextInput
+          value={slot.alt ?? ""}
+          onChange={(e) => updateSlot(mod.id, slotKey, { alt: e.target.value })}
+        />
+      </Field>
+    </>
+  );
+}
+
 // ── Editable Slots Panel ──────────────────────────────────────────────────────
 // Shown inside ModulePanel when mod.editableSlots is set.
-// Each slot gets an appropriate input based on its type.
+// Shows href slots and falls back for any slot not handled inline.
 
 function SlotsPanel({ mod }: { mod: EmailModule }) {
   const updateSlot = useEmailStore((s) => s.updateSlot);
-  const getAsset = getAssetProvider();
-  const [uploadingSlot, setUploadingSlot] = useState<string | null>(null);
-  const fileRef = useRef<HTMLInputElement>(null);
-  const [pendingImageSlot, setPendingImageSlot] = useState<string | null>(null);
 
   const slots = mod.editableSlots!;
-  const entries = Object.entries(slots);
-  if (entries.length === 0) return null;
-
-  const handleImageUpload = async (slotKey: string, file: File) => {
-    if (!getAsset?.upload) return;
-    setUploadingSlot(slotKey);
-    try {
-      const result = await getAsset.upload(file);
-      if (result?.url) {
-        updateSlot(mod.id, slotKey, { value: result.url, alt: result.name ?? "" });
-      }
-    } finally {
-      setUploadingSlot(null);
-      if (fileRef.current) fileRef.current.value = "";
-    }
-  };
+  // Only show href slots here — text/html are edited inline in the canvas,
+  // and image slots are edited via SlotImagePanel (click the image in canvas).
+  const hrefEntries = Object.entries(slots).filter(([, s]) => s.type === "href");
+  if (hrefEntries.length === 0) return null;
 
   return (
     <div className="mt-3 border-t pt-3">
-      <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Content</div>
-      {entries.map(([key, slot]) => (
+      <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Links</div>
+      {hrefEntries.map(([key, slot]) => (
         <div key={key} className="mb-3">
           <label className="block text-xs font-medium text-gray-600 mb-1">{slot.label || key}</label>
-
-          {slot.type === "text" && (
-            <input
-              className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-400"
-              value={slot.value}
-              onChange={(e) => updateSlot(mod.id, key, { value: e.target.value })}
-            />
-          )}
-
-          {slot.type === "html" && (
-            <textarea
-              className="w-full border border-gray-300 rounded px-2 py-1.5 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-blue-400 resize-y"
-              rows={3}
-              value={slot.value}
-              onChange={(e) => updateSlot(mod.id, key, { value: e.target.value })}
-            />
-          )}
-
-          {slot.type === "href" && (
-            <input
-              type="url"
-              className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm font-mono focus:outline-none focus:ring-1 focus:ring-blue-400"
-              value={slot.value}
-              onChange={(e) => updateSlot(mod.id, key, { value: e.target.value })}
-              placeholder="https://…"
-            />
-          )}
-
-          {slot.type === "image" && (
-            <div className="space-y-1.5">
-              {slot.value && (
-                <img src={slot.value} alt={slot.alt ?? ""} className="w-full h-20 object-cover rounded border" />
-              )}
-              <input
-                className="w-full border border-gray-300 rounded px-2 py-1.5 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-blue-400"
-                value={slot.value}
-                onChange={(e) => updateSlot(mod.id, key, { value: e.target.value })}
-                placeholder="https://…/image.jpg"
-              />
-              <input
-                className="w-full border border-gray-300 rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-400"
-                value={slot.alt ?? ""}
-                onChange={(e) => updateSlot(mod.id, key, { alt: e.target.value })}
-                placeholder="Alt text"
-              />
-              {getAsset?.upload && (
-                <>
-                  <input
-                    ref={fileRef}
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={(e) => {
-                      const f = e.target.files?.[0];
-                      if (f && pendingImageSlot) handleImageUpload(pendingImageSlot, f);
-                    }}
-                  />
-                  <button
-                    type="button"
-                    className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 disabled:opacity-50"
-                    disabled={uploadingSlot === key}
-                    onClick={() => { setPendingImageSlot(key); setTimeout(() => fileRef.current?.click(), 0); }}
-                  >
-                    {uploadingSlot === key
-                      ? <><Loader2 size={12} className="animate-spin" /> Uploading…</>
-                      : <><Upload size={12} /> Upload image</>}
-                  </button>
-                </>
-              )}
-            </div>
-          )}
+          <input
+            type="url"
+            className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm font-mono focus:outline-none focus:ring-1 focus:ring-blue-400"
+            value={slot.value}
+            onChange={(e) => updateSlot(mod.id, key, { value: e.target.value })}
+            placeholder="https://…"
+          />
         </div>
       ))}
     </div>
