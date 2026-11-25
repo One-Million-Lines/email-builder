@@ -4,9 +4,30 @@ All notable changes to this package are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/) and the
 [Keep a Changelog](https://keepachangelog.com/) format.
 
-## [0.16.0] — 2026-11-18
+## [0.17.0] — 2026-11-25
 
-### Added — Extended theme token groups
+### Added — `editableSlots`: content editing inside `htmlOverride` blocks
+
+Custom blocks can now keep their pixel-perfect `htmlOverride` HTML design while
+exposing named content slots that are **fully editable** in the builder's right
+sidebar.
+
+**How it works:**
+- Mark editable nodes in the HTML with `data-slot="key"` attributes.
+- Declare the slot values in `editableSlots` on the `EmailModule`.
+- The engine substitutes slot values at render time (canvas preview + HTML export).
+- The right sidebar shows a "Content" panel when a module has `editableSlots`.
+
+**Four slot types:** `"text"` (plain text), `"html"` (innerHTML with inline markup),
+`"image"` (src + alt on `<img>`), `"href"` (href attribute on any element).
+
+**New exports:** `EditableSlot`, `SlotType`, `EmailModule`, `applyEditableSlots`.
+
+**New store action:** `updateSlot(moduleId, key, patch)`.
+
+See `examples/tenant-themes/TENANT_THEMING_GUIDE.md` for the full authoring
+contract and AI agent instructions.
+
 
 Three new optional token groups extend `ThemeTokens` beyond colors. They are
 backwards-compatible: omitting them leaves all existing behavior unchanged.

@@ -11,7 +11,7 @@ import type {
   Theme,
 } from "../core/types";
 import { resolveStyle, resolveToken } from "../core/theme";
-import { STAR_COLOR, starGlyphs } from "../core/utils";
+import { STAR_COLOR, starGlyphs, applyEditableSlots } from "../core/utils";
 import { Copy, Trash2, GripVertical, ArrowUp, ArrowDown, MousePointer2, Code2 } from "lucide-react";
 import {
   DndContext,
@@ -362,11 +362,22 @@ function ModuleView({
 
       {/* Render block content */}
       {mod.htmlOverride ? (
-        // HTML override mode: render raw HTML preview
-        <div
-          className="pointer-events-none select-none"
-          dangerouslySetInnerHTML={{ __html: mod.htmlOverride }}
-        />
+        mod.editableSlots ? (
+          // Editable-slots mode: apply slot values and allow module-level selection
+          <div
+            className="cursor-pointer"
+            onClick={(e) => { e.stopPropagation(); onSelectModule(); }}
+            dangerouslySetInnerHTML={{
+              __html: applyEditableSlots(mod.htmlOverride, mod.editableSlots)
+            }}
+          />
+        ) : (
+          // Plain HTML override: static, non-interactive
+          <div
+            className="pointer-events-none select-none"
+            dangerouslySetInnerHTML={{ __html: mod.htmlOverride }}
+          />
+        )
       ) : (
         mod.children.map((c, i) => (
           <ElementView

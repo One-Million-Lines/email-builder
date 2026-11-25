@@ -167,6 +167,40 @@ export type EmailElement =
   | DividerElement
   | ProductGridElement;
 
+/**
+ * Type of an editable slot within an htmlOverride block.
+ *
+ *   "text"  — replace the text content of the target element (safe, no markup)
+ *   "html"  — replace the innerHTML of the target element (preserves inline tags)
+ *   "image" — replace the `src` (and optionally `alt`) of an `<img>` element
+ *   "href"  — replace the `href` attribute of a link element
+ */
+export type SlotType = "text" | "html" | "image" | "href";
+
+/**
+ * A single editable slot inside an htmlOverride block.
+ *
+ * The HTML template marks the target element with `data-slot="key"`:
+ *
+ *   <p data-slot="eyebrow" style="…">Default eyebrow label</p>
+ *   <h1 data-slot="headline" style="…">Default headline text</h1>
+ *   <img data-slot="hero_image" src="…" alt="…">
+ *   <a data-slot="cta_link" href="https://…">…</a>
+ *
+ * Storing the editable value here (not inside the HTML) means the HTML
+ * template's design is never mutated — only the value is swapped at
+ * render time (both in the canvas preview and in the exported HTML).
+ */
+export interface EditableSlot {
+  type: SlotType;
+  /** Current value: text string, HTML string, image URL, or href URL. */
+  value: string;
+  /** For "image" slots: the alt text. */
+  alt?: string;
+  /** Human-readable label shown in the right sidebar editing panel. */
+  label: string;
+}
+
 export interface EmailModule {
   id: string;
   type: string; // e.g. "header.hero", "cta.simple"
@@ -181,6 +215,23 @@ export interface EmailModule {
    * Use the HTML editor in the canvas toolbar to set/clear this override.
    */
   htmlOverride?: string;
+  /**
+   * Editable content slots for `htmlOverride` blocks.
+   *
+   * Keys match the `data-slot="key"` attributes in the `htmlOverride` HTML.
+   * Values hold the current content and are substituted into the HTML at render
+   * time — the template HTML itself is never mutated.
+   *
+   * When present, the block becomes selectable in the canvas and the right
+   * sidebar shows a "Content" panel with editable fields for each slot.
+   *
+   * Example:
+   *   htmlOverride: '<p data-slot="headline" style="…">Default</p>',
+   *   editableSlots: {
+   *     headline: { type: "text", value: "My headline", label: "Headline" }
+   *   }
+   */
+  editableSlots?: Record<string, EditableSlot>;
 }
 
 export interface ThemeTokens {

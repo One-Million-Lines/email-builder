@@ -10,6 +10,7 @@ import { product as makeProduct } from "../modules/helpers";
 import type {
   EmailElement,
   EmailModule,
+  EditableSlot,
   TextElement,
   ImageElement,
   ButtonElement,
@@ -748,6 +749,118 @@ function ThemeColorRow({
 
 // ---------- Module panel ----------
 
+// ── Editable Slots Panel ──────────────────────────────────────────────────────
+// Shown inside ModulePanel when mod.editableSlots is set.
+// Each slot gets an appropriate input based on its type.
+
+function SlotsPanel({ mod }: { mod: EmailModule }) {
+  const updateSlot = useEmailStore((s) => s.updateSlot);
+  const getAsset = getAssetProvider();
+  const [uploadingSlot, setUploadingSlot] = useState<string | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [pendingImageSlot, setPendingImageSlot] = useState<string | null>(null);
+
+  const slots = mod.editableSlots!;
+  const entries = Object.entries(slots);
+  if (entries.length === 0) return null;
+
+  const handleImageUpload = async (slotKey: string, file: File) => {
+    if (!getAsset?.upload) return;
+    setUploadingSlot(slotKey);
+    try {
+      const result = await getAsset.upload(file);
+      if (result?.url) {
+        updateSlot(mod.id, slotKey, { value: result.url, alt: result.name ?? "" });
+      }
+    } finally {
+      setUploadingSlot(null);
+      if (fileRef.current) fileRef.current.value = "";
+    }
+  };
+
+  return (
+    <div className="mt-3 border-t pt-3">
+      <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Content</div>
+      {entries.map(([key, slot]) => (
+        <div key={key} className="mb-3">
+          <label className="block text-xs font-medium text-gray-600 mb-1">{slot.label || key}</label>
+
+          {slot.type === "text" && (
+            <input
+              className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-400"
+              value={slot.value}
+              onChange={(e) => updateSlot(mod.id, key, { value: e.target.value })}
+            />
+          )}
+
+          {slot.type === "html" && (
+            <textarea
+              className="w-full border border-gray-300 rounded px-2 py-1.5 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-blue-400 resize-y"
+              rows={3}
+              value={slot.value}
+              onChange={(e) => updateSlot(mod.id, key, { value: e.target.value })}
+            />
+          )}
+
+          {slot.type === "href" && (
+            <input
+              type="url"
+              className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm font-mono focus:outline-none focus:ring-1 focus:ring-blue-400"
+              value={slot.value}
+              onChange={(e) => updateSlot(mod.id, key, { value: e.target.value })}
+              placeholder="https://…"
+            />
+          )}
+
+          {slot.type === "image" && (
+            <div className="space-y-1.5">
+              {slot.value && (
+                <img src={slot.value} alt={slot.alt ?? ""} className="w-full h-20 object-cover rounded border" />
+              )}
+              <input
+                className="w-full border border-gray-300 rounded px-2 py-1.5 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-blue-400"
+                value={slot.value}
+                onChange={(e) => updateSlot(mod.id, key, { value: e.target.value })}
+                placeholder="https://…/image.jpg"
+              />
+              <input
+                className="w-full border border-gray-300 rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-400"
+                value={slot.alt ?? ""}
+                onChange={(e) => updateSlot(mod.id, key, { alt: e.target.value })}
+                placeholder="Alt text"
+              />
+              {getAsset?.upload && (
+                <>
+                  <input
+                    ref={fileRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (f && pendingImageSlot) handleImageUpload(pendingImageSlot, f);
+                    }}
+                  />
+                  <button
+                    type="button"
+                    className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 disabled:opacity-50"
+                    disabled={uploadingSlot === key}
+                    onClick={() => { setPendingImageSlot(key); setTimeout(() => fileRef.current?.click(), 0); }}
+                  >
+                    {uploadingSlot === key
+                      ? <><Loader2 size={12} className="animate-spin" /> Uploading…</>
+                      : <><Upload size={12} /> Upload image</>}
+                  </button>
+                </>
+              )}
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function ModulePanel({ mod }: { mod: EmailModule }) {
   const updateModule = useEmailStore((s) => s.updateModule);
   const viewMode = useEmailStore((s) => s.viewMode);
@@ -784,6 +897,7 @@ function ModulePanel({ mod }: { mod: EmailModule }) {
             <Component mod={mod} />
           </Suspense>
         ))}
+      {mod.editableSlots && <SlotsPanel mod={mod} />}
     </>
   );
 }

@@ -184,24 +184,6 @@ const document: EmailDocument = {
       "htmlOverride": "<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" bgcolor=\"#FFFFFF\" style=\"width:100%;border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0pt;background-color:#FFFFFF;\"><tr><td style=\"font-family:Arial,Helvetica,sans-serif;padding:0 24px 20px;color:#192235;border-bottom:1px solid #DDE1EA;\"><table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" bgcolor=\"#FFFFFF\" style=\"width:100%;border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0pt;background-color:#FFFFFF;\"><tr><td style=\"font-family:Arial,Helvetica,sans-serif;padding:20px 20px 4px;color:#192235;\"><p style=\"margin:0 0 14px;color:#3024F4;font-size:11px;font-weight:bold;line-height:17px;letter-spacing:1.5px;\">02 / TASKS</p><h2 style=\"margin:0 0 12px;font-size:26px;line-height:32px;letter-spacing:-0.6px;\">Capture it while it is fresh.</h2></td></tr><tr><td style=\"font-family:Arial,Helvetica,sans-serif;padding:16px 20px;color:#192235;background-color:#F6F7FA;\"><p style=\"margin:0;font-size:16px;line-height:25px;color:#606C80;\">&ldquo;Create a task to send the proposal on Friday.&rdquo;</p></td></tr><tr><td style=\"font-family:Arial,Helvetica,sans-serif;padding:16px 20px;color:#192235;font-size:15px;line-height:23px;\"><span style=\"color:#3024F4;font-weight:bold;\">&#10003;</span> A task in your connected task list</td></tr></table></td></tr></table>"
     },
     {
-      "id": "actordo_module_6",
-      "type": "actordo.feature.email",
-      "name": "Get past the blank reply.",
-      "style": {
-        "backgroundColor": "#FFFFFF",
-        "paddingTop": 0,
-        "paddingBottom": 0,
-        "paddingLeft": 0,
-        "paddingRight": 0,
-        "mobile": {
-          "paddingLeft": 0,
-          "paddingRight": 0
-        }
-      },
-      "children": [],
-      "htmlOverride": "<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" bgcolor=\"#FFFFFF\" style=\"width:100%;border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0pt;background-color:#FFFFFF;\"><tr><td style=\"font-family:Arial,Helvetica,sans-serif;padding:0 24px 20px;color:#192235;border-bottom:1px solid #DDE1EA;\"><table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" bgcolor=\"#FFFFFF\" style=\"width:100%;border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0pt;background-color:#FFFFFF;\"><tr><td style=\"font-family:Arial,Helvetica,sans-serif;padding:20px 20px 4px;color:#192235;\"><p style=\"margin:0 0 14px;color:#3024F4;font-size:11px;font-weight:bold;line-height:17px;letter-spacing:1.5px;\">03 / EMAIL</p><h2 style=\"margin:0 0 12px;font-size:26px;line-height:32px;letter-spacing:-0.6px;\">Get past the blank reply.</h2></td></tr><tr><td style=\"font-family:Arial,Helvetica,sans-serif;padding:16px 20px;color:#192235;background-color:#F6F7FA;\"><p style=\"margin:0;font-size:16px;line-height:25px;color:#606C80;\">&ldquo;Draft a reply to this customer using our returns policy.&rdquo;</p></td></tr><tr><td style=\"font-family:Arial,Helvetica,sans-serif;padding:16px 20px;color:#192235;font-size:15px;line-height:23px;\"><span style=\"color:#3024F4;font-weight:bold;\">&#10003;</span> A contextual draft ready for your review</td></tr></table></td></tr></table>"
-    },
-    {
       "id": "actordo_module_7",
       "type": "actordo.content.studio",
       "name": "Proactive Studio panel",

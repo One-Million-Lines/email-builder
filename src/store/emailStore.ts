@@ -3,6 +3,7 @@ import type {
   EmailDocument,
   EmailModule,
   EmailElement,
+  EditableSlot,
   Theme,
   Selection,
 } from "../core/types";
@@ -74,6 +75,7 @@ interface State {
   reorderModules: (fromIndex: number, toIndex: number) => void;
 
   updateModule: (moduleId: string, patch: Partial<EmailModule>) => void;
+  updateSlot: (moduleId: string, slotKey: string, patch: Partial<EditableSlot>) => void;
   updateElement: (
     moduleId: string,
     elementId: string,
@@ -225,6 +227,21 @@ export const useEmailStore = create<State>((set, get) => ({
     const modules = doc.modules.map((m) =>
       m.id === moduleId ? { ...m, ...patch, style: { ...m.style, ...patch.style } } : m
     );
+    applyDoc({ ...doc, modules });
+  },
+
+  updateSlot: (moduleId, slotKey, patch) => {
+    const { doc, applyDoc } = get();
+    const modules = doc.modules.map((m) => {
+      if (m.id !== moduleId || !m.editableSlots) return m;
+      return {
+        ...m,
+        editableSlots: {
+          ...m.editableSlots,
+          [slotKey]: { ...m.editableSlots[slotKey], ...patch },
+        },
+      };
+    });
     applyDoc({ ...doc, modules });
   },
 

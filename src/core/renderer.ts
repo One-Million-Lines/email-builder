@@ -14,7 +14,7 @@ import type {
   Theme,
 } from "./types";
 import { resolveStyle, resolveToken } from "./theme";
-import { escapeHtml, safeUrl, starGlyphs, STAR_COLOR } from "./utils";
+import { escapeHtml, safeUrl, starGlyphs, STAR_COLOR, applyEditableSlots } from "./utils";
 import { documentSchema } from "./validation";
 
 const VT_LINK_CLASSES: Record<string, string> = {
@@ -466,9 +466,10 @@ function renderModule(m: EmailModule, ctx: RenderCtx): string {
     : "";
   const cls = collectMobile(ctx, m.style as Record<string, unknown>);
 
-  // When the module has an HTML override, use it directly as the inner content.
+  // When the module has an HTML override, apply editable slots then use it as inner content.
   if (m.htmlOverride) {
-    return `<tr><td${cls ? ` class="${cls}"` : ""} style="${css}">${m.htmlOverride}</td></tr>`;
+    const html = applyEditableSlots(m.htmlOverride, m.editableSlots);
+    return `<tr><td${cls ? ` class="${cls}"` : ""} style="${css}">${html}</td></tr>`;
   }
 
   if (vtproduct && m.children.some((c) => c.type === "productGrid")) {
@@ -613,6 +614,6 @@ ${body}
  */
 export function renderModuleInner(m: EmailModule, theme: Theme): string {
   const ctx: RenderCtx = { theme, mobileRules: [], classCounter: { n: 0 } };
-  if (m.htmlOverride) return m.htmlOverride;
+  if (m.htmlOverride) return applyEditableSlots(m.htmlOverride, m.editableSlots);
   return m.children.map((c) => renderElement(c, ctx)).join("\n");
 }

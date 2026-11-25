@@ -275,8 +275,9 @@ export function clearEmailBuilderDocument(): void {
 }
 
 // Re-exports for plugin authors.
-export type { Plugin, ModuleDefinition, AIProvider, EmailDocument, Theme, MergeTag, ThemeTokens };
+export type { Plugin, ModuleDefinition, AIProvider, EmailDocument, EmailModule, Theme, MergeTag, ThemeTokens, EditableSlot, SlotType };
 export { registerPlugin, renderEmailHtml, documentSchema };
+export { applyEditableSlots } from "./core/utils";
 export { imageUploaderPlugin } from "./plugins/imageUploader";
 export type { ImageUploaderOptions } from "./plugins/imageUploader";
 
