@@ -3,7 +3,15 @@
 import { createRoot, type Root } from "react-dom/client";
 import { createElement, useEffect } from "react";
 import "./lib.css";
-import type { EmailDocument, Theme, MergeTag, ThemeTokens } from "./core/types";
+import type {
+  EditableSlot,
+  EmailDocument,
+  EmailModule,
+  MergeTag,
+  SlotType,
+  Theme,
+  ThemeTokens,
+} from "./core/types";
 import { documentSchema } from "./core/validation";
 import { renderEmailHtml } from "./core/renderer";
 import { useEmailStore } from "./store/emailStore";

@@ -4,6 +4,12 @@ All notable changes to this package are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/) and the
 [Keep a Changelog](https://keepachangelog.com/) format.
 
+## [0.18.3] — 2026-11-26
+
+### Changed
+
+- Updated runtime and build dependencies to current stable releases.
+
 ## [0.18.2] — 2026-11-26
 
 ### Fixed
