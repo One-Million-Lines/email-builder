@@ -4,6 +4,18 @@ All notable changes to this package are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/) and the
 [Keep a Changelog](https://keepachangelog.com/) format.
 
+## [0.18.2] — 2026-11-26
+
+### Fixed
+
+- Prevented AI image modal prompts from being cleared on every toolbar re-render.
+
+## [0.18.1] — 2026-11-26
+
+### Fixed
+
+- Restored typing in AI image modal inputs opened from the inline rich-text toolbar.
+
 ## [0.18.0] — 2026-11-25
 
 ### Added — Theme token resolution for `htmlOverride` blocks

@@ -71,6 +71,8 @@ export function AIImageModal({ open, onClose, onSave }: Props) {
 
   const promptRef    = useRef<HTMLTextAreaElement | null>(null);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
 
   // Reset when modal opens
   useEffect(() => {
@@ -83,10 +85,10 @@ export function AIImageModal({ open, onClose, onSave }: Props) {
     setSaving(false);
     setShowSettings(false);
     const t = setTimeout(() => promptRef.current?.focus(), 60);
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onCloseRef.current(); };
     window.addEventListener("keydown", onKey);
     return () => { clearTimeout(t); window.removeEventListener("keydown", onKey); };
-  }, [open, onClose]);
+  }, [open]);
 
   // Auto-scroll conversation
   useEffect(() => {
@@ -161,7 +163,11 @@ export function AIImageModal({ open, onClose, onSave }: Props) {
     : null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+      onMouseDown={(e) => e.stopPropagation()}
+      onClick={(e) => e.stopPropagation()}
+    >
       <div className="flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
 
         {/* ── Header ────────────────────────────────────────────────────── */}

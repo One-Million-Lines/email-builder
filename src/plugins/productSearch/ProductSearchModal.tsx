@@ -19,6 +19,8 @@ export function ProductSearchModal({ open, onClose, onSave, initialQuery, title 
   const [searched, setSearched] = useState(false);
   const [expandedIdx, setExpandedIdx] = useState<number | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
 
   useEffect(() => {
     if (!open) return;
@@ -29,14 +31,14 @@ export function ProductSearchModal({ open, onClose, onSave, initialQuery, title 
     setExpandedIdx(null);
     const t = setTimeout(() => inputRef.current?.focus(), 40);
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") onCloseRef.current();
     };
     window.addEventListener("keydown", onKey);
     return () => {
       clearTimeout(t);
       window.removeEventListener("keydown", onKey);
     };
-  }, [open, initialQuery, onClose]);
+  }, [open, initialQuery]);
 
   if (!open) return null;
 

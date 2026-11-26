@@ -142,7 +142,7 @@ import type { Theme } from "./types";
  */
 export function applyThemeTokens(html: string, theme: Theme | null | undefined): string {
   if (!html || !theme?.tokens) return html;
-  const tokens = theme.tokens as Record<string, Record<string, unknown>>;
+  const tokens = theme.tokens as unknown as Record<string, Record<string, unknown>>;
   return html.replace(/\{(\w+)\.(\w+)\}/g, (match, group, key) => {
     const val = tokens[group]?.[key];
     return val !== undefined ? String(val) : match;

@@ -71,6 +71,14 @@ const AIImageModalSlot =
 
 export interface AssetProvider {
   upload: (file: File) => Promise<{ url: string; alt?: string }>;
+  /**
+   * Optional: open the host application's asset library so the user can pick
+   * an existing image. When provided, the upload button is replaced by a
+   * "Library / Upload" combo that also allows file pick-and-upload in one step.
+   *
+   * The host calls `onSelect({ url, alt? })` with the chosen asset.
+   */
+  pick?: (onSelect: (asset: { url: string; alt?: string }) => void) => void;
 }
 
 /**

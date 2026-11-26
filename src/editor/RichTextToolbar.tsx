@@ -11,12 +11,15 @@
  *   Insert link (with optional special-link role) · Emoji picker ·
  *   Merge-tag inserter (when mergeTags are configured)
  */
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback, useSyncExternalStore, Suspense } from "react";
 import { useRichTextStore } from "./richTextState";
 import { useMergeTagsStore } from "../plugins/mergeTags/state";
 import type { SpecialLinkType } from "../core/types";
 import { SPECIAL_LINK_PLACEHOLDERS } from "../core/types";
-import { Link2, Smile, ChevronDown, Tag, X } from "lucide-react";
+import { Link2, Smile, ChevronDown, Tag, X, ImagePlus, Upload, Sparkles, Loader2, Images } from "lucide-react";
+import { getAssetProvider } from "../core/plugins";
+import { getAIImageProvider, subscribeAIImageProvider } from "../plugins/aiImageGenerate/state";
+import { usePluginSlotStore } from "../core/pluginSlots";
 
 // ─── Constants ─────────────────────────────────────────────────────────────
 
@@ -415,9 +418,174 @@ function MergeTagPopover({ onClose }: { onClose: () => void }) {
   );
 }
 
+// ─── ImageInsertPopover ───────────────────────────────────────────────────────
+// Opens when the user clicks "Insert image" in the toolbar while editing text.
+// Provides URL input, file upload and AI generation — same providers as the
+// sidebar image panel. The chosen image is inserted at the saved cursor position
+// as an inline-block `<img>` compatible with major email clients.
+
+function ImageInsertPopover({
+  savedRange,
+  activeEl,
+  onClose,
+}: {
+  savedRange: Range | null;
+  activeEl: HTMLElement | null;
+  onClose: () => void;
+}) {
+  const provider = getAssetProvider();
+  const canPick   = !!provider?.pick;
+  const canUpload = !!provider?.upload;
+  const aiImageProvider = useSyncExternalStore(subscribeAIImageProvider, getAIImageProvider);
+  const aiImageModalSlot = usePluginSlotStore((s) => s.aiImageModal);
+  const fileRef = useRef<HTMLInputElement | null>(null);
+  const [url, setUrl] = useState("");
+  const [alt, setAlt] = useState("");
+  const [width, setWidth] = useState("200");
+  const [busy, setBusy] = useState(false);
+  const [aiOpen, setAiOpen] = useState(false);
+
+  const AIImageModal = aiImageModalSlot?.Component;
+
+  const handleUpload = async (file: File) => {
+    if (!provider) return;
+    setBusy(true);
+    try {
+      const res = await provider.upload(file);
+      setUrl(res.url);
+      if (res.alt) setAlt(res.alt);
+    } finally {
+      setBusy(false);
+      if (fileRef.current) fileRef.current.value = "";
+    }
+  };
+
+  const handlePick = () => {
+    provider?.pick?.((asset) => {
+      setUrl(asset.url);
+      if (asset.alt) setAlt(asset.alt);
+    });
+  };
+
+  const apply = () => {
+    if (!url.trim()) return;
+    const src = url.trim().replace(/"/g, "&quot;");
+    const altAttr = alt.trim().replace(/"/g, "&quot;");
+    const w = parseInt(width, 10) || 200;
+    // Email-safe inline image: inline-block with vertical-align keeps it
+    // nestled in the text flow; width/max-width for Outlook + responsive clients.
+    const html =
+      `<img src="${src}" alt="${altAttr}" width="${w}" ` +
+      `style="display:inline-block;vertical-align:middle;max-width:100%;height:auto;margin:0 4px;" ` +
+      `border="0">`;
+    // Restore cursor to where it was before the popover opened, then insert.
+    if (savedRange && activeEl) {
+      activeEl.focus();
+      restoreRange(savedRange);
+    }
+    insertHtml(html);
+    onClose();
+  };
+
+  return (
+    <div
+      className="absolute top-full mt-1.5 left-0 z-50 bg-white border border-gray-200 rounded-lg shadow-xl p-3 w-72"
+      onMouseDown={(e) => e.stopPropagation()}
+    >
+      <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Insert image</div>
+
+      {/* URL input + library/upload + AI */}
+      <div className="flex gap-1 mb-2">
+        <input
+          type="url"
+          placeholder="https://…/image.jpg"
+          value={url}
+          onChange={(e) => setUrl(e.target.value)}
+          className="flex-1 min-w-0 border border-gray-200 rounded px-2 py-1 text-xs focus:outline-none focus:border-blue-400"
+          onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); apply(); } }}
+          autoFocus
+        />
+        {/* Library picker — preferred when host provides pick() */}
+        {canPick && (
+          <button type="button" title="Choose from library or upload"
+            onClick={handlePick}
+            className="shrink-0 px-2 py-1 border border-gray-200 rounded hover:bg-gray-50 flex items-center"
+          >
+            <Images size={12} />
+          </button>
+        )}
+        {/* Raw file upload — only when no pick() */}
+        {canUpload && !canPick && (
+          <>
+            <input ref={fileRef} type="file" accept="image/*" className="hidden"
+              onChange={(e) => { const f = e.target.files?.[0]; if (f) void handleUpload(f); }} />
+            <button type="button" disabled={busy} title="Upload image"
+              onClick={() => fileRef.current?.click()}
+              className="shrink-0 px-2 py-1 border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-50 flex items-center"
+            >
+              {busy ? <Loader2 size={12} className="animate-spin" /> : <Upload size={12} />}
+            </button>
+          </>
+        )}
+        {aiImageProvider && AIImageModal && (
+          <button type="button" title="Generate with AI"
+            onClick={() => setAiOpen(true)}
+            className="shrink-0 px-2 py-1 border border-violet-200 rounded hover:bg-violet-50 text-violet-600 flex items-center"
+          >
+            <Sparkles size={12} />
+          </button>
+        )}
+      </div>
+
+      {/* Alt text */}
+      <input type="text" placeholder="Alt text" value={alt} onChange={(e) => setAlt(e.target.value)}
+        className="w-full border border-gray-200 rounded px-2 py-1 text-xs focus:outline-none focus:border-blue-400 mb-2"
+      />
+
+      {/* Width */}
+      <div className="flex items-center gap-2 mb-3">
+        <label className="text-xs text-gray-500 w-10 shrink-0">Width</label>
+        <input type="number" min={16} max={600} value={width} onChange={(e) => setWidth(e.target.value)}
+          className="w-20 border border-gray-200 rounded px-2 py-1 text-xs focus:outline-none focus:border-blue-400"
+        />
+        <span className="text-xs text-gray-400">px</span>
+      </div>
+
+      {/* Preview */}
+      {url && (
+        <div className="mb-2 max-h-20 overflow-hidden rounded border border-gray-100 bg-gray-50 flex items-center justify-center">
+          <img src={url} alt={alt} style={{ maxHeight: 80, maxWidth: "100%", display: "block", margin: "0 auto" }} />
+        </div>
+      )}
+
+      <div className="flex gap-2">
+        <button type="button" onClick={apply} disabled={!url.trim()}
+          className="flex-1 bg-blue-600 text-white text-xs rounded px-3 py-1.5 hover:bg-blue-700 disabled:opacity-40"
+        >
+          Insert
+        </button>
+        <button type="button" onClick={onClose}
+          className="px-3 py-1.5 text-xs border border-gray-200 rounded hover:bg-gray-50"
+        >
+          Cancel
+        </button>
+      </div>
+
+      {/* AI image modal (renders outside the popover to avoid z-index issues) */}
+      {aiImageProvider && AIImageModal && (
+        <Suspense>
+          <AIImageModal open={aiOpen} onClose={() => setAiOpen(false)}
+            onSave={(imgUrl: string) => { setUrl(imgUrl); setAiOpen(false); }}
+          />
+        </Suspense>
+      )}
+    </div>
+  );
+}
+
 // ─── Main toolbar ───────────────────────────────────────────────────────────
 
-type Popover = "link" | "color" | "emoji" | "mergeTag" | null;
+type Popover = "link" | "color" | "emoji" | "mergeTag" | "image" | null;
 
 export function RichTextToolbar() {
   const activeEl = useRichTextStore((s) => s.activeEl);
@@ -588,7 +756,6 @@ export function RichTextToolbar() {
       data-rich-toolbar="true"
       className="fixed z-[9999] flex items-center gap-0.5 bg-white border border-gray-200 rounded-lg shadow-lg px-1.5 py-1 select-none"
       style={{ top: pos.top, left: pos.left }}
-      onMouseDown={(e) => e.preventDefault()}
     >
       {/* ── Format ─────────────────────────────────── */}
       <TBtn title="Bold (Ctrl+B)" active={formats.bold} onMouseDown={md(() => execCmd("bold"))}>
@@ -678,6 +845,30 @@ export function RichTextToolbar() {
           <Smile size={13} />
         </TBtn>
         {openPopover === "emoji" && <EmojiPopover onClose={closePopover} />}
+      </div>
+
+      <Sep />
+
+      {/* ── Insert image ─────────────────────────────── */}
+      <div className="relative">
+        <TBtn
+          title="Insert image"
+          active={openPopover === "image"}
+          onMouseDown={md(() => {
+            const range = saveRange();
+            setSavedRange(range);
+            setOpenPopover((cur) => (cur === "image" ? null : "image"));
+          })}
+        >
+          <ImagePlus size={13} />
+        </TBtn>
+        {openPopover === "image" && (
+          <ImageInsertPopover
+            savedRange={savedRange}
+            activeEl={activeEl}
+            onClose={closePopover}
+          />
+        )}
       </div>
 
       {/* ── Merge tags (conditional) ─────────────────── */}

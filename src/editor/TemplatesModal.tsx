@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { X, Search } from "lucide-react";
 import { useEmailStore } from "../store/emailStore";
 import {
@@ -19,15 +19,17 @@ export function TemplatesModal({ open, onClose }: Props) {
 
   const [category, setCategory] = useState<TemplateCategory | "all">("all");
   const [query, setQuery] = useState("");
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
 
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") onCloseRef.current();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [open, onClose]);
+  }, [open]);
 
   const all = useMemo(() => templateRegistry.list(), [open]);
 

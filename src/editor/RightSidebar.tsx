@@ -21,7 +21,7 @@ import type {
   SpecialLinkType,
 } from "../core/types";
 import { SPECIAL_LINK_PLACEHOLDERS } from "../core/types";
-import { Smartphone, Monitor, Trash2, Plus, RotateCcw, Upload, Loader2, Check, Search, PanelRightClose, PanelRightOpen, Tag, ChevronsLeft, ChevronsRight, Sparkles } from "lucide-react";
+import { Smartphone, Monitor, Trash2, Plus, RotateCcw, Upload, Loader2, Check, Search, PanelRightClose, PanelRightOpen, Tag, ChevronsLeft, ChevronsRight, Sparkles, Images } from "lucide-react";
 
 const SPECIAL_LINK_LABELS: Record<SpecialLinkType, string> = {
   unsubscribe: "Unsubscribe",
@@ -208,6 +208,9 @@ function ImageUrlInput({
   const [err, setErr] = useState<string | null>(null);
   const [aiModalOpen, setAiModalOpen] = useState(false);
 
+  const canPick   = !!provider?.pick;
+  const canUpload = !!provider?.upload;
+
   const handleFile = async (file: File) => {
     if (!provider) return;
     setBusy(true);
@@ -224,13 +227,34 @@ function ImageUrlInput({
     }
   };
 
+  const handlePick = () => {
+    provider?.pick?.((asset) => {
+      onChange(asset.url);
+      if (asset.alt && onAlt) onAlt(asset.alt);
+    });
+  };
+
   const AIImageModal = aiImageModalSlot?.Component;
 
   return (
     <div>
       <div className="flex gap-1">
         <TextInput value={value ?? ""} onChange={(e) => onChange(e.target.value)} />
-        {provider && (
+
+        {/* Library picker — shown when host provides pick(), replaces the raw upload button */}
+        {canPick && (
+          <button
+            type="button"
+            onClick={handlePick}
+            className="shrink-0 px-2 py-1.5 text-xs border border-gray-200 rounded hover:bg-gray-50 flex items-center gap-1"
+            title="Choose from library or upload"
+          >
+            <Images size={12} />
+          </button>
+        )}
+
+        {/* Raw file upload — shown only when provider has upload but no pick() */}
+        {canUpload && !canPick && (
           <>
             <input
               ref={fileRef}
@@ -253,6 +277,8 @@ function ImageUrlInput({
             </button>
           </>
         )}
+
+        {/* AI generation */}
         {aiImageProvider && AIImageModal && (
           <>
             <button
